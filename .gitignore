@@ -1,0 +1,40 @@
+# Compiled source #
+###################
+*.class
+spring-boot/target/**
+
+# IntelliJ Idea files #
+#######################
+.idea
+*.iml
+*.ipr
+*.ids
+*.iws
+*.eml
+
+# Developer profiles #
+######################
+spring-boot/profiles/**/config.*.properties
+
+# Logs and databases #
+######################
+*.log
+*.sqlite
+
+# Packages #
+############
+# It's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.rar
+*.tar
+
+# OS generated files #
+######################
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
