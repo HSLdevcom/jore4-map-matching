@@ -6,4 +6,5 @@ import org.geolatte.geom.LineString
 data class RouteResultDTO(val geometry: LineString<G2D>,
                           val weight: Double,
                           val distance: Double,
-                          val links: List<LinkDTO>)
+                          val links: List<LinkDTO>,
+                          val stops: List<StopDTO>)
