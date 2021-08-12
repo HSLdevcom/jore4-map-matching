@@ -3,6 +3,7 @@ package fi.hsl.jore4.mapmatching
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 import org.springframework.boot.runApplication
+import org.springframework.transaction.annotation.EnableTransactionManagement
 
 fun main(args: Array<String>) {
     runApplication<MapMatchingApplication>(*args)
@@ -18,4 +19,5 @@ fun main(args: Array<String>) {
         SecurityAutoConfiguration::class
     ]
 )
+@EnableTransactionManagement
 class MapMatchingApplication

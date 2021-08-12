@@ -32,6 +32,7 @@
         <!-- Library versions -->
         <postgresql.version>42.2.23</postgresql.version>
         <flyway.version>7.13.0</flyway.version>
+        <jooq.version>3.14.13</jooq.version>
 
         <!-- Other properties -->
         <start.class>fi.hsl.jore4.mapmatching.MapMatchingApplicationKt</start.class>
@@ -65,6 +66,27 @@
                     <filter>profiles/${build.profile.id}/config.${user.name}.properties</filter>
                 </filters>
                 <plugins>
+                    <!-- Read properties files for build plugins. ATM, jOOQ plugin needs to access properties. -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>properties-maven-plugin</artifactId>
+                        <version>${build-properties.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>read-config-properties</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>read-project-properties</goal>
+                                </goals>
+                                <configuration>
+                                    <files>
+                                        <file>${build.property.file}</file>
+                                    </files>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
                     <!-- Run migrations during build phase. -->
                     <plugin>
                         <groupId>org.flywaydb</groupId>
@@ -105,6 +127,82 @@
                                 <version>${postgresql.version}</version>
                             </dependency>
                         </dependencies>
+                    </plugin>
+
+                    <!-- jOOQ generator scans the empty DB to detect the tables created by
+                         the Flyway migration. -->
+                    <plugin>
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-codegen-maven</artifactId>
+                        <version>${jooq.version}</version>
+
+                        <executions>
+                            <execution>
+                                <id>generate-sources-jooq</id>
+                                <!-- jOOQ code generation is executed in process-resources phase just after
+                                     Flyway migrations. -->
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.postgresql</groupId>
+                                <artifactId>postgresql</artifactId>
+                                <version>${postgresql.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.jooq</groupId>
+                                <artifactId>jooq-codegen</artifactId>
+                                <version>${jooq.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.jooq</groupId>
+                                <artifactId>jooq-meta</artifactId>
+                                <version>${jooq.version}</version>
+                            </dependency>
+                        </dependencies>
+
+                        <configuration>
+                            <jdbc>
+                                <driver>${db.driver}</driver>
+                                <url>${db.url}</url>
+                                <user>${db.username}</user>
+                                <password>${db.password}</password>
+                            </jdbc>
+                            <generator>
+                                <name>org.jooq.codegen.JavaGenerator</name>
+                                <database>
+                                    <name>org.jooq.meta.postgres.PostgresDatabase</name>
+                                    <inputSchema>${jooq.generator.input.schema}</inputSchema>
+                                    <includeTables>true</includeTables>
+                                    <includeInvisibleColumns>false</includeInvisibleColumns>
+                                    <includeEmbeddables>false</includeEmbeddables>
+                                    <includeRoutines>false</includeRoutines>
+                                    <includePackages>false</includePackages>
+                                    <includePackageRoutines>false</includePackageRoutines>
+                                    <includePackageUDTs>false</includePackageUDTs>
+                                    <includePackageConstants>false</includePackageConstants>
+                                    <includeUDTs>false</includeUDTs>
+                                    <includeDomains>false</includeDomains>
+                                    <includeSequences>true</includeSequences>
+                                    <includePrimaryKeys>true</includePrimaryKeys>
+                                    <includeUniqueKeys>true</includeUniqueKeys>
+                                    <includeForeignKeys>true</includeForeignKeys>
+                                    <includeCheckConstraints>false</includeCheckConstraints>
+                                    <includeSystemCheckConstraints>false</includeSystemCheckConstraints>
+                                    <includeIndexes>false</includeIndexes>
+                                    <includeSystemIndexes>false</includeSystemIndexes>
+                                </database>
+                                <target>
+                                    <packageName>fi.hsl.jore4.mapmatching.model</packageName>
+                                    <directory>${project.basedir}/src/generated-sources/jooq</directory>
+                                </target>
+                            </generator>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -317,7 +415,7 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jdbc</artifactId>
+            <artifactId>spring-boot-starter-jooq</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -355,6 +453,13 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
             <version>${flyway.version}</version>
+        </dependency>
+
+        <!-- jOOQ -->
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>${jooq.version}</version>
         </dependency>
     </dependencies>
 </project>

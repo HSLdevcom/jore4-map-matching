@@ -6,6 +6,8 @@
         </encoder>
     </appender>
 
+    <logger name="org.jooq" level="INFO"/>
+
     <root level="${LOG_LEVEL:-INFO}">
         <appender-ref ref="STDOUT"/>
     </root>
