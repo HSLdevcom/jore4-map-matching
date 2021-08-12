@@ -34,9 +34,83 @@ This avoids rebuilding Docker image every the code is changed. The application i
 
 The application will be available through http://localhost:8080. The database used by the application is initially empty. Hence, no meaningful routing results can be expected (unless some data is populated e.g. from a dump available through [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import)).
 
-## How to use API
+## Making requests to API
 
-API NOT YET IMPLEMENTED.
+The common structure for all requests is:
+
+```
+GET /api/{service}/{version}/{profile}/{coordinates}[.{format}]?option=value&option=value
+```
+
+Example request:
+
+```
+curl "https://<host>:<port>/api/route/v1/bus/24.95324,60.16980;24.83849,60.16707"
+```
+
+The table below describes the request parameters part of the URI path.
+
+| Parameter     | Description |
+| ------------- | ----------- |
+| `service`     | Only `route` is currently available. |
+| `version`     | Version of the service. `v1` for `route` service. |
+| `profile`     | Mode of transportation. `bus` is the only mode that is currently supported. |
+| `coordinates` | String of format `{longitude},{latitude};{longitude},{latitude}[;{longitude},{latitude} ...]` |
+| `format`      | This parameter is optional and defaults to `json` which is the only supported value. |
+
+The table below describes the request options.
+
+| Option               | Description |
+| -------------------- | ------------|
+| `link_search_radius` | Limit search radius (in meters) while finding closest infrastructure link for each given coordinate. Defaults to `150` meters if not present. |
+
+## Response format
+
+A successful routing response has the following JSON structure:
+
+```
+{
+    code: "Ok",
+    routes: [
+        {
+            geometry: {
+                type: "LineString",
+                coordinates: [...]
+            }
+            paths: [
+                {
+                    infrastructureLinkId: <integer>,
+                    externalLinkRef: {
+                        externalLinkId: <string>,
+                        infrastructureSource: "digiroad_r"
+                    },
+                    traversalForwards: <boolean>,
+                    geometry: {
+                        type: "LineString",
+                        coordinates: [...]
+                    },
+                    distance: <double>,
+                    weight: <double>
+                },
+                ...
+            ],
+            distance: <double>,
+            weight: <double>
+        }
+    ]
+}
+```
+
+The `infrastructureLinkId` attribute in the response is local to the service. Linking to other infrastructure sources (such as **Digiroad R**) may be done using a pair of `externalLinkId` and `infrastructureSource` attributes. The geometry for an entire route is given in GeoJSON format at route's top-level `geometry` attribute. A `geometry` is also provided for each individual infrastructure link appearing in `paths`. The `traversalForwards` attribute tells whether a single link is traversed either forwards or backwards (`null` not possible) with regard to its directed `LineString` geometry.
+
+The table below describes the possible response codes.
+
+| Response code  | Description |
+| ---------------| ------------|
+| `Ok`           | Request was successfully parsed and a route was successfully resolved. |
+| `InvalidUrl`   | An error occurred while parsing request parameters or options. |
+| `InvalidValue` | Invalid values given e.g. at least two distinct coordinates must be given. |
+| `NoSegment`    | Could not resolve a route for given coordinates. |
 
 ## Building
 

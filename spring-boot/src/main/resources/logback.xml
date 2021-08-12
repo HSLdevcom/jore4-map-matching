@@ -6,6 +6,7 @@
         </encoder>
     </appender>
 
+    <logger name="fi.hsl.jore4" level="DEBUG"/>
     <logger name="org.jooq" level="INFO"/>
 
     <root level="${LOG_LEVEL:-INFO}">
