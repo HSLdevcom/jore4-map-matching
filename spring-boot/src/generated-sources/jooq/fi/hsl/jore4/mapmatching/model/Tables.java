@@ -8,6 +8,7 @@ import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink;
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLinkSafelyTraversedByVehicleType;
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLinkVerticesPgr;
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureSource;
+import fi.hsl.jore4.mapmatching.model.tables.PublicTransportStop;
 import fi.hsl.jore4.mapmatching.model.tables.TrafficFlowDirection;
 import fi.hsl.jore4.mapmatching.model.tables.VehicleMode;
 import fi.hsl.jore4.mapmatching.model.tables.VehicleType;
@@ -38,6 +39,11 @@ public class Tables {
      * The enumerated sources for infrastructure network entities
      */
     public static final InfrastructureSource INFRASTRUCTURE_SOURCE = InfrastructureSource.INFRASTRUCTURE_SOURCE;
+
+    /**
+     * The public transport stops imported from Digiroad export
+     */
+    public static final PublicTransportStop PUBLIC_TRANSPORT_STOP = PublicTransportStop.PUBLIC_TRANSPORT_STOP;
 
     /**
      * The possible directions of traffic flow on infrastructure links. Using code values from Digiroad codeset.

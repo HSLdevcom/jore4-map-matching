@@ -227,7 +227,7 @@
                                         <forcedType>
                                             <userType>org.geolatte.geom.Point&lt;org.geolatte.geom.C2D&gt;</userType>
                                             <converter>fi.hsl.jore4.mapmatching.config.jooq.converter.PointBinding</converter>
-                                            <includeExpression>.*\.infrastructure_link_vertices_pgr\.the_geom</includeExpression>
+                                            <includeExpression>.*\.public_transport_stop\.geom | .*\.infrastructure_link_vertices_pgr\.the_geom</includeExpression>
                                         </forcedType>
                                     </forcedTypes>
                                 </database>
