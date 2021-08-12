@@ -18,7 +18,7 @@ services:
 
   # pre-populated with infrastructure network data and pgRouting topology
   jore4-mapmatchingdb:
-    image: hsldevcom/jore4-postgres:mapmatching-main--5ad5e8cc8d6fffa386c18edf517552a78de65999
+    image: hsldevcom/jore4-postgres:mapmatching-main--df61098c81ba5419cea763136644fa84ba31a870
     container_name: mapmatchingdb
     restart: "unless-stopped"
     networks:
@@ -29,7 +29,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - DIGIROAD_ROUTING_DUMP_VERSION=2021-10-11
+      - DIGIROAD_ROUTING_DUMP_VERSION=2021-11-04
 
   # empty database used in development (instead of "jore4-mapmatchingdb")
   jore4-mapmatchingdevdb:

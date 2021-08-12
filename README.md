@@ -2,11 +2,15 @@
 
 ## Overview
 
-Provides a microservice and REST API for matching a shortest path through JORE4 infrastructure network against a given sequence of coordinates. Directionality of road links is taken account. Vehicle type specific turn restrictions are not yet implemented.
+Provides a microservice and REST API for matching a shortest path through JORE4 infrastructure network against a given sequence of coordinates. Directionality of road links is taken account.
 
-Initially, the map matching and navigation services are based on Digiroad infrastructure network but later on the infrastructure network will be supplemented with other sources as well.
+Vehicle mode specific link selection is not yet implemented even though the support for it exists already in the data model. Vehicle type specific turn restrictions are not yet implemented either.
 
-The microservice consists of (1) Spring Boot application written in [Kotlin](https://kotlinlang.org/) and (2) an internal PostgreSQL database enabled with [PostGIS](https://postgis.net/) and [pgRouting](https://pgrouting.org/) extensions.
+Initially, the map matching and navigation services are based on Digiroad infrastructure network but later on the infrastructure network will be supplemented with other infrastructure sources as well.
+
+The microservice consists of:
+1. Spring Boot application written in [Kotlin](https://kotlinlang.org/)
+2. PostgreSQL database enabled with [PostGIS](https://postgis.net/) and [pgRouting](https://pgrouting.org/) extensions
 
 ## Running app in production setup
 
@@ -51,6 +55,31 @@ With `dev` profile one needs to create a user-specific build configuration file 
 ```
     touch spring-boot/profiles/dev/config.$(whoami).properties
 ```
+
+## Populating data within development
+
+Within development, the currently recommended way of importing infrastructure data is to:
+1. Start map-matching server with the commands below. Within launch, the server will run database migration scripts into the development database. The scripts will initialise schemas, tables, constraints and indices. Also a couple of enumeration tables are populated with a fixed set of data.
+    ```
+        ./development.sh start:dev
+    ```
+2. Populate data (infrastructure links, infrastructure sources, network topology and associations of links to vehicle types) from [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import-experiment). This does not involve creating tables neither populating enumeration tables (which already contain data coming from the migration scripts).
+
+To generate a Digiroad-based dump, issue the following commands in the Digiroad import repository:
+
+```
+    ./build_docker_image.sh
+    ./import_digiroad_shapefiles.sh
+    ./export_routing_schema.sh
+```
+
+To restore table data from the dump (generated into `workdir/pgdump` directory), issue the following command (with `<date>` placeholder replaced with a proper value):
+
+```
+    pg_restore -1 -a --use-list=digiroad_r_routing_<date>.pgdump.no-enums.only-links.list -h localhost -p 18000 -d jore4mapmatching -U mapmatching digiroad_r_routing_<date>.pgdump
+```
+
+The list argument passed to `pg_restore` command will constrain the restoration of the dump file to data of selected tables only. Hence, enumeration tables are excluded as well as create table statements.
 
 ## Development notes
 

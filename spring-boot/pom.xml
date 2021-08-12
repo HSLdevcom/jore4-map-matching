@@ -20,6 +20,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <!-- Maven build plugins -->
+        <build-helper.plugin.version>3.2.0</build-helper.plugin.version>
         <build-properties.plugin.version>1.0.0</build-properties.plugin.version>
 
         <!-- Library versions -->
@@ -298,6 +299,25 @@
                                     <version>${java.version}</version>
                                 </requireJavaVersion>
                             </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${build-helper.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/generated-sources/jooq</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>
