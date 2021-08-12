@@ -8,6 +8,7 @@ import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink;
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLinkSafelyTraversedByVehicleType;
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLinkVerticesPgr;
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureSource;
+import fi.hsl.jore4.mapmatching.model.tables.PublicTransportStop;
 import fi.hsl.jore4.mapmatching.model.tables.TrafficFlowDirection;
 import fi.hsl.jore4.mapmatching.model.tables.VehicleMode;
 import fi.hsl.jore4.mapmatching.model.tables.VehicleType;
@@ -55,6 +56,11 @@ public class Routing extends SchemaImpl {
     public final InfrastructureSource INFRASTRUCTURE_SOURCE = InfrastructureSource.INFRASTRUCTURE_SOURCE;
 
     /**
+     * The public transport stops imported from Digiroad export
+     */
+    public final PublicTransportStop PUBLIC_TRANSPORT_STOP = PublicTransportStop.PUBLIC_TRANSPORT_STOP;
+
+    /**
      * The possible directions of traffic flow on infrastructure links. Using code values from Digiroad codeset.
      */
     public final TrafficFlowDirection TRAFFIC_FLOW_DIRECTION = TrafficFlowDirection.TRAFFIC_FLOW_DIRECTION;
@@ -95,6 +101,7 @@ public class Routing extends SchemaImpl {
             InfrastructureLinkSafelyTraversedByVehicleType.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE,
             InfrastructureLinkVerticesPgr.INFRASTRUCTURE_LINK_VERTICES_PGR,
             InfrastructureSource.INFRASTRUCTURE_SOURCE,
+            PublicTransportStop.PUBLIC_TRANSPORT_STOP,
             TrafficFlowDirection.TRAFFIC_FLOW_DIRECTION,
             VehicleMode.VEHICLE_MODE,
             VehicleType.VEHICLE_TYPE);

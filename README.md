@@ -156,7 +156,7 @@ Within development, the currently recommended way of importing infrastructure da
     ```sh
     ./development.sh start:dev
     ```
-2. Populate data (infrastructure links, infrastructure sources, network topology and associations of links to vehicle types) from [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import). This does not involve creating tables neither populating enumeration tables (which already contain data coming from the migration scripts).
+2. Populate data (infrastructure links, infrastructure sources, network topology, associations of links to vehicle types and public transport stops) from [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import). This does not involve creating tables neither populating enumeration tables (which already contain data coming from the migration scripts).
 
 To generate a Digiroad-based dump, issue the following commands in the Digiroad import repository:
 
@@ -169,7 +169,7 @@ To generate a Digiroad-based dump, issue the following commands in the Digiroad 
 To restore table data from the dump (generated into `workdir/pgdump` directory), issue the following command (with `<date>` placeholder replaced with a proper value):
 
 ```sh
-pg_restore -1 -a --use-list=digiroad_r_routing_<date>.pgdump.no-enums.only-links.list -h localhost -p 18000 -d jore4mapmatching -U mapmatching digiroad_r_routing_<date>.pgdump
+pg_restore -1 -a --use-list=digiroad_r_routing_<date>.pgdump.no-enums.links-and-stops.list -h localhost -p 18000 -d jore4mapmatching -U mapmatching digiroad_r_routing_<date>.pgdump 
 ```
 
 The list argument passed to `pg_restore` command will constrain the restoration of the dump file to data of selected tables only. Hence, enumeration tables are excluded as well as create table statements.
