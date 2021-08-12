@@ -1,9 +1,17 @@
 package fi.hsl.jore4.mapmatching
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import org.geolatte.geom.json.GeolatteGeomModule
+import org.geolatte.geom.json.Setting
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 import org.springframework.boot.runApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Primary
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
+import org.springframework.validation.beanvalidation.MethodValidationPostProcessor
 
 fun main(args: Array<String>) {
     runApplication<MapMatchingApplication>(*args)
@@ -14,10 +22,29 @@ fun main(args: Array<String>) {
  *
  * Disable Spring Security initialization, since we don't use it at this stage.
  */
-@SpringBootApplication(
-    exclude = [
-        SecurityAutoConfiguration::class
-    ]
-)
+@SpringBootApplication
 @EnableTransactionManagement
-class MapMatchingApplication
+class MapMatchingApplication {
+
+    @Bean
+    fun methodValidationPostProcessor(): MethodValidationPostProcessor {
+        val mv = MethodValidationPostProcessor()
+        mv.setValidator(validator())
+        return mv
+    }
+
+    @Bean
+    fun validator() = LocalValidatorFactoryBean()
+
+    @Bean
+    @Primary
+    fun objectMapper(): ObjectMapper {
+        val geomlatteModule = GeolatteGeomModule()
+        geomlatteModule.set(Setting.SUPPRESS_CRS_SERIALIZATION, true)
+
+        return ObjectMapper()
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            .registerModule(geomlatteModule)
+            .registerModule(JavaTimeModule())
+    }
+}
