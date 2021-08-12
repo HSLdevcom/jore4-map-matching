@@ -263,7 +263,7 @@
                     const primaryRoute = data.routes[0];
 
                     // Draw the route on the map.
-                    addRouteLayer(primaryRoute.geometry);
+                    addRouteLayer(primaryRoute.geometry, primaryRoute.stops);
                     showRouteInfo(primaryRoute);
                 } else {
                     showError(data.message);
@@ -275,7 +275,24 @@
         }
 
         // Draw the result route as a new layer on the map.
-        function addRouteLayer(geometry) {
+        function addRouteLayer(geometry, stops) {
+            let seq = 1;
+            const stopPointsFeatures = stops.map(stop => {
+                return {
+                    type: "Feature",
+                    geometry: {
+                        type: stop.location.type,
+                        coordinates: stop.location.coordinates
+                    },
+                    properties: {
+                        seq: seq++,
+                        name: stop.name,
+                        nationalId: stop.locatedOnLink.externalLinkRef.externalLinkId,
+                        digiroadLinkId: stop.locatedOnLink.externalLinkRef.externalLinkId
+                    }
+                };
+            });
+
             map.addLayer({
                 id: 'route',
                 type: 'line',
@@ -293,28 +310,50 @@
                 },
                 paint: {
                     'line-color': '#03aa46',
-                    'line-width': 8,
+                    'line-width': 10,
                     'line-opacity': 0.8
                 }
             });
+
+
+            if (!!stops) {
+                map.addLayer({
+                    id: 'stops',
+                    type: 'circle',
+                    source: {
+                        type: 'geojson',
+                        data: {
+                            type: 'FeatureCollection',
+                            properties: {},
+                            features: stopPointsFeatures
+                        }
+                    },
+                    paint: {
+                        'circle-color': '#B42222',
+                        'circle-radius': 10,
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#ffffff'
+                    }
+                });
+            }
         }
 
         function showRouteInfo(route) {
             // Add route overview to sidebar.
             const routeInfo = document.getElementById('route-info');
-            let routeLinks = '';
+            let stops = '';
 
-            // Output summary for each infrastructure link of route in the response object.
-            if (route.paths) {
-                for (const path of route.paths) {
-                    routeLinks += `<li>${path.infrastructureLinkName.fi}, ${path.distance.toFixed(1)} m</li>`;
+            // Output summary for each bus stop on route in the response object.
+            if (route.stops) {
+                for (const stop of route.stops) {
+                    stops += `<li>${stop.name.fi} (ID:${stop.publicTransportStopNationalId})</li>`;
                 }
             }
 
             routeInfo.innerHTML = `<p><strong>Route distance: ${Math.floor(route.distance)} m</strong></p>`
 
-            if (routeLinks) {
-                routeInfo.innerHTML += `<strong>Infrastructure links:</strong><ol>${routeLinks}</ol>`;
+            if (stops) {
+                routeInfo.innerHTML += `<strong>Stops:</strong><ol>${stops}</ol>`;
             }
 
             // Make info box visible.
@@ -332,6 +371,8 @@
             if (map.getSource('route')) {
                 map.removeLayer('route');
                 map.removeSource('route');
+                map.removeLayer('stops');
+                map.removeSource('stops');
             }
         }
 

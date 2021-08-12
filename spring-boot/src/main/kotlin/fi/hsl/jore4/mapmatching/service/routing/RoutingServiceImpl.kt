@@ -3,17 +3,20 @@ package fi.hsl.jore4.mapmatching.service.routing
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.model.tables.records.PublicTransportStopRecord
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
+import fi.hsl.jore4.mapmatching.repository.infrastructure.IStopRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeResolutionParams
+import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.filterStopsByDirectionOfTraversal
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedCoordinates
 import fi.hsl.jore4.mapmatching.service.routing.internal.INodeServiceInternal
+import fi.hsl.jore4.mapmatching.service.routing.internal.IRoutingResultTransformer
 import fi.hsl.jore4.mapmatching.service.routing.internal.NodeResolutionParams
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingFailureDTO
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingResponse
-import fi.hsl.jore4.mapmatching.service.routing.response.RoutingResultTransformer
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import org.slf4j.Logger
@@ -25,8 +28,10 @@ import java.util.SortedMap
 
 @Service
 class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkRepository,
+                                                val stopRepository: IStopRepository,
                                                 val routingRepository: IRoutingRepository,
-                                                val nodeService: INodeServiceInternal)
+                                                val nodeService: INodeServiceInternal,
+                                                val resultTransformer: IRoutingResultTransformer)
     : IRoutingService {
 
     @Transactional(readOnly = true)
@@ -71,8 +76,20 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         }
 
         val traversedPaths: List<PathTraversal> = routeLinks.map { it.path }
+        val stopsAlongRoute = findStopsAlongRoute(traversedPaths)
 
-        return RoutingResultTransformer.createResponse(traversedPaths)
+        if (LOGGER.isDebugEnabled) {
+            LOGGER.debug("Found ${stopsAlongRoute.size} stops along the route")
+        }
+
+        return resultTransformer.createResponse(traversedPaths, stopsAlongRoute)
+    }
+
+    private fun findStopsAlongRoute(paths: List<PathTraversal>): List<PublicTransportStopRecord> {
+        val uniqueLinkIds: Set<Long> = paths.map { it.infrastructureLinkId }.toSet()
+        val allStopsAlongRoute = stopRepository.findStopsAlongLinks(uniqueLinkIds)
+
+        return filterStopsByDirectionOfTraversal(allStopsAlongRoute, paths)
     }
 
     companion object {

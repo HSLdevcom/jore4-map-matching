@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.config.jooq.converter
 
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.EPSG_3067
 import org.geolatte.geom.C2D
 import org.geolatte.geom.Geometry
 import org.geolatte.geom.GeometryType
@@ -8,7 +9,6 @@ import org.geolatte.geom.Point
 import org.geolatte.geom.builder.DSL.c
 import org.geolatte.geom.builder.DSL.linestring
 import org.geolatte.geom.builder.DSL.point
-import org.geolatte.geom.crs.CrsRegistry
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.equalTo
@@ -20,8 +20,6 @@ import kotlin.test.assertFailsWith
 class GeometryConverterTest {
 
     companion object {
-        private val EPSG_3067 = CrsRegistry.getProjectedCoordinateReferenceSystemForEPSG(3067)
-
         private const val EWKB_POINT = "0101000020FB0B0000666666660C8C1741CDCCCC4CCE735941"
         private const val EWKB_LINESTRING =
             "0102000020FB0B000002000000666666660C8C1741CDCCCC4CCE73594100000000B0931741000000C0B9745941"
