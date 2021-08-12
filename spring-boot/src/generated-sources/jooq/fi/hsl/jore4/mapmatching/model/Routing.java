@@ -6,6 +6,7 @@ package fi.hsl.jore4.mapmatching.model;
 
 import fi.hsl.jore4.mapmatching.model.tables.DrLinkki;
 import fi.hsl.jore4.mapmatching.model.tables.DrLinkkiVerticesPgr;
+import fi.hsl.jore4.mapmatching.model.tables.DrPysakki;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +41,11 @@ public class Routing extends SchemaImpl {
     public final DrLinkkiVerticesPgr DR_LINKKI_VERTICES_PGR = DrLinkkiVerticesPgr.DR_LINKKI_VERTICES_PGR;
 
     /**
+     * The table <code>routing.dr_pysakki</code>.
+     */
+    public final DrPysakki DR_PYSAKKI = DrPysakki.DR_PYSAKKI;
+
+    /**
      * No further instances allowed
      */
     private Routing() {
@@ -62,6 +68,7 @@ public class Routing extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.<Table<?>>asList(
             DrLinkki.DR_LINKKI,
-            DrLinkkiVerticesPgr.DR_LINKKI_VERTICES_PGR);
+            DrLinkkiVerticesPgr.DR_LINKKI_VERTICES_PGR,
+            DrPysakki.DR_PYSAKKI);
     }
 }

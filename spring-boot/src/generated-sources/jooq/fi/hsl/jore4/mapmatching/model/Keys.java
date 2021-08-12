@@ -6,9 +6,12 @@ package fi.hsl.jore4.mapmatching.model;
 
 import fi.hsl.jore4.mapmatching.model.tables.DrLinkki;
 import fi.hsl.jore4.mapmatching.model.tables.DrLinkkiVerticesPgr;
+import fi.hsl.jore4.mapmatching.model.tables.DrPysakki;
 import fi.hsl.jore4.mapmatching.model.tables.records.DrLinkkiRecord;
 import fi.hsl.jore4.mapmatching.model.tables.records.DrLinkkiVerticesPgrRecord;
+import fi.hsl.jore4.mapmatching.model.tables.records.DrPysakkiRecord;
 
+import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
@@ -29,4 +32,11 @@ public class Keys {
     public static final UniqueKey<DrLinkkiRecord> DR_LINKKI_PKEY = Internal.createUniqueKey(DrLinkki.DR_LINKKI, DSL.name("dr_linkki_pkey"), new TableField[] { DrLinkki.DR_LINKKI.GID }, true);
     public static final UniqueKey<DrLinkkiRecord> UK_DR_LINKKI_LINK_ID = Internal.createUniqueKey(DrLinkki.DR_LINKKI, DSL.name("uk_dr_linkki_link_id"), new TableField[] { DrLinkki.DR_LINKKI.LINK_ID }, true);
     public static final UniqueKey<DrLinkkiVerticesPgrRecord> DR_LINKKI_VERTICES_PGR_PKEY = Internal.createUniqueKey(DrLinkkiVerticesPgr.DR_LINKKI_VERTICES_PGR, DSL.name("dr_linkki_vertices_pgr_pkey"), new TableField[] { DrLinkkiVerticesPgr.DR_LINKKI_VERTICES_PGR.ID }, true);
+    public static final UniqueKey<DrPysakkiRecord> DR_PYSAKKI_PKEY = Internal.createUniqueKey(DrPysakki.DR_PYSAKKI, DSL.name("dr_pysakki_pkey"), new TableField[] { DrPysakki.DR_PYSAKKI.GID }, true);
+
+    // -------------------------------------------------------------------------
+    // FOREIGN KEY definitions
+    // -------------------------------------------------------------------------
+
+    public static final ForeignKey<DrPysakkiRecord, DrLinkkiRecord> DR_PYSAKKI__FK_DR_PYSAKKI_LINK_ID = Internal.createForeignKey(DrPysakki.DR_PYSAKKI, DSL.name("fk_dr_pysakki_link_id"), new TableField[] { DrPysakki.DR_PYSAKKI.LINK_ID }, Keys.UK_DR_LINKKI_LINK_ID, new TableField[] { DrLinkki.DR_LINKKI.LINK_ID }, true);
 }

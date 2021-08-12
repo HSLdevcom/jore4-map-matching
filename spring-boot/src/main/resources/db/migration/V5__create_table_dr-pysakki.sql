@@ -1,0 +1,51 @@
+CREATE TABLE routing.dr_pysakki
+(
+    gid         INT NOT NULL PRIMARY KEY,
+    link_id     VARCHAR(20) NOT NULL,
+    link_mmlid  VARCHAR(20),
+    valtak_id   INT NOT NULL,
+    kuntakoodi  INT NOT NULL,
+    koord_x     DOUBLE PRECISION NOT NULL,
+    koord_y     DOUBLE PRECISION NOT NULL,
+    sijainti_m  DOUBLE PRECISION NOT NULL,
+    vaik_suunt  INT NOT NULL,
+    nimi_su     VARCHAR(200),
+    nimi_ru     VARCHAR(200),
+    yllapitaja  INT,
+    yllap_tunn  VARCHAR(50),
+    livi_tunn   VARCHAR(50),
+    matk_tunn   VARCHAR(50),
+    maast_x     VARCHAR(50),
+    maast_y     VARCHAR(50),
+    maast_z     VARCHAR(50),
+    liik_suunt  VARCHAR(200),
+    l_suuntima  DOUBLE PRECISION,
+    ens_vo_pv   VARCHAR(50),
+    viim_vo_pv  VARCHAR(50),
+    pys_tyyppi  VARCHAR(20),
+    aikataulu   INT,
+    katos       INT,
+    penkki      INT,
+    mainoskat   INT,
+    pyoratelin  INT,
+    s_aikataul  INT,
+    valaistus   INT,
+    estettomyy  VARCHAR(200),
+    saattomahd  INT,
+    liit_lkm    VARCHAR(200),
+    liit_lisat  VARCHAR(200),
+    pys_omist   VARCHAR(200),
+    palaute_os  VARCHAR(200),
+    lisatiedot  VARCHAR(200),
+    irti_geom   INT,
+    muokkauspv  VARCHAR(50),
+    laiturinum  VARCHAR(200),
+    liit_term   VARCHAR(200),
+    vyohyktiet  VARCHAR(200),
+    palvelutas  VARCHAR(200)
+);
+
+SELECT AddGeometryColumn('routing', 'dr_pysakki', 'geom', 3067, 'POINT', 2);
+ALTER TABLE routing.dr_pysakki ALTER COLUMN geom SET NOT NULL;
+
+ALTER TABLE routing.dr_pysakki ADD CONSTRAINT fk_dr_pysakki_link_id FOREIGN KEY (link_id) REFERENCES routing.dr_linkki (link_id);

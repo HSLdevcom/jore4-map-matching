@@ -3,9 +3,11 @@ package fi.hsl.jore4.mapmatching.service.routing
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.repository.infrastructure.LinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.NearestLinkResultDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.StopRepository
 import fi.hsl.jore4.mapmatching.repository.routing.RouteSegmentDTO
 import fi.hsl.jore4.mapmatching.repository.routing.RoutingRepository
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNetworkNodeParams
+import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.filterStopsByTraversalDirection
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedCoordinates
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.transformToResponse
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingFailureDTO
@@ -20,6 +22,7 @@ import java.util.SortedMap
 
 @Service
 class RoutingService @Autowired constructor(val linkRepository: LinkRepository,
+                                            val stopRepository: StopRepository,
                                             val routingRepository: RoutingRepository) {
 
     fun findRoute(coordinates: List<LatLng>, linkSearchRadius: Int): RoutingResponse {
@@ -53,7 +56,16 @@ class RoutingService @Autowired constructor(val linkRepository: LinkRepository,
             LOGGER.debug("Got route segments: {}", joinToLogString(routingResultSegments))
         }
 
-        return transformToResponse(routingResultSegments)
+        val linkTraversals = routingResultSegments.map { LinkTraversalDTO(it.linkId, it.isTraversalForwards) }
+        val linkIds = linkTraversals.map { it.linkId }.toSet()
+        val allStopsAlongRoute = stopRepository.findAllStops(linkIds)
+        val filteredStopsAlongRoute = filterStopsByTraversalDirection(allStopsAlongRoute, linkTraversals)
+
+        if (LOGGER.isDebugEnabled) {
+            LOGGER.debug("Found ${filteredStopsAlongRoute.size} stops along the route")
+        }
+
+        return transformToResponse(routingResultSegments, filteredStopsAlongRoute)
     }
 
     companion object {
