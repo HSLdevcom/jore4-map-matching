@@ -91,21 +91,6 @@
                              filtered in target directory. -->
                         <executions>
                             <execution>
-                                <id>flyway-clean</id>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>clean</goal>
-                                </goals>
-                                <configuration>
-                                    <!-- Flyway doesn't seem to have a "drop schemas" functionality so let's do it
-                                         manually -->
-                                    <initSql>
-                                        DROP SCHEMA IF EXISTS routing CASCADE;
-                                        DROP TABLE IF EXISTS public.flyway_schema_history CASCADE;
-                                    </initSql>
-                                </configuration>
-                            </execution>
-                            <execution>
                                 <id>flyway-migrate</id>
                                 <phase>process-resources</phase>
                                 <goals>
@@ -190,6 +175,9 @@
                                     <includeSystemCheckConstraints>false</includeSystemCheckConstraints>
                                     <includeIndexes>false</includeIndexes>
                                     <includeSystemIndexes>false</includeSystemIndexes>
+                                    <includes>
+                                        routing\..*
+                                    </includes>
                                 </database>
                                 <target>
                                     <packageName>fi.hsl.jore4.mapmatching.model</packageName>
