@@ -1,0 +1,41 @@
+name: Generate jooq
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  generate-jooq:
+    name: Verifies whether generated jooq classes have been updated
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: "11"
+          java-package: jdk
+          architecture: x64
+
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run jooq class generation
+        run: |
+          # create mvn profile for runner user
+          RUNNER_USERNAME=$(whoami)
+          cp ./spring-boot/profiles/dev/config.properties ./spring-boot/profiles/dev/config.${RUNNER_USERNAME}.properties
+
+          # generate jooq classes
+          ./development.sh generate:jooq
+
+      - name: Verify that workspace is clean, so jooq classes are up to date
+        run: '[ -z "$(git status --porcelain)" ]'
