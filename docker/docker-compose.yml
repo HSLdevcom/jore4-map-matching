@@ -1,0 +1,50 @@
+---
+version: "3.8"
+services:
+  # empty pgrouting database, for running tests and jooq generation
+  jore4-mapmatchingtestdb:
+    image: pgrouting/pgrouting:13-3.1-3.2.0
+    container_name: mapmatchingtestdb
+    restart: "unless-stopped"
+    networks:
+      - jore4
+    ports:
+      - "127.0.0.1:18000:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+  # pgrouting database populated with digiroad data, for development
+  jore4-mapmatchingdb:
+    image: hsldevcom/jore4-postgres:mapmatching
+    container_name: mapmatchingdb
+    restart: "unless-stopped"
+    networks:
+      - jore4
+    ports:
+      - "127.0.0.1:19000:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DIGIROAD_ROUTING_DUMP_VERSION=2021-09-28
+
+  jore4-mapmatching:
+    build:
+      context: ".."
+      dockerfile: "Dockerfile"
+    container_name: mapmatching
+    restart: "unless-stopped"
+    networks:
+      - jore4
+    ports:
+      - "127.0.0.1:3200:8080"
+    environment:
+      - DB_DATABASE=${POSTGRES_DB}
+      - DB_HOSTNAME=jore4-mapmatchingdb
+      - DB_USERNAME=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+
+networks:
+  jore4:

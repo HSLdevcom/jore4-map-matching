@@ -25,16 +25,10 @@ The application is using [Flyway](https://flywaydb.org/) for database migrations
 The application can be started with:
 
 ```
-    docker-compose up
+    docker-compose up --build
 ```
 
 The app will be available through http://localhost:3200.
-
-After changes has been made to the app source code, one needs to update the Docker image with:
-
-```
-    docker-compose build
-```
 
 ## Running the app within development
 
@@ -56,8 +50,46 @@ By default, Maven uses `dev` profile. With `dev` profile one needs to make a cop
 
 ## Development notes
 
-For testing migration SQL scripts, the database can be resetted into its initial state (with all migrations undone) with:
+For testing migration SQL scripts, the database can be reset into its initial state (with all migrations undone) with:
 
 ```
     mvn flyway:clean
 ```
+
+Initially will provide map matching and navigation services based upon Digiroad infrastructure network for other Jore4 components.
+
+## Docker Reference
+
+- Needs pgrouting test database to be deployed.
+- Currently we should fill it up with digiroad data (exported from digiroad-import repo), in the future could link to jore4 db with FDW (foreign data wrapper)
+- When flexible-server enables pgrouting extension, the map-matching service will point directly to the jore4 database
+instead of having its own database
+- Warning: currently map-matching always runs its own migrations. This is fine while it uses its own docker database, but should not do so
+when using the jore4 database in the future
+- How to load digiroad export to mapmatchingdb
+
+Ports:
+
+8080
+
+Environment variables:
+
+The application uses spring boot which allows overwriting configuration properties as described
+[here](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config.typesafe-configuration-properties.relaxed-binding.environment-variables).
+The docker container is also able to
+[read secrets](https://github.com/HSLdevcom/jore4-tools#read-secretssh) and expose
+them as environment variables.
+
+The following configuration properties are to be defined for each environment:
+
+| Config property         | Environment variable    | Secret name      | Example                                                                            | Description                                                                      |
+| ----------------------  | ----------------------- | ---------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| -                       | SECRET_STORE_BASE_PATH  | -                | /mnt/secrets-store                                                                 | Directory containing the docker secrets                                          |
+| db.url                  | DB_URL                  | db-url           | jdbc:postgresql://jore4-mapmatchingdb:5432/jore4mapmatching?stringtype=unspecified | The jdbc url of the database containing the routing (+Digiroad) data             |
+|                         | DB_HOSTNAME             | db-hostname      | jore4-mapmatchingdb                                                                | The IP/hostname of the routing database (if DB_URL is not set)                   |
+|                         | DB_PORT                 | db-port          | 5432                                                                               | The port of the routing database (if DB_URL is not set)                          |
+|                         | DB_DATABASE             | db-database      | jore4mapmatching                                                                   | The name of the routing database (if DB_URL is not set)                          |
+| db.username             | DB_USERNAME             | db-username      | mapmatching                                                                        | Username for the routing database                                                |
+| db.password             | DB_PASSWORD             | db-password      | ****                                                                               | Password for the routing database                                                |
+
+More properties can be found from `/profiles/prod/config.properties`
