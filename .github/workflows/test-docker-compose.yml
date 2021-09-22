@@ -1,0 +1,30 @@
+name: Test whether the dockerized version works
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-docker-compose:
+    name: verify docker-compose setup
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Start dependencies and map-matching service
+        run: ./development.sh start
+
+      - name: Verify that dockerized map-matching API is up and running
+        uses: HSLdevcom/jore4-tools/github-actions/healthcheck@healthcheck-v1
+        with:
+          command:
+            "curl --fail http://localhost:3200/actuator/health --output
+            /dev/null --silent"
+
+      - name: Testing that the dockerized map-matching service works
+        run: |
+          HTTP_RESULT=$(curl -s "http://localhost:3200/api/route/v1/driving/24.942705,60.170545;24.942962,60.170540")
+          [ $(echo "$HTTP_RESULT" | jq -r '.code' ) = "Ok" ]
