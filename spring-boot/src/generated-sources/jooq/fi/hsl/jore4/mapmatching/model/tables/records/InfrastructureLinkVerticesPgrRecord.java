@@ -11,13 +11,14 @@ import org.jooq.Record1;
 import org.jooq.Record6;
 import org.jooq.Row6;
 import org.jooq.impl.UpdatableRecordImpl;
+import org.locationtech.jts.geom.Point;
 
 
 /**
  * Topology nodes created for infrastructure links by pgRougting
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<InfrastructureLinkVerticesPgrRecord> implements Record6<Long, Integer, Integer, Integer, Integer, Object> {
+public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<InfrastructureLinkVerticesPgrRecord> implements Record6<Long, Integer, Integer, Integer, Integer, Point> {
 
     private static final long serialVersionUID = 1L;
 
@@ -92,19 +93,17 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     }
 
     /**
-     * @deprecated Unknown data type. Please define an explicit {@link org.jooq.Binding} to specify how this type should be handled. Deprecation can be turned off using {@literal <deprecationOnUnknownTypes/>} in your code generator configuration.
+     * Setter for <code>routing.infrastructure_link_vertices_pgr.the_geom</code>.
      */
-    @Deprecated
-    public void setTheGeom(Object value) {
+    public void setTheGeom(Point value) {
         set(5, value);
     }
 
     /**
-     * @deprecated Unknown data type. Please define an explicit {@link org.jooq.Binding} to specify how this type should be handled. Deprecation can be turned off using {@literal <deprecationOnUnknownTypes/>} in your code generator configuration.
+     * Getter for <code>routing.infrastructure_link_vertices_pgr.the_geom</code>.
      */
-    @Deprecated
-    public Object getTheGeom() {
-        return get(5);
+    public Point getTheGeom() {
+        return (Point) get(5);
     }
 
     // -------------------------------------------------------------------------
@@ -121,12 +120,12 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     // -------------------------------------------------------------------------
 
     @Override
-    public Row6<Long, Integer, Integer, Integer, Integer, Object> fieldsRow() {
+    public Row6<Long, Integer, Integer, Integer, Integer, Point> fieldsRow() {
         return (Row6) super.fieldsRow();
     }
 
     @Override
-    public Row6<Long, Integer, Integer, Integer, Integer, Object> valuesRow() {
+    public Row6<Long, Integer, Integer, Integer, Integer, Point> valuesRow() {
         return (Row6) super.valuesRow();
     }
 
@@ -155,12 +154,8 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
         return InfrastructureLinkVerticesPgr.INFRASTRUCTURE_LINK_VERTICES_PGR.EOUT;
     }
 
-    /**
-     * @deprecated Unknown data type. Please define an explicit {@link org.jooq.Binding} to specify how this type should be handled. Deprecation can be turned off using {@literal <deprecationOnUnknownTypes/>} in your code generator configuration.
-     */
-    @Deprecated
     @Override
-    public Field<Object> field6() {
+    public Field<Point> field6() {
         return InfrastructureLinkVerticesPgr.INFRASTRUCTURE_LINK_VERTICES_PGR.THE_GEOM;
     }
 
@@ -189,12 +184,8 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
         return getEout();
     }
 
-    /**
-     * @deprecated Unknown data type. Please define an explicit {@link org.jooq.Binding} to specify how this type should be handled. Deprecation can be turned off using {@literal <deprecationOnUnknownTypes/>} in your code generator configuration.
-     */
-    @Deprecated
     @Override
-    public Object component6() {
+    public Point component6() {
         return getTheGeom();
     }
 
@@ -223,12 +214,8 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
         return getEout();
     }
 
-    /**
-     * @deprecated Unknown data type. Please define an explicit {@link org.jooq.Binding} to specify how this type should be handled. Deprecation can be turned off using {@literal <deprecationOnUnknownTypes/>} in your code generator configuration.
-     */
-    @Deprecated
     @Override
-    public Object value6() {
+    public Point value6() {
         return getTheGeom();
     }
 
@@ -262,18 +249,14 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
         return this;
     }
 
-    /**
-     * @deprecated Unknown data type. Please define an explicit {@link org.jooq.Binding} to specify how this type should be handled. Deprecation can be turned off using {@literal <deprecationOnUnknownTypes/>} in your code generator configuration.
-     */
-    @Deprecated
     @Override
-    public InfrastructureLinkVerticesPgrRecord value6(Object value) {
+    public InfrastructureLinkVerticesPgrRecord value6(Point value) {
         setTheGeom(value);
         return this;
     }
 
     @Override
-    public InfrastructureLinkVerticesPgrRecord values(Long value1, Integer value2, Integer value3, Integer value4, Integer value5, Object value6) {
+    public InfrastructureLinkVerticesPgrRecord values(Long value1, Integer value2, Integer value3, Integer value4, Integer value5, Point value6) {
         value1(value1);
         value2(value2);
         value3(value3);
@@ -297,7 +280,7 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     /**
      * Create a detached, initialised InfrastructureLinkVerticesPgrRecord
      */
-    public InfrastructureLinkVerticesPgrRecord(Long id, Integer cnt, Integer chk, Integer ein, Integer eout, Object theGeom) {
+    public InfrastructureLinkVerticesPgrRecord(Long id, Integer cnt, Integer chk, Integer ein, Integer eout, Point theGeom) {
         super(InfrastructureLinkVerticesPgr.INFRASTRUCTURE_LINK_VERTICES_PGR);
 
         setId(id);

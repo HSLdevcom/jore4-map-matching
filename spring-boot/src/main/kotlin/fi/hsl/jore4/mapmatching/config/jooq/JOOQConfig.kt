@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.config
+package fi.hsl.jore4.mapmatching.config.jooq
 
 import org.jooq.conf.Settings
 import org.jooq.conf.SettingsTools
