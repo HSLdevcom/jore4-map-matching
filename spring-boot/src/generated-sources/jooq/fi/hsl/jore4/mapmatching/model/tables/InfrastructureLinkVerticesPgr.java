@@ -4,6 +4,7 @@
 package fi.hsl.jore4.mapmatching.model.tables;
 
 
+import fi.hsl.jore4.mapmatching.config.jooq.converter.PointBinding;
 import fi.hsl.jore4.mapmatching.model.Keys;
 import fi.hsl.jore4.mapmatching.model.Routing;
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkVerticesPgrRecord;
@@ -25,6 +26,7 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.locationtech.jts.geom.Point;
 
 
 /**
@@ -74,10 +76,9 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     public final TableField<InfrastructureLinkVerticesPgrRecord, Integer> EOUT = createField(DSL.name("eout"), SQLDataType.INTEGER, this, "");
 
     /**
-     * @deprecated Unknown data type. Please define an explicit {@link org.jooq.Binding} to specify how this type should be handled. Deprecation can be turned off using {@literal <deprecationOnUnknownTypes/>} in your code generator configuration.
+     * The column <code>routing.infrastructure_link_vertices_pgr.the_geom</code>.
      */
-    @Deprecated
-    public final TableField<InfrastructureLinkVerticesPgrRecord, Object> THE_GEOM = createField(DSL.name("the_geom"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"extensions\".\"geometry\""), this, "");
+    public final TableField<InfrastructureLinkVerticesPgrRecord, Point> THE_GEOM = createField(DSL.name("the_geom"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"extensions\".\"geometry\""), this, "", new PointBinding());
 
     private InfrastructureLinkVerticesPgr(Name alias, Table<InfrastructureLinkVerticesPgrRecord> aliased) {
         this(alias, aliased, null);
@@ -163,7 +164,7 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     // -------------------------------------------------------------------------
 
     @Override
-    public Row6<Long, Integer, Integer, Integer, Integer, Object> fieldsRow() {
+    public Row6<Long, Integer, Integer, Integer, Integer, Point> fieldsRow() {
         return (Row6) super.fieldsRow();
     }
 }
