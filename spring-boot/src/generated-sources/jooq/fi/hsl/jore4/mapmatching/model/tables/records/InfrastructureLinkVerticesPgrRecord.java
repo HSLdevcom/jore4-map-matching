@@ -6,19 +6,20 @@ package fi.hsl.jore4.mapmatching.model.tables.records;
 
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLinkVerticesPgr;
 
+import org.geolatte.geom.C2D;
+import org.geolatte.geom.Point;
 import org.jooq.Field;
 import org.jooq.Record1;
 import org.jooq.Record6;
 import org.jooq.Row6;
 import org.jooq.impl.UpdatableRecordImpl;
-import org.locationtech.jts.geom.Point;
 
 
 /**
  * Topology nodes created for infrastructure links by pgRougting
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<InfrastructureLinkVerticesPgrRecord> implements Record6<Long, Integer, Integer, Integer, Integer, Point> {
+public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<InfrastructureLinkVerticesPgrRecord> implements Record6<Long, Integer, Integer, Integer, Integer, Point<C2D>> {
 
     private static final long serialVersionUID = 1L;
 
@@ -95,15 +96,15 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     /**
      * Setter for <code>routing.infrastructure_link_vertices_pgr.the_geom</code>.
      */
-    public void setTheGeom(Point value) {
+    public void setTheGeom(Point<C2D> value) {
         set(5, value);
     }
 
     /**
      * Getter for <code>routing.infrastructure_link_vertices_pgr.the_geom</code>.
      */
-    public Point getTheGeom() {
-        return (Point) get(5);
+    public Point<C2D> getTheGeom() {
+        return (Point<C2D>) get(5);
     }
 
     // -------------------------------------------------------------------------
@@ -120,12 +121,12 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     // -------------------------------------------------------------------------
 
     @Override
-    public Row6<Long, Integer, Integer, Integer, Integer, Point> fieldsRow() {
+    public Row6<Long, Integer, Integer, Integer, Integer, Point<C2D>> fieldsRow() {
         return (Row6) super.fieldsRow();
     }
 
     @Override
-    public Row6<Long, Integer, Integer, Integer, Integer, Point> valuesRow() {
+    public Row6<Long, Integer, Integer, Integer, Integer, Point<C2D>> valuesRow() {
         return (Row6) super.valuesRow();
     }
 
@@ -155,7 +156,7 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     }
 
     @Override
-    public Field<Point> field6() {
+    public Field<Point<C2D>> field6() {
         return InfrastructureLinkVerticesPgr.INFRASTRUCTURE_LINK_VERTICES_PGR.THE_GEOM;
     }
 
@@ -185,7 +186,7 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     }
 
     @Override
-    public Point component6() {
+    public Point<C2D> component6() {
         return getTheGeom();
     }
 
@@ -215,7 +216,7 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     }
 
     @Override
-    public Point value6() {
+    public Point<C2D> value6() {
         return getTheGeom();
     }
 
@@ -250,13 +251,13 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     }
 
     @Override
-    public InfrastructureLinkVerticesPgrRecord value6(Point value) {
+    public InfrastructureLinkVerticesPgrRecord value6(Point<C2D> value) {
         setTheGeom(value);
         return this;
     }
 
     @Override
-    public InfrastructureLinkVerticesPgrRecord values(Long value1, Integer value2, Integer value3, Integer value4, Integer value5, Point value6) {
+    public InfrastructureLinkVerticesPgrRecord values(Long value1, Integer value2, Integer value3, Integer value4, Integer value5, Point<C2D> value6) {
         value1(value1);
         value2(value2);
         value3(value3);
@@ -280,7 +281,7 @@ public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<Inf
     /**
      * Create a detached, initialised InfrastructureLinkVerticesPgrRecord
      */
-    public InfrastructureLinkVerticesPgrRecord(Long id, Integer cnt, Integer chk, Integer ein, Integer eout, Point theGeom) {
+    public InfrastructureLinkVerticesPgrRecord(Long id, Integer cnt, Integer chk, Integer ein, Integer eout, Point<C2D> theGeom) {
         super(InfrastructureLinkVerticesPgr.INFRASTRUCTURE_LINK_VERTICES_PGR);
 
         setId(id);
