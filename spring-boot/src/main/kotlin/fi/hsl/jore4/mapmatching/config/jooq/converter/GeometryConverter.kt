@@ -1,16 +1,21 @@
 package fi.hsl.jore4.mapmatching.config.jooq.converter
 
-import org.locationtech.jts.geom.Geometry
+import org.geolatte.geom.ByteBuffer
+import org.geolatte.geom.C2D
+import org.geolatte.geom.Geometry
+import org.geolatte.geom.GeometryType
+import org.geolatte.geom.codec.Wkb
+import org.geolatte.geom.codec.Wkt
 import org.locationtech.jts.io.ParseException
-import org.locationtech.jts.io.WKBReader
-import org.locationtech.jts.io.WKTWriter
 
-class GeometryConverter(private val typeName: String) {
+class GeometryConverter(private val geometryType: GeometryType) {
 
-    fun from(databaseObject: Any?): Geometry? = databaseObject?.let {
+    fun from(databaseObject: Any?): Geometry<C2D>? = databaseObject?.let {
         try {
-            val geom: Geometry = read(it.toString())
-            require(typeName == geom.geometryType) { "Unsupported geometry type: ${geom.geometryType}" }
+            val geom: Geometry<C2D> = read(it.toString())
+            require(geometryType == geom.geometryType) {
+                "Unsupported geometry type: ${geom.geometryType.camelCased}"
+            }
             geom
         } catch (e: ParseException) {
             throw IllegalArgumentException("Failed to parse EWKB string", e)
@@ -19,17 +24,8 @@ class GeometryConverter(private val typeName: String) {
 
     companion object {
 
-        private val WKB_READER = WKBReader()
-        private val WKT_WRITER = WKTWriter(2)
+        fun to(geom: Geometry<C2D>?): String? = geom?.let { Wkt.toWkt(geom) }
 
-        fun to(geom: Geometry?): String? = geom?.let {
-            val wkt = WKT_WRITER.write(geom)
-
-            // Note that the WKTWriter does _not_ support the PostGIS EWKT format.
-            // Hence, we must manually add the SRID prefix.
-            return "SRID=${geom.srid};$wkt"
-        }
-
-        internal fun read(hex: String): Geometry = WKB_READER.read(WKBReader.hexToBytes(hex))
+        internal fun read(hex: String): Geometry<C2D> = Wkb.fromWkb(ByteBuffer.from(hex)) as Geometry<C2D>
     }
 }

@@ -1,25 +1,26 @@
 package fi.hsl.jore4.mapmatching.config.jooq.converter
 
+import org.geolatte.geom.C2D
+import org.geolatte.geom.GeometryType
+import org.geolatte.geom.Point
 import org.jooq.Converter
-import org.locationtech.jts.geom.Geometry
-import org.locationtech.jts.geom.Point
 
 /**
  * Converts between Point geometries and PostGIS EWKT/EWKB formats.
  */
-class PointConverter : Converter<Any, Point> {
+class PointConverter : Converter<Any, Point<C2D>> {
 
     override fun from(databaseObject: Any?) = CONVERTER.from(databaseObject) as Point?
 
-    override fun to(userObject: Point?): Any? = GeometryConverter.to(userObject)
+    override fun to(userObject: Point<C2D>?): Any? = GeometryConverter.to(userObject)
 
     override fun fromType() = Any::class.java
 
-    override fun toType() = Point::class.java
+    override fun toType() = Point::class.java as Class<Point<C2D>>
 
     companion object {
         val INSTANCE = PointConverter()
 
-        private val CONVERTER = GeometryConverter(Geometry.TYPENAME_POINT)
+        private val CONVERTER = GeometryConverter(GeometryType.POINT)
     }
 }
