@@ -12,6 +12,8 @@ import fi.hsl.jore4.mapmatching.model.tables.records.DrLinkkiRecord;
 import java.util.Arrays;
 import java.util.List;
 
+import org.geolatte.geom.C2D;
+import org.geolatte.geom.LineString;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Name;
@@ -25,7 +27,6 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
-import org.locationtech.jts.geom.LineString;
 
 
 /**
@@ -117,7 +118,7 @@ public class DrLinkki extends TableImpl<DrLinkkiRecord> {
     /**
      * The column <code>routing.dr_linkki.geom</code>.
      */
-    public final TableField<DrLinkkiRecord, LineString> GEOM = createField(DSL.name("geom"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"extensions\".\"geometry\"").nullable(false), this, "", new LineStringBinding());
+    public final TableField<DrLinkkiRecord, LineString<C2D>> GEOM = createField(DSL.name("geom"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"extensions\".\"geometry\"").nullable(false), this, "", new LineStringBinding());
 
     private DrLinkki(Name alias, Table<DrLinkkiRecord> aliased) {
         this(alias, aliased, null);
@@ -198,7 +199,7 @@ public class DrLinkki extends TableImpl<DrLinkkiRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row14<Integer, String, Integer, Integer, Integer, Integer, String, String, String, Integer, Integer, Double, Double, LineString> fieldsRow() {
+    public Row14<Integer, String, Integer, Integer, Integer, Integer, String, String, String, Integer, Integer, Double, Double, LineString<C2D>> fieldsRow() {
         return (Row14) super.fieldsRow();
     }
 }
