@@ -12,6 +12,8 @@ import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkVerticesP
 import java.util.Arrays;
 import java.util.List;
 
+import org.geolatte.geom.C2D;
+import org.geolatte.geom.Point;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Identity;
@@ -26,7 +28,6 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
-import org.locationtech.jts.geom.Point;
 
 
 /**
@@ -78,7 +79,7 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     /**
      * The column <code>routing.infrastructure_link_vertices_pgr.the_geom</code>.
      */
-    public final TableField<InfrastructureLinkVerticesPgrRecord, Point> THE_GEOM = createField(DSL.name("the_geom"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"extensions\".\"geometry\""), this, "", new PointBinding());
+    public final TableField<InfrastructureLinkVerticesPgrRecord, Point<C2D>> THE_GEOM = createField(DSL.name("the_geom"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"extensions\".\"geometry\""), this, "", new PointBinding());
 
     private InfrastructureLinkVerticesPgr(Name alias, Table<InfrastructureLinkVerticesPgrRecord> aliased) {
         this(alias, aliased, null);
@@ -164,7 +165,7 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     // -------------------------------------------------------------------------
 
     @Override
-    public Row6<Long, Integer, Integer, Integer, Integer, Point> fieldsRow() {
+    public Row6<Long, Integer, Integer, Integer, Integer, Point<C2D>> fieldsRow() {
         return (Row6) super.fieldsRow();
     }
 }

@@ -6,20 +6,21 @@ package fi.hsl.jore4.mapmatching.model.tables.records;
 
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink;
 
+import org.geolatte.geom.C2D;
+import org.geolatte.geom.LineString;
 import org.jooq.Field;
 import org.jooq.JSONB;
 import org.jooq.Record1;
 import org.jooq.Record13;
 import org.jooq.Row13;
 import org.jooq.impl.UpdatableRecordImpl;
-import org.locationtech.jts.geom.LineString;
 
 
 /**
  * The infrastructure links, e.g. road or rail elements: https://www.transmodel-cen.eu/model/index.htm?goto=2:1:1:1:453
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class InfrastructureLinkRecord extends UpdatableRecordImpl<InfrastructureLinkRecord> implements Record13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString, Long, Long, Double, Double> {
+public class InfrastructureLinkRecord extends UpdatableRecordImpl<InfrastructureLinkRecord> implements Record13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> {
 
     private static final long serialVersionUID = 1L;
 
@@ -138,15 +139,15 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     /**
      * Setter for <code>routing.infrastructure_link.geom</code>. The 2D linestring geometry describing the shape of the infrastructure link. The requirement of two-dimensionality and metric unit is imposed by pgRouting. The EPSG:3067 coordinate system applied is the same as is used in Digiroad.
      */
-    public void setGeom(LineString value) {
+    public void setGeom(LineString<C2D> value) {
         set(8, value);
     }
 
     /**
      * Getter for <code>routing.infrastructure_link.geom</code>. The 2D linestring geometry describing the shape of the infrastructure link. The requirement of two-dimensionality and metric unit is imposed by pgRouting. The EPSG:3067 coordinate system applied is the same as is used in Digiroad.
      */
-    public LineString getGeom() {
-        return (LineString) get(8);
+    public LineString<C2D> getGeom() {
+        return (LineString<C2D>) get(8);
     }
 
     /**
@@ -219,12 +220,12 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     // -------------------------------------------------------------------------
 
     @Override
-    public Row13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString, Long, Long, Double, Double> fieldsRow() {
+    public Row13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> fieldsRow() {
         return (Row13) super.fieldsRow();
     }
 
     @Override
-    public Row13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString, Long, Long, Double, Double> valuesRow() {
+    public Row13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> valuesRow() {
         return (Row13) super.valuesRow();
     }
 
@@ -269,7 +270,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public Field<LineString> field9() {
+    public Field<LineString<C2D>> field9() {
         return InfrastructureLink.INFRASTRUCTURE_LINK.GEOM;
     }
 
@@ -334,7 +335,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public LineString component9() {
+    public LineString<C2D> component9() {
         return getGeom();
     }
 
@@ -399,7 +400,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public LineString value9() {
+    public LineString<C2D> value9() {
         return getGeom();
     }
 
@@ -472,7 +473,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public InfrastructureLinkRecord value9(LineString value) {
+    public InfrastructureLinkRecord value9(LineString<C2D> value) {
         setGeom(value);
         return this;
     }
@@ -502,7 +503,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public InfrastructureLinkRecord values(Long value1, Integer value2, String value3, Integer value4, Integer value5, Integer value6, Integer value7, JSONB value8, LineString value9, Long value10, Long value11, Double value12, Double value13) {
+    public InfrastructureLinkRecord values(Long value1, Integer value2, String value3, Integer value4, Integer value5, Integer value6, Integer value7, JSONB value8, LineString<C2D> value9, Long value10, Long value11, Double value12, Double value13) {
         value1(value1);
         value2(value2);
         value3(value3);
@@ -533,7 +534,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     /**
      * Create a detached, initialised InfrastructureLinkRecord
      */
-    public InfrastructureLinkRecord(Long infrastructureLinkId, Integer infrastructureSourceId, String externalLinkId, Integer trafficFlowDirectionType, Integer municipalityCode, Integer externalLinkType, Integer externalLinkState, JSONB name, LineString geom, Long startNodeId, Long endNodeId, Double cost, Double reverseCost) {
+    public InfrastructureLinkRecord(Long infrastructureLinkId, Integer infrastructureSourceId, String externalLinkId, Integer trafficFlowDirectionType, Integer municipalityCode, Integer externalLinkType, Integer externalLinkState, JSONB name, LineString<C2D> geom, Long startNodeId, Long endNodeId, Double cost, Double reverseCost) {
         super(InfrastructureLink.INFRASTRUCTURE_LINK);
 
         setInfrastructureLinkId(infrastructureLinkId);
