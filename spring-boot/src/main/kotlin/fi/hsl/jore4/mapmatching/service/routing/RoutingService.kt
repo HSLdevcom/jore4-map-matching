@@ -3,6 +3,7 @@ package fi.hsl.jore4.mapmatching.service.routing
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.repository.infrastructure.LinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.NearestLinkResultDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.StopInfoDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.StopRepository
 import fi.hsl.jore4.mapmatching.repository.routing.RouteSegmentDTO
 import fi.hsl.jore4.mapmatching.repository.routing.RoutingRepository
@@ -67,11 +68,12 @@ class RoutingService @Autowired constructor(val linkRepository: LinkRepository,
 
         val linkTraversals = routingResultSegments.map { LinkTraversalDTO(it.linkId, it.isTraversalForwards) }
         val linkIds = linkTraversals.map { it.linkId }.toSet()
-        val allStopsAlongRoute = stopRepository.findAllStops(linkIds)
-        val filteredStopsAlongRoute = filterStopsByTraversalDirection(allStopsAlongRoute, linkTraversals)
+        val allStopsAlongRoute: List<StopInfoDTO> = stopRepository.findAllStops(linkIds)
+        val filteredStopsAlongRoute: List<StopInfoDTO> =
+            filterStopsByTraversalDirection(allStopsAlongRoute, linkTraversals)
 
         if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Found ${filteredStopsAlongRoute.size} stops along the route")
+            LOGGER.debug("Found stops along the route: {}", joinToLogString(filteredStopsAlongRoute))
         }
 
         return transformToResponse(routingResultSegments, filteredStopsAlongRoute)

@@ -7,5 +7,5 @@ interface StopRepository {
     /**
      * Finds all stops associated with the given set of link identifiers.
      */
-    fun findAllStops(linkIds: Set<String>): List<DrPysakkiRecord>
+    fun findAllStops(linkIds: Set<String>): List<StopInfoDTO>
 }
