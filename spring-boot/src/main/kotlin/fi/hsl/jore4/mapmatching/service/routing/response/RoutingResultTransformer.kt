@@ -1,32 +1,16 @@
-package fi.hsl.jore4.mapmatching.service.routing.internal
+package fi.hsl.jore4.mapmatching.service.routing.response
 
 import fi.hsl.jore4.mapmatching.model.ExternalLinkReference
 import fi.hsl.jore4.mapmatching.model.PathTraversal
-import fi.hsl.jore4.mapmatching.model.tables.records.PublicTransportStopRecord
-import fi.hsl.jore4.mapmatching.service.routing.response.LinkTraversalDTO
-import fi.hsl.jore4.mapmatching.service.routing.response.PublicTransportStopDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.StopInfoDTO
 import fi.hsl.jore4.mapmatching.service.routing.response.PublicTransportStopDTO.LinkReferenceDTO
-import fi.hsl.jore4.mapmatching.service.routing.response.ResponseCode
-import fi.hsl.jore4.mapmatching.service.routing.response.RouteResultDTO
-import fi.hsl.jore4.mapmatching.service.routing.response.RoutingFailureDTO
-import fi.hsl.jore4.mapmatching.service.routing.response.RoutingResponse
-import fi.hsl.jore4.mapmatching.service.routing.response.RoutingSuccessDTO
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousLines
-import fi.hsl.jore4.mapmatching.util.GeolatteUtils.transformFrom3067To4326
-import fi.hsl.jore4.mapmatching.util.MultilingualString
-import fi.hsl.jore4.mapmatching.util.component.IJsonbConverter
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class RoutingResultTransformerImpl @Autowired constructor(val jsonbConverter: IJsonbConverter)
-    : IRoutingResultTransformer {
+object RoutingResultTransformer {
 
-    override fun createResponse(paths: List<PathTraversal>,
-                                stopsAlongRoute: List<PublicTransportStopRecord>): RoutingResponse {
-
+    fun createResponse(paths: List<PathTraversal>, stopsAlongRoute: List<StopInfoDTO>): RoutingResponse {
         if (paths.isEmpty()) {
             return RoutingFailureDTO.noSegment("Could not find a matching route")
         }
@@ -58,15 +42,13 @@ class RoutingResultTransformerImpl @Autowired constructor(val jsonbConverter: IJ
         return RoutingSuccessDTO(ResponseCode.Ok, listOf(route))
     }
 
-    private fun toPublicTransportStopDTO(stop: PublicTransportStopRecord,
+    private fun toPublicTransportStopDTO(stop: StopInfoDTO,
                                          externalLinkRef: ExternalLinkReference): PublicTransportStopDTO {
 
-        val name = jsonbConverter.fromJson(stop.name, MultilingualString::class.java)
-
         return PublicTransportStopDTO(stop.publicTransportStopId,
-                                      stop.publicTransportStopNationalId,
-                                      transformFrom3067To4326(stop.geom),
-                                      name,
+                                      stop.stopNationalId,
+                                      stop.stopPoint.toGeolattePoint(),
+                                      stop.name,
                                       LinkReferenceDTO(stop.locatedOnInfrastructureLinkId, externalLinkRef))
     }
 }

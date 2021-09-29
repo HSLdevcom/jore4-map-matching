@@ -3,9 +3,10 @@ package fi.hsl.jore4.mapmatching.service.routing
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
-import fi.hsl.jore4.mapmatching.model.tables.records.PublicTransportStopRecord
+import fi.hsl.jore4.mapmatching.repository.infrastructure.DirectionType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.StopInfoDTO
 import fi.hsl.jore4.mapmatching.service.routing.internal.NodeResolutionParams
 
 object RoutingServiceHelper {
@@ -26,8 +27,8 @@ object RoutingServiceHelper {
         return NodeResolutionParams(vehicleType, links)
     }
 
-    internal fun filterStopsByDirectionOfTraversal(allStopsAlongLinks: List<PublicTransportStopRecord>,
-                                                   paths: List<PathTraversal>): List<PublicTransportStopRecord> {
+    internal fun filterStopsByDirectionOfTraversal(allStopsAlongLinks: List<StopInfoDTO>,
+                                                   paths: List<PathTraversal>): List<StopInfoDTO> {
 
         val uniqueLinkIds: Set<Long> = paths.map { it.infrastructureLinkId }.toSet()
 
@@ -39,8 +40,7 @@ object RoutingServiceHelper {
             }
         }
 
-        val stopsByLinkId: Map<Long, List<PublicTransportStopRecord>> =
-            allStopsAlongLinks.groupBy { it.locatedOnInfrastructureLinkId }
+        val stopsByLinkId: Map<Long, List<StopInfoDTO>> = allStopsAlongLinks.groupBy { it.locatedOnInfrastructureLinkId }
 
         return paths.flatMap { path ->
             val linkTraversedForwards = path.alongLinkDirection
@@ -48,17 +48,17 @@ object RoutingServiceHelper {
             stopsByLinkId
                 .getOrDefault(path.infrastructureLinkId, emptyList())
                 .filter { stop ->
-                    when (stop.isOnDirectionOfLinkForwardTraversal) {
-                        true -> linkTraversedForwards
-                        false -> !linkTraversedForwards
-                        null -> false
+                    when (stop.direction) {
+                        DirectionType.ALONG_DIGITISED_DIRECTION -> linkTraversedForwards
+                        DirectionType.AGAINST_DIGITISED_DIRECTION -> !linkTraversedForwards
+                        else -> false
                     }
                 }
                 .sortedWith(compareBy {
                     if (linkTraversedForwards)
-                        it.distanceFromLinkStartInMeters
+                        it.distanceOfStopFromStartOfLink
                     else
-                        -it.distanceFromLinkStartInMeters
+                        -it.distanceOfStopFromStartOfLink
                 })
         }
     }

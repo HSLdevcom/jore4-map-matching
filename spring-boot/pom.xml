@@ -26,7 +26,6 @@
         <!-- Library versions -->
         <flyway.version>8.0.4</flyway.version>
         <geolatte.version>1.8.2</geolatte.version>
-        <geotools.version>25.2</geotools.version>
         <jooq.version>3.14.13</jooq.version>
         <postgresql.version>42.3.1</postgresql.version>
         <spring-boot.version>2.5.6</spring-boot.version>
@@ -34,20 +33,6 @@
         <!-- Other properties -->
         <start.class>fi.hsl.jore4.mapmatching.MapMatchingApplicationKt</start.class>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>osgeo</id>
-            <name>OSGeo Release Repository</name>
-            <url>https://repo.osgeo.org/repository/release/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
-    </repositories>
 
     <profiles>
         <profile>
@@ -528,24 +513,6 @@
             <groupId>org.geolatte</groupId>
             <artifactId>geolatte-geojson</artifactId>
             <version>${geolatte.version}</version>
-        </dependency>
-
-        <!-- GeoTools for transformation between coordinate systems. -->
-        <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-main</artifactId>
-            <version>${geotools.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.geotools</groupId>
-                    <artifactId>gt-http</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-epsg-hsql</artifactId>
-            <version>${geotools.version}</version>
         </dependency>
 
         <dependency>
