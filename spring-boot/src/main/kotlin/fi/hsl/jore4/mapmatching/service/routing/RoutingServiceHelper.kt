@@ -2,7 +2,6 @@ package fi.hsl.jore4.mapmatching.service.routing
 
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.repository.infrastructure.NearestLinkResultDTO
-import fi.hsl.jore4.mapmatching.repository.routing.NetworkNodeParams
 import fi.hsl.jore4.mapmatching.repository.routing.RouteSegmentDTO
 import fi.hsl.jore4.mapmatching.service.routing.response.LinkDTO
 import fi.hsl.jore4.mapmatching.service.routing.response.ResponseCode
@@ -10,7 +9,6 @@ import fi.hsl.jore4.mapmatching.service.routing.response.RouteResultDTO
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingFailureDTO
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingSuccessDTO
-import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousLines
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
@@ -26,17 +24,10 @@ object RoutingServiceHelper {
         return coordinates.filter { !matchedCoordinates.contains(it) }
     }
 
-    internal fun createNetworkNodeParams(links: Collection<NearestLinkResultDTO>): NetworkNodeParams {
-        if (links.size < 2) {
-            throw IllegalArgumentException("Must have at least 2 link objects")
-        }
-
-        val firstLinkEndpoints = links.first().getNetworkNodeIds()
-        val lastLinkEndpoints = links.last().getNetworkNodeIds()
-        val interimNodes = links.drop(1).dropLast(1).map { it.closerNodeId }
-
-        return NetworkNodeParams(firstLinkEndpoints, lastLinkEndpoints, filterOutConsecutiveDuplicates(interimNodes))
-    }
+    internal fun createNodeResolutionParams(links: Collection<NearestLinkResultDTO>) =
+        NodeResolutionParams(links.map {
+            NodeResolutionParams.SelectedLink(it.linkId, it.closerNodeId, it.furtherNodeId)
+        })
 
     internal fun transformToResponse(routeSegments: List<RouteSegmentDTO>): RoutingResponse {
         if (routeSegments.isEmpty()) {

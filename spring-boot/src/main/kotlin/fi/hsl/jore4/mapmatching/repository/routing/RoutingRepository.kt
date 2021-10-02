@@ -2,5 +2,5 @@ package fi.hsl.jore4.mapmatching.repository.routing
 
 interface RoutingRepository {
 
-    fun findRouteViaNetworkNodes(params: NetworkNodeParams): List<RouteSegmentDTO>
+    fun findRouteViaNetworkNodes(nodeIds: List<Int>): List<RouteSegmentDTO>
 }

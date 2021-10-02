@@ -5,7 +5,7 @@ import fi.hsl.jore4.mapmatching.repository.infrastructure.LinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.NearestLinkResultDTO
 import fi.hsl.jore4.mapmatching.repository.routing.RouteSegmentDTO
 import fi.hsl.jore4.mapmatching.repository.routing.RoutingRepository
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNetworkNodeParams
+import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeResolutionParams
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedCoordinates
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.transformToResponse
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingFailureDTO
@@ -21,7 +21,8 @@ import java.util.SortedMap
 
 @Service
 class RoutingService @Autowired constructor(val linkRepository: LinkRepository,
-                                            val routingRepository: RoutingRepository) {
+                                            val routingRepository: RoutingRepository,
+                                            val nodeService: NodeServiceInternal) {
 
     @Transactional(readOnly = true)
     fun findRoute(coordinates: List<LatLng>, linkSearchRadius: Int): RoutingResponse {
@@ -48,11 +49,17 @@ class RoutingService @Autowired constructor(val linkRepository: LinkRepository,
             return RoutingFailureDTO.noSegment(findUnmatchedCoordinates(nearestLinks, filteredCoords))
         }
 
-        val routingResultSegments: List<RouteSegmentDTO> =
-            routingRepository.findRouteViaNetworkNodes(createNetworkNodeParams(nearestLinks))
+        val nodeParams: NodeResolutionParams = createNodeResolutionParams(nearestLinks)
+        val nodeIds: List<Int> = nodeService.resolveSimpleNodeSequence(nodeParams)
 
         if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Got route segments: {}", joinToLogString(routingResultSegments))
+            LOGGER.debug("Resolved params ${nodeParams.toCompactString()} to node sequence $nodeIds")
+        }
+
+        val routingResultSegments: List<RouteSegmentDTO> = routingRepository.findRouteViaNetworkNodes(nodeIds)
+
+        if (LOGGER.isDebugEnabled) {
+            LOGGER.debug("Got route segments for node sequence $nodeIds: {}", joinToLogString(routingResultSegments))
         }
 
         return transformToResponse(routingResultSegments)
