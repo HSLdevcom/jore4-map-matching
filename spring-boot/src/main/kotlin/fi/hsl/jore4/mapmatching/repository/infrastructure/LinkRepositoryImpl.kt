@@ -16,8 +16,10 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     private data class ClosestLinkResult(val coordinateSeqNum: Int,
                                          val infrastructureLinkId: Long,
                                          val closestDistance: Double,
-                                         val closerNodeId: Long,
-                                         val furtherNodeId: Long)
+                                         val startNodeId: Long,
+                                         val endNodeId: Long,
+                                         val distanceToStartNode: Double,
+                                         val distanceToEndNode: Double)
 
     @Transactional(readOnly = true)
     override fun findClosestLinks(coordinates: List<LatLng>, distanceInMeters: Double): Map<Int, SnapToLinkDTO> {
@@ -37,10 +39,18 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 val coordinateSeqNum = rs.getInt("seq")
                 val infrastructureLinkId = rs.getLong("infrastructure_link_id")
                 val closestDistance = rs.getDouble("closest_distance")
-                val closerNodeId = rs.getLong("closer_node_id")
-                val furtherNodeId = rs.getLong("further_node_id")
+                val startNodeId = rs.getLong("start_node_id")
+                val endNodeId = rs.getLong("end_node_id")
+                val distanceToStartNode = rs.getDouble("start_node_distance")
+                val distanceToEndNode = rs.getDouble("end_node_distance")
 
-                ClosestLinkResult(coordinateSeqNum, infrastructureLinkId, closestDistance, closerNodeId, furtherNodeId)
+                ClosestLinkResult(coordinateSeqNum,
+                                  infrastructureLinkId,
+                                  closestDistance,
+                                  startNodeId,
+                                  endNodeId,
+                                  distanceToStartNode,
+                                  distanceToEndNode)
             }
 
         return resultItems.associateBy(keySelector = { it.coordinateSeqNum }, valueTransform = {
@@ -49,10 +59,12 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
             SnapToLinkDTO(point,
                           distanceInMeters,
-                          it.infrastructureLinkId,
-                          it.closestDistance,
-                          it.closerNodeId,
-                          it.furtherNodeId)
+                          SnappedLinkState(it.infrastructureLinkId,
+                                           it.closestDistance,
+                                           it.startNodeId,
+                                           it.endNodeId,
+                                           it.distanceToStartNode,
+                                           it.distanceToEndNode))
         })
     }
 
@@ -62,14 +74,10 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 "    path[1] AS seq, \n" +
                 "    closest_link.infrastructure_link_id, \n" +
                 "    closest_link.distance AS closest_distance, \n" +
-                "    CASE \n" +
-                "        WHEN node_distance.start_node <= node_distance.end_node THEN start_node.id \n" +
-                "        ELSE end_node.id \n" +
-                "    END AS closer_node_id, \n" +
-                "    CASE \n" +
-                "        WHEN node_distance.start_node > node_distance.end_node THEN start_node.id \n" +
-                "        ELSE end_node.id \n" +
-                "    END AS further_node_id \n" +
+                "    closest_link.start_node_id, \n" +
+                "    closest_link.end_node_id, \n" +
+                "    coords.geom <-> start_node.the_geom AS start_node_distance, \n" +
+                "    coords.geom <-> end_node.the_geom AS end_node_distance \n" +
                 "FROM ( \n" +
                 "    SELECT (g.gdump).path AS path, (g.gdump).geom AS geom \n" +
                 "    FROM ( \n" +
@@ -88,11 +96,6 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 ") AS closest_link \n" +
                 "INNER JOIN routing.infrastructure_link_vertices_pgr start_node ON start_node.id = closest_link.start_node_id \n" +
                 "INNER JOIN routing.infrastructure_link_vertices_pgr end_node ON end_node.id = closest_link.end_node_id \n" +
-                "CROSS JOIN LATERAL ( \n" +
-                "    SELECT \n" +
-                "        coords.geom <-> start_node.the_geom AS start_node, \n" +
-                "        coords.geom <-> end_node.the_geom AS end_node \n" +
-                ") AS node_distance \n" +
                 "ORDER BY seq ASC; \n"
     }
 }
