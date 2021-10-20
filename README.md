@@ -89,6 +89,10 @@ A successful routing response has the following JSON structure:
                         type: "LineString",
                         coordinates: [...]
                     },
+                    infrastructureLinkName: {
+                        fi: <string>,
+                        sv: <string>
+                    },
                     distance: <double>,
                     weight: <double>
                 },
