@@ -12,41 +12,43 @@ The microservice consists of (1) Spring Boot application written in [Kotlin](htt
 
 API NOT YET IMPLEMENTED.
 
-## Implementation details
+## Building
 
-The app is built with [Maven](https://maven.apache.org/). There are defined two Maven profiles: `dev` and `prod`. In `prod` profile, which is used by docker-compose setup, the database migrations are executed when the app starts. In `dev` profile the database migrations are instead run during Maven build.
+The app is built with [Maven](https://maven.apache.org/). The application is using [Flyway](https://flywaydb.org/) for database migrations and [jOOQ](https://www.jooq.org/) as query builder.
 
-In `dev` profile the database migrations are run within `process-resource` lifecycle phase (before source code compilation). The jOOQ metadata classes are updated in the same lifecycle phase.
+There are defined two Maven profiles: `dev` and `prod`. By default, Maven uses `dev` profile.
 
-The application is using [Flyway](https://flywaydb.org/) for database migrations and [jOOQ](https://www.jooq.org/) as query builder.
+In `prod` profile, which is used by docker-compose setup, the database migrations are executed when the app starts.
+
+In `dev` profile the database migrations are instead run during Maven build within `process-resource` lifecycle phase which occurs before source code compilation. The jOOQ metadata classes are updated in the same lifecycle phase.
+
+With `dev` profile one needs to make a copy of the build configuration file as follows:
+
+```
+    cp profiles/dev/config.properties profiles/dev/config.<my-username>.properties
+```
 
 ## Running the app in docker-compose
 
 The application can be started with:
 
 ```
-    docker-compose up --build
+    ./development start
 ```
 
 The app will be available through http://localhost:3200.
 
 ## Running the app within development
 
-Within development it is meant to start the PostGIS database via docker-compose and start the application manually with Maven (in order to avoid the need to rebuild Docker image) as follows:
+Within development it is intended to start the PostGIS database via docker-compose and start the application manually with Maven (in order to avoid the need to rebuild Docker image) as follows:
 
 ```
-    docker-compose up -d postgis
+    ./development start:deps
     cd spring-boot
     mvn clean spring-boot:run
 ```
 
 Then, the app will be available through http://localhost:8080.
-
-By default, Maven uses `dev` profile. With `dev` profile one needs to make a copy of the build configuration file as follows:
-
-```
-    cp profiles/dev/config.properties profiles/dev/config.<my-username>.properties
-```
 
 ## Development notes
 
@@ -56,17 +58,14 @@ For testing migration SQL scripts, the database can be reset into its initial st
     mvn flyway:clean
 ```
 
-Initially will provide map matching and navigation services based upon Digiroad infrastructure network for other Jore4 components.
-
 ## Docker Reference
 
-- Needs pgrouting test database to be deployed.
-- Currently we should fill it up with digiroad data (exported from digiroad-import repo), in the future could link to jore4 db with FDW (foreign data wrapper)
-- When flexible-server enables pgrouting extension, the map-matching service will point directly to the jore4 database
+- Needs pgRouting-enabled test database to be deployed.
+- Currently we should fill it up with Digiroad data (exported from [digiroad-import repo](https://github.com/HSLdevcom/jore4-digiroad-import-experiment)), in the future could link to JORE4 database with FDW (Foreign Data Wrapper extension)
+- When flexible-server enables pgRouting extension, the map-matching service will point directly to the JORE4 database
 instead of having its own database
-- Warning: currently map-matching always runs its own migrations. This is fine while it uses its own docker database, but should not do so
-when using the jore4 database in the future
-- How to load digiroad export to mapmatchingdb
+- Warning: currently map-matching always runs its own migrations. This is fine while it uses its own Docker database, but should not do so when using the JORE4 database in the future
+- How to load Digiroad export to mapmatchingdb
 
 Ports:
 
