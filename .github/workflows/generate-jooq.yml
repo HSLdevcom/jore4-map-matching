@@ -28,14 +28,14 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Run jooq class generation
+      - name: Run jOOQ class generation
         run: |
-          # create mvn profile for runner user
+          # create mandatory Maven configuration file for runner user
           RUNNER_USERNAME=$(whoami)
-          cp ./spring-boot/profiles/dev/config.properties ./spring-boot/profiles/dev/config.${RUNNER_USERNAME}.properties
+          touch ./spring-boot/profiles/dev/config.${RUNNER_USERNAME}.properties
 
-          # generate jooq classes
+          # generate jOOQ classes
           ./development.sh generate:jooq
 
-      - name: Verify that workspace is clean, so jooq classes are up to date
+      - name: Verify that workspace is clean, so jOOQ classes are up to date
         run: '[ -z "$(git status --porcelain)" ]'

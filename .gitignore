@@ -14,7 +14,7 @@ spring-boot/target/**
 
 # Developer profiles #
 ######################
-spring-boot/profiles/**/config.*.properties
+spring-boot/profiles/dev/config.*.properties
 
 # Logs and databases #
 ######################
