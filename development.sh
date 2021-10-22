@@ -8,11 +8,21 @@ cd "${WD}"
 
 DOCKER_COMPOSE_CMD="docker-compose -f ./docker/docker-compose.yml"
 
-function start_dependencies {
+function start_main_database {
+  $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingdb
+}
+
+function start_test_database {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingtestdb
 }
 
-function start_all {
+function start {
+  start_main_database
+  while ! pg_isready -h localhost -p 19000
+  do
+    echo "waiting for database to spin up"
+    sleep 2;
+  done
   $DOCKER_COMPOSE_CMD up --build -d
 }
 
@@ -30,7 +40,7 @@ function usage {
   Usage $0 <command>
 
   start:deps
-    Start the dependencies the map-matching service needs
+    Start the main database and test database for development
 
   start
     Start the dependencies and the map-matching service
@@ -48,11 +58,12 @@ function usage {
 
 case $1 in
 start:deps)
-  start_dependencies
+  start_main_database
+  start_test_database
   ;;
 
 start)
-  start_all
+  start
   ;;
 
 stop)
@@ -60,7 +71,7 @@ stop)
   ;;
 
 generate:jooq)
-  start_dependencies
+  start_test_database
   while ! pg_isready -h localhost -p 18000
   do
     echo "waiting for db to spin up"

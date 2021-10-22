@@ -87,6 +87,24 @@
                         <artifactId>flyway-maven-plugin</artifactId>
                         <version>${flyway.version}</version>
 
+                        <configuration>
+                            <driver>${test.db.driver}</driver>
+                            <url>${test.db.url}</url>
+                            <user>${test.db.username}</user>
+                            <password>${test.db.password}</password>
+                            <locations>
+                                <location>classpath:db/migration</location>
+                            </locations>
+                            <schemas>
+                                <schema>routing</schema>
+                                <schema>extensions</schema>
+                                <schema>flyway</schema>
+                            </schemas>
+                            <defaultSchema>flyway</defaultSchema>
+                            <createSchemas>true</createSchemas>
+                            <initSql>SET search_path = extensions, routing;</initSql>
+                        </configuration>
+
                         <!-- Run Flyway migrations in process-resources phase in order to have Flyway properties file
                              filtered in target directory. -->
                         <executions>
@@ -108,8 +126,7 @@
                         </dependencies>
                     </plugin>
 
-                    <!-- jOOQ generator scans the empty DB to detect the tables created by
-                         the Flyway migration. -->
+                    <!-- jOOQ generator scans the DB to detect the tables created by the Flyway migration. -->
                     <plugin>
                         <groupId>org.jooq</groupId>
                         <artifactId>jooq-codegen-maven</artifactId>
@@ -147,10 +164,10 @@
 
                         <configuration>
                             <jdbc>
-                                <driver>${db.driver}</driver>
-                                <url>${db.url}</url>
-                                <user>${db.username}</user>
-                                <password>${db.password}</password>
+                                <driver>${test.db.driver}</driver>
+                                <url>${test.db.url}</url>
+                                <user>${test.db.username}</user>
+                                <password>${test.db.password}</password>
                             </jdbc>
                             <generator>
                                 <name>org.jooq.codegen.JavaGenerator</name>
@@ -308,24 +325,6 @@
                 </dependencies>
             </plugin>
 
-            <!-- Introduce common Flyway Maven plugin configuration globally. Having configuration defined
-                 globally makes it possible to invoke the plugin also from command line during development. -->
-            <plugin>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-maven-plugin</artifactId>
-                <version>${flyway.version}</version>
-
-                <configuration>
-                    <!-- Having Flyway configuration file reside in output directory requires that property
-                         filtering and copying is done before accessing the configuration. The plugin executions
-                         related to or relying upon Flyway migrations must not be executed prior to the
-                         `process-resources` lifecycle phase. -->
-                    <configFiles>
-                        <configFile>${project.build.outputDirectory}/db/flyway.maven-plugin.properties</configFile>
-                    </configFiles>
-                </configuration>
-            </plugin>
-
             <!-- Set Java compiling to occur after Kotlin compilation. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -378,19 +377,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-
-            <!-- Configure JAR build. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <!-- Exclude Flyway configuration in order to not expose DB access details through it. -->
-                    <excludes>
-                        <exclude>**/flyway.maven-plugin.properties</exclude>
-                    </excludes>
-                </configuration>
             </plugin>
         </plugins>
     </build>
