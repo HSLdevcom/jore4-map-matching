@@ -37,10 +37,11 @@
             <id>prod</id>
             <properties>
                 <build.profile.id>prod</build.profile.id>
+                <build.property.file>profiles/${build.profile.id}/config.properties</build.property.file>
             </properties>
             <build>
                 <filters>
-                    <filter>profiles/prod/config.properties</filter>
+                    <filter>${build.property.file}</filter>
                 </filters>
             </build>
         </profile>
@@ -50,6 +51,7 @@
             <properties>
                 <build.profile.id>dev</build.profile.id>
                 <build.property.file>profiles/${build.profile.id}/config.properties</build.property.file>
+                <build.property.user-override.file>profiles/${build.profile.id}/config.${user.name}.properties</build.property.user-override.file>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -57,14 +59,62 @@
             <build>
                 <filters>
                     <filter>${build.property.file}</filter>
-                    <filter>profiles/${build.profile.id}/config.${user.name}.properties</filter>
+                    <filter>${build.property.user-override.file}</filter>
                 </filters>
                 <plugins>
-                    <!-- Read properties files for build plugins. ATM, jOOQ plugin needs to access properties. -->
+
+                    <plugin>
+                        <!-- Workaround for Maven not being able to set a property conditionally based on
+                             environment variable -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.8</version>
+                        <executions>
+                            <execution>
+                                <id>init-db-properties</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <exportAntProperties>true</exportAntProperties>
+                                    <!-- Set database hostname and port number properties used in constructing
+                                         JDBC URLs. The values depend on whether the app is run locally or inside
+                                         a Docker container. -->
+                                    <target>
+                                        <property environment="env"/>
+                                        <condition property="DB_HOST" value="${env.DEV_DB_HOST}" else="localhost">
+                                            <isset property="env.DEV_DB_HOST" />
+                                        </condition>
+                                        <condition property="DB_PORT" value="${env.DEV_DB_PORT}" else="18000">
+                                            <isset property="env.DEV_DB_PORT" />
+                                        </condition>
+                                        <condition property="TEST_DB_HOST" value="${env.TEST_DB_HOST}" else="localhost">
+                                            <isset property="env.TEST_DB_HOST" />
+                                        </condition>
+                                        <condition property="TEST_DB_PORT" value="${env.TEST_DB_PORT}" else="20000">
+                                            <isset property="env.TEST_DB_PORT" />
+                                        </condition>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Read properties files for build plugins.
+                         ATM, Flyway and jOOQ plugins need access to database properties. -->
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>properties-maven-plugin</artifactId>
                         <version>${build-properties.plugin.version}</version>
+
+                        <configuration>
+                            <files>
+                                <file>${build.property.file}</file>
+                                <file>${build.property.user-override.file}</file>
+                            </files>
+                        </configuration>
+
                         <executions>
                             <execution>
                                 <id>read-config-properties</id>
@@ -72,28 +122,53 @@
                                 <goals>
                                     <goal>read-project-properties</goal>
                                 </goals>
-                                <configuration>
-                                    <files>
-                                        <file>${build.property.file}</file>
-                                    </files>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
 
-                    <!-- Run migrations during build phase. -->
                     <plugin>
                         <groupId>org.flywaydb</groupId>
                         <artifactId>flyway-maven-plugin</artifactId>
                         <version>${flyway.version}</version>
 
-                        <!-- Run Flyway migrations in process-resources phase in order to have Flyway properties file
-                             filtered in target directory. -->
+                        <configuration>
+                            <driver>${db.driver}</driver>
+                            <url>${db.url}</url>
+                            <user>${db.username}</user>
+                            <password>${db.password}</password>
+
+                            <!-- Below is common configuration for the development and test databases. -->
+
+                            <locations>
+                                <location>filesystem:${project.basedir}/src/main/resources/db/migration</location>
+                            </locations>
+                            <schemas>
+                                <schema>routing</schema>
+                                <schema>extensions</schema>
+                                <schema>flyway</schema>
+                            </schemas>
+                            <defaultSchema>flyway</defaultSchema>
+                            <createSchemas>true</createSchemas>
+                            <initSql>SET search_path = extensions, routing;</initSql>
+                        </configuration>
+
                         <executions>
+                            <!-- Run migrations during build phase. Migrations are run into the test database to enable
+                                 jOOQ metaclass generation. -->
                             <execution>
                                 <id>flyway-migrate</id>
                                 <phase>process-resources</phase>
+
+                                <!-- Configure test database to be used during build. -->
+                                <configuration>
+                                    <driver>${test.db.driver}</driver>
+                                    <url>${test.db.url}</url>
+                                    <user>${test.db.username}</user>
+                                    <password>${test.db.password}</password>
+                                </configuration>
+
                                 <goals>
+                                    <goal>clean</goal>
                                     <goal>migrate</goal>
                                 </goals>
                             </execution>
@@ -147,10 +222,10 @@
 
                         <configuration>
                             <jdbc>
-                                <driver>${db.driver}</driver>
-                                <url>${db.url}</url>
-                                <user>${db.username}</user>
-                                <password>${db.password}</password>
+                                <driver>${test.db.driver}</driver>
+                                <url>${test.db.url}</url>
+                                <user>${test.db.username}</user>
+                                <password>${test.db.password}</password>
                             </jdbc>
                             <generator>
                                 <name>org.jooq.codegen.JavaGenerator</name>
@@ -308,24 +383,6 @@
                 </dependencies>
             </plugin>
 
-            <!-- Introduce common Flyway Maven plugin configuration globally. Having configuration defined
-                 globally makes it possible to invoke the plugin also from command line during development. -->
-            <plugin>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-maven-plugin</artifactId>
-                <version>${flyway.version}</version>
-
-                <configuration>
-                    <!-- Having Flyway configuration file reside in output directory requires that property
-                         filtering and copying is done before accessing the configuration. The plugin executions
-                         related to or relying upon Flyway migrations must not be executed prior to the
-                         `process-resources` lifecycle phase. -->
-                    <configFiles>
-                        <configFile>${project.build.outputDirectory}/db/flyway.maven-plugin.properties</configFile>
-                    </configFiles>
-                </configuration>
-            </plugin>
-
             <!-- Set Java compiling to occur after Kotlin compilation. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -378,19 +435,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-
-            <!-- Configure JAR build. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <!-- Exclude Flyway configuration in order to not expose DB access details through it. -->
-                    <excludes>
-                        <exclude>**/flyway.maven-plugin.properties</exclude>
-                    </excludes>
-                </configuration>
             </plugin>
         </plugins>
     </build>

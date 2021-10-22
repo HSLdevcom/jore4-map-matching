@@ -14,8 +14,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Start dependencies and map-matching service
-        run: ./development.sh start
+      - name: Start database and map-matching service
+        run: ./production.sh start
 
       - name: Verify that dockerized map-matching API is up and running
         uses: HSLdevcom/jore4-tools/github-actions/healthcheck@healthcheck-v1

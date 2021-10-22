@@ -6,14 +6,25 @@ set -euo pipefail
 WD=$(dirname "$0")
 cd "${WD}"
 
-DOCKER_COMPOSE_CMD="docker-compose -f ./docker/docker-compose.yml"
+DOCKER_COMPOSE_CMD="docker-compose -f ./docker/docker-compose.dev.yml"
 
-function start_dependencies {
+function start_dev_database {
+  $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingdevdb
+}
+
+function start_test_database {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingtestdb
 }
 
-function start_all {
-  $DOCKER_COMPOSE_CMD up --build -d
+function start {
+  start_dev_database
+  start_test_database
+  while ! pg_isready -h localhost -p 18000
+  do
+    echo "waiting for database to spin up"
+    sleep 2;
+  done
+  $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatching
 }
 
 function stop_all {
@@ -30,16 +41,16 @@ function usage {
   Usage $0 <command>
 
   start:deps
-    Start the dependencies the map-matching service needs
+    Start development and test database
 
   start
-    Start the dependencies and the map-matching service
+    Start databases and the map-matching service
 
   stop
-    Stop all map-matching related containers
+    Stop all map-matching related Docker containers
 
   generate:jooq
-    Start the dependencies and generate JOOQ classes
+    Generate jOOQ classes based on tables existing in the test database
 
   help
     Show this usage information
@@ -48,11 +59,12 @@ function usage {
 
 case $1 in
 start:deps)
-  start_dependencies
+  start_dev_database
+  start_test_database
   ;;
 
 start)
-  start_all
+  start
   ;;
 
 stop)
@@ -60,8 +72,8 @@ stop)
   ;;
 
 generate:jooq)
-  start_dependencies
-  while ! pg_isready -h localhost -p 18000
+  start_test_database
+  while ! pg_isready -h localhost -p 20000
   do
     echo "waiting for db to spin up"
     sleep 2;

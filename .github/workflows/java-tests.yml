@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Start test environment in the background
+      - name: Start development environment in the background
         run: ./development.sh start:deps
 
       - name: Set up JDK 11
@@ -33,9 +33,9 @@ jobs:
 
       - name: Run tests and try building a package
         run: |
-          # create mvn profile for runner user
+          # create mandatory Maven configuration file for runner user
           RUNNER_USERNAME=$(whoami)
-          cp ./spring-boot/profiles/dev/config.properties ./spring-boot/profiles/dev/config.${RUNNER_USERNAME}.properties
+          touch ./spring-boot/profiles/dev/config.${RUNNER_USERNAME}.properties
 
           # run tests
           cd ./spring-boot && mvn clean verify
