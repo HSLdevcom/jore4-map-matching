@@ -16,7 +16,7 @@ The microservice consists of:
 
 The application is started with:
 
-```
+```sh
     ./development.sh start
 ```
 
@@ -26,13 +26,13 @@ The application will be available through http://localhost:3200. The application
 
 Within development the application can be started with:
 
-```
+```sh
     ./development.sh start:dev
 ```
 
 This avoids rebuilding Docker image every the code is changed. The application is started locally via Maven (not inside a Docker container) but the database dependencies are launched via docker-compose setup.
 
-The application will be available through http://localhost:8080. The database used by the application is initially empty. Hence, no meaningful routing results can be expected (unless some data is populated e.g. from a dump available through [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import-experiment)).
+The application will be available through http://localhost:8080. The database used by the application is initially empty. Hence, no meaningful routing results can be expected (unless some data is populated e.g. from a dump available through [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import)).
 
 ## How to use API
 
@@ -48,11 +48,11 @@ In `prod` profile, the database is expected to be already set up with the schema
 
 In `dev` profile, there are two databases used:
 -  _Development database_ containing the application data. The database is initially empty. Database migrations are run into the database during application start.
-- _Test database_ that is used in tests and within jOOQ metaclass generation. Database migrations are run during Maven build within the `process-resource` lifecycle phase which occurs just before source code compilation. The jOOQ metadata classes are updated in the same lifecycle phase after the migrations.
+- _Test database_ that is used in tests and within jOOQ code generation. Database migrations are run during Maven build within the `process-resource` lifecycle phase which occurs just before source code compilation. The jOOQ classes are updated in the same lifecycle phase after the migrations.
 
 With `dev` profile one needs to create a user-specific build configuration file e.g. as follows:
 
-```
+```sh
     touch spring-boot/profiles/dev/config.$(whoami).properties
 ```
 
@@ -60,14 +60,15 @@ With `dev` profile one needs to create a user-specific build configuration file 
 
 Within development, the currently recommended way of importing infrastructure data is to:
 1. Start map-matching server with the commands below. Within launch, the server will run database migration scripts into the development database. The scripts will initialise schemas, tables, constraints and indices. Also a couple of enumeration tables are populated with a fixed set of data.
-    ```
+
+    ```sh
         ./development.sh start:dev
     ```
-2. Populate data (infrastructure links, infrastructure sources, network topology and associations of links to vehicle types) from [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import-experiment). This does not involve creating tables neither populating enumeration tables (which already contain data coming from the migration scripts).
+2. Populate data (infrastructure links, infrastructure sources, network topology and associations of links to vehicle types) from [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import). This does not involve creating tables neither populating enumeration tables (which already contain data coming from the migration scripts).
 
 To generate a Digiroad-based dump, issue the following commands in the Digiroad import repository:
 
-```
+```sh
     ./build_docker_image.sh
     ./import_digiroad_shapefiles.sh
     ./export_routing_schema.sh
@@ -75,7 +76,7 @@ To generate a Digiroad-based dump, issue the following commands in the Digiroad 
 
 To restore table data from the dump (generated into `workdir/pgdump` directory), issue the following command (with `<date>` placeholder replaced with a proper value):
 
-```
+```sh
     pg_restore -1 -a --use-list=digiroad_r_routing_<date>.pgdump.no-enums.only-links.list -h localhost -p 18000 -d jore4mapmatching -U mapmatching digiroad_r_routing_<date>.pgdump
 ```
 
@@ -87,8 +88,8 @@ Within each build cycle, the test database is cleaned and re-initialised with da
 
 The development database can be re-initialised (without recreating it) by running:
 
-```
-    mvn antrun:run@init-db-properties properties:read-project-properties flyway:clean flyway:migrate
+```sh
+    mvn properties:read-project-properties flyway:clean flyway:migrate
 ```
 
 Currently, there is a discrepancy between production database and the development/test database with regard to schema arrangement. In production database, **postgis** and **pgrouting** extensions are created into _public_ schema whereas in the development/test database the extensions are created into a separate _extensions_ schema.  Having a separate _extensions_ schema makes it easier to develop the app. This discrepancy does not affect the functioning of the app.
@@ -99,9 +100,9 @@ In the development/test database there exists also a _flyway_ schema (for keepin
 
 - Needs **postgis** and **pgrouting** extensions enabled in the production database.
 - Currently, there exist three databases in the docker-compose setup:
-    1. One for productional use that is pre-populated with infrastructure network data and pgRouting topology (exported from [digiroad-import repo](https://github.com/HSLdevcom/jore4-digiroad-import-experiment)). In the future, this might get replaced by linking to JORE4 database via FDW (Foreign Data Wrapper extension)
+    1. One for productional use that is pre-populated with infrastructure network data and pgRouting topology (exported from [digiroad-import repo](https://github.com/HSLdevcom/jore4-digiroad-import)). In the future, this might get replaced by linking to JORE4 database via FDW (Foreign Data Wrapper extension)
     2. Development database. Initially empty with no schema, tables or data.
-    3. Test database. Initially empty like development database. Used within test execution and for generating jOOQ metaclasses.
+    3. Test database. Initially empty like development database. Used within test execution and for generating jOOQ classes.
 - When Azure flexible-server enables pgRouting extension, it is considered that the map-matching service could be changed to point directly to the JORE4 database (in production setup) instead of having its own database
 - How to load infrastructure network into mapmatchingdb
 
@@ -120,7 +121,7 @@ them as environment variables.
 The following configuration properties are to be defined for each environment:
 
 | Config property         | Environment variable    | Secret name      | Example                                                                            | Description                                                                      |
-| ----------------------  | ----------------------- | ---------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| ----------------------- | ----------------------- | ---------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | -                       | SECRET_STORE_BASE_PATH  | -                | /mnt/secrets-store                                                                 | Directory containing the docker secrets                                          |
 | db.url                  | DB_URL                  | db-url           | jdbc:postgresql://jore4-mapmatchingdb:5432/jore4mapmatching?stringtype=unspecified | The JDBC URL of the database containing the routing data (based on Digiroad)     |
 |                         | DB_HOSTNAME             | db-hostname      | jore4-mapmatchingdb                                                                | The IP/hostname of the routing database (if DB_URL is not set)                   |
