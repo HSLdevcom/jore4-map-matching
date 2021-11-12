@@ -2,6 +2,7 @@ package fi.hsl.jore4.mapmatching.repository.routing
 
 import fi.hsl.jore4.mapmatching.model.ExternalLinkReference
 import fi.hsl.jore4.mapmatching.model.PathTraversal
+import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.extractLineStringG2D
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.fromEwkb
 import fi.hsl.jore4.mapmatching.util.MultilingualString
@@ -22,7 +23,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                                    val jsonbConverter: IJsonbConverter) : IRoutingRepository {
 
     @Transactional(readOnly = true)
-    override fun findRouteViaNetworkNodes(nodeIds: List<Long>): List<RouteLinkDTO> {
+    override fun findRouteViaNetworkNodes(vehicleType: VehicleType, nodeIds: List<Long>): List<RouteLinkDTO> {
         val parameterSetter = PreparedStatementSetter { pstmt ->
             val conn: Connection = pstmt.connection
 
@@ -30,7 +31,9 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             pstmt.setArray(1, conn.createArrayOf("bigint", nodeIds.toTypedArray()))
         }
 
-        return jdbcTemplate.jdbcOperations.query(FIND_ROUTE_VIA_NODES_SQL, parameterSetter) { rs: ResultSet, _: Int ->
+        val query: String = getQueryForFindingRouteViaNodes(vehicleType)
+
+        return jdbcTemplate.jdbcOperations.query(query, parameterSetter) { rs: ResultSet, _: Int ->
             val routeSeqNum = rs.getInt("seq")
             val routeLegSeqNum = rs.getInt("path_seq")
 
@@ -63,7 +66,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     }
 
     companion object {
-        private const val FIND_ROUTE_VIA_NODES_SQL =
+        private fun getQueryForFindingRouteViaNodes(vehicleType: VehicleType): String =
             "SELECT \n" +
                 "    pt.seq, \n" +
                 "    pt.path_seq, \n" +
@@ -81,7 +84,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 "FROM ( \n" +
                 "    SELECT seq, path_seq, node, edge, pgr.cost \n" +
                 "    FROM pgr_dijkstraVia( \n" +
-                "        'SELECT infrastructure_link_id AS id, start_node_id AS source, end_node_id AS target, cost, reverse_cost FROM routing.infrastructure_link', \n" +
+                "        ${QueryHelper.getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleType)}, \n" +
                 "        ?::bigint[], \n" +
                 "        directed := true, \n" +
                 "        strict := true, \n" +
