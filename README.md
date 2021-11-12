@@ -17,7 +17,7 @@ The microservice consists of:
 The application is started with:
 
 ```sh
-    ./development.sh start
+./development.sh start
 ```
 
 The application will be available through http://localhost:3200. The application uses a pre-populated database and is ready for use.
@@ -27,7 +27,7 @@ The application will be available through http://localhost:3200. The application
 Within development the application can be started with:
 
 ```sh
-    ./development.sh start:dev
+./development.sh start:dev
 ```
 
 This avoids rebuilding Docker image every the code is changed. The application is started locally via Maven (not inside a Docker container) but the database dependencies are launched via docker-compose setup.
@@ -53,7 +53,7 @@ In `dev` profile, there are two databases used:
 With `dev` profile one needs to create a user-specific build configuration file e.g. as follows:
 
 ```sh
-    touch spring-boot/profiles/dev/config.$(whoami).properties
+touch spring-boot/profiles/dev/config.$(whoami).properties
 ```
 
 ## Populating data within development
@@ -62,22 +62,22 @@ Within development, the currently recommended way of importing infrastructure da
 1. Start map-matching server with the commands below. Within launch, the server will run database migration scripts into the development database. The scripts will initialise schemas, tables, constraints and indices. Also a couple of enumeration tables are populated with a fixed set of data.
 
     ```sh
-        ./development.sh start:dev
+    ./development.sh start:dev
     ```
 2. Populate data (infrastructure links, infrastructure sources, network topology and associations of links to vehicle types) from [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import). This does not involve creating tables neither populating enumeration tables (which already contain data coming from the migration scripts).
 
 To generate a Digiroad-based dump, issue the following commands in the Digiroad import repository:
 
 ```sh
-    ./build_docker_image.sh
-    ./import_digiroad_shapefiles.sh
-    ./export_routing_schema.sh
+./build_docker_image.sh
+./import_digiroad_shapefiles.sh
+./export_routing_schema.sh
 ```
 
 To restore table data from the dump (generated into `workdir/pgdump` directory), issue the following command (with `<date>` placeholder replaced with a proper value):
 
 ```sh
-    pg_restore -1 -a --use-list=digiroad_r_routing_<date>.pgdump.no-enums.only-links.list -h localhost -p 18000 -d jore4mapmatching -U mapmatching digiroad_r_routing_<date>.pgdump
+pg_restore -1 -a --use-list=digiroad_r_routing_<date>.pgdump.no-enums.only-links.list -h localhost -p 18000 -d jore4mapmatching -U mapmatching digiroad_r_routing_<date>.pgdump
 ```
 
 The list argument passed to `pg_restore` command will constrain the restoration of the dump file to data of selected tables only. Hence, enumeration tables are excluded as well as create table statements.
@@ -89,7 +89,7 @@ Within each build cycle, the test database is cleaned and re-initialised with da
 The development database can be re-initialised (without recreating it) by running:
 
 ```sh
-    mvn properties:read-project-properties flyway:clean flyway:migrate
+mvn properties:read-project-properties flyway:clean flyway:migrate
 ```
 
 Currently, there is a discrepancy between production database and the development/test database with regard to schema arrangement. In production database, **postgis** and **pgrouting** extensions are created into _public_ schema whereas in the development/test database the extensions are created into a separate _extensions_ schema.  Having a separate _extensions_ schema makes it easier to develop the app. This discrepancy does not affect the functioning of the app.
