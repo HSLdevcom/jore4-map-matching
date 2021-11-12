@@ -2,6 +2,7 @@ package fi.hsl.jore4.mapmatching.service.routing
 
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.PathTraversal
+import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
@@ -29,7 +30,10 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
     : IRoutingService {
 
     @Transactional(readOnly = true)
-    override fun findRoute(coordinates: List<LatLng>, linkQueryDistance: Int): RoutingResponse {
+    override fun findRoute(coordinates: List<LatLng>,
+                           vehicleType: VehicleType,
+                           linkQueryDistance: Int): RoutingResponse {
+
         val filteredCoords = filterOutConsecutiveDuplicates(coordinates)
 
         if (filteredCoords.distinct().size < 2) {
@@ -37,7 +41,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         }
 
         val closestLinksResult: SortedMap<Int, SnapToLinkDTO> = linkRepository
-            .findClosestLinks(filteredCoords, linkQueryDistance.toDouble())
+            .findClosestLinks(filteredCoords, vehicleType, linkQueryDistance.toDouble())
             .toSortedMap()
 
         if (LOGGER.isDebugEnabled) {
@@ -53,14 +57,14 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingFailureDTO.noSegment(findUnmatchedCoordinates(closestLinks, filteredCoords))
         }
 
-        val nodeParams: NodeResolutionParams = createNodeResolutionParams(closestLinks)
+        val nodeParams: NodeResolutionParams = createNodeResolutionParams(vehicleType, closestLinks)
         val nodeIds: List<Long> = nodeService.resolveNodeSequence(nodeParams)
 
         if (LOGGER.isDebugEnabled) {
             LOGGER.debug("Resolved params ${nodeParams.toCompactString()} to node sequence $nodeIds")
         }
 
-        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIds)
+        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(vehicleType, nodeIds)
 
         if (LOGGER.isDebugEnabled) {
             LOGGER.debug("Got route links for node sequence $nodeIds: {}", joinToLogString(routeLinks))

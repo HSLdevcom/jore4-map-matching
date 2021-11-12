@@ -1,5 +1,7 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
+import fi.hsl.jore4.mapmatching.model.VehicleType
+
 interface INodeRepository {
 
     /**
@@ -13,5 +15,6 @@ interface INodeRepository {
      */
     fun resolveNodeSequence(startLinkId: Long,
                             endLinkId: Long,
-                            nodeSequences: Iterable<List<Long>>): List<Long>?
+                            nodeSequences: Iterable<List<Long>>,
+                            vehicleType: VehicleType): List<Long>?
 }
