@@ -1,6 +1,7 @@
 package fi.hsl.jore4.mapmatching.repository.infrastructure
 
 import fi.hsl.jore4.mapmatching.model.LatLng
+import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toMultiPoint
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,7 +23,10 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                          val distanceToEndNode: Double)
 
     @Transactional(readOnly = true)
-    override fun findClosestLinks(coordinates: List<LatLng>, distanceInMeters: Double): Map<Int, SnapToLinkDTO> {
+    override fun findClosestLinks(coordinates: List<LatLng>,
+                                  vehicleType: VehicleType,
+                                  distanceInMeters: Double): Map<Int, SnapToLinkDTO> {
+
         if (coordinates.isEmpty()) {
             return emptyMap()
         }
@@ -32,6 +36,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
         val params = MapSqlParameterSource()
             .addValue("ewkb", ewkb)
+            .addValue("vehicleType", vehicleType.value)
             .addValue("distance", distanceInMeters)
 
         val resultItems: List<ClosestLinkResult> =
@@ -90,7 +95,10 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 "        link.end_node_id, \n" +
                 "        coords.geom <-> link.geom AS distance \n" +
                 "    FROM routing.infrastructure_link link \n" +
+                "    INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe \n" +
+                "        ON safe.infrastructure_link_id = link.infrastructure_link_id \n" +
                 "    WHERE ST_DWithin(coords.geom, link.geom, :distance) \n" +
+                "        AND safe.vehicle_type = :vehicleType \n" +
                 "    ORDER BY distance \n" +
                 "    LIMIT 1 \n" +
                 ") AS closest_link \n" +

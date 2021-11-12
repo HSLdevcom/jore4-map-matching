@@ -26,7 +26,7 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
         val startLinkId: Long = params.firstLink.infrastructureLinkId
         val endLinkId: Long = params.lastLink.infrastructureLinkId
 
-        return nodeRepository.resolveNodeSequence(startLinkId, endLinkId, nodeSequences)
+        return nodeRepository.resolveNodeSequence(startLinkId, endLinkId, nodeSequences, params.vehicleType)
             ?: throw IllegalStateException("Could not resolve node sequence from ${params.toCompactString()}")
     }
 

@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
+import fi.hsl.jore4.mapmatching.model.VehicleType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.PreparedStatementCreator
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -12,7 +13,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
     override fun resolveNodeSequence(startLinkId: Long,
                                      endLinkId: Long,
-                                     nodeSequences: Iterable<List<Long>>): List<Long>? {
+                                     nodeSequences: Iterable<List<Long>>,
+                                     vehicleType: VehicleType): List<Long>? {
 
         val iter: Iterator<List<Long>> = nodeSequences.iterator()
 
@@ -29,8 +31,10 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             throw IllegalArgumentException("Maximum of 4 node sequences exceeded")
         }
 
+        val query: String = getQueryForResolvingBestNodeSequenceOf4(vehicleType)
+
         val preparedStatementCreator = PreparedStatementCreator { conn ->
-            val pstmt: PreparedStatement = conn.prepareStatement(RESOLVE_BEST_NODE_SEQUENCE_OF_4_SQL)
+            val pstmt: PreparedStatement = conn.prepareStatement(query)
 
             // Setting array parameters can only be done through a java.sql.Connection object.
             pstmt.setArray(1, conn.createArrayOf("bigint", seq1.toTypedArray()))
@@ -53,7 +57,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     }
 
     companion object {
-        private const val RESOLVE_BEST_NODE_SEQUENCE_OF_4_SQL =
+        private fun getQueryForResolvingBestNodeSequenceOf4(vehicleType: VehicleType): String =
             "SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id \n" +
                 "FROM ( \n" +
                 "    SELECT _node_seq.* \n" +
@@ -71,7 +75,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 "CROSS JOIN LATERAL ( \n" +
                 "    SELECT max(pgr.route_agg_cost) AS route_agg_cost \n" +
                 "    FROM pgr_dijkstraVia( \n" +
-                "        'SELECT infrastructure_link_id AS id, start_node_id AS source, end_node_id AS target, cost, reverse_cost FROM routing.infrastructure_link', \n" +
+                "        ${QueryHelper.getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleType)}, \n" +
                 "        node_seq.node_arr, \n" +
                 "        directed := true, \n" +
                 "        strict := true, \n" +

@@ -54,9 +54,23 @@ The table below describes the request parameters part of the URI path.
 | ------------- | ----------- |
 | `service`     | Only `route` is currently available. |
 | `version`     | Version of the service. `v1` for `route` service. |
-| `profile`     | Mode of transportation. `bus` is the only mode that is currently supported. |
+| `profile`     | Mode of transportation and optional vehicle type separated by a slash. E.g. `bus/tall_electric_bus`. |
 | `coordinates` | String of format `{longitude},{latitude};{longitude},{latitude}[;{longitude},{latitude} ...]` |
 | `format`      | This parameter is optional and defaults to `json` which is the only supported value. |
+
+The table below describes the supported profiles that consist of transportation mode and optional vehicle type. Profiles are used to constrain infrastructure links to those safely traversable for given combination of transportation mode and optional vehicle type.
+
+| Profile                 | Description                        |
+| ----------------------- | ---------------------------------- |
+| `bus`                   | Shortcut for `bus/generic_bus`     |
+| `bus/generic_bus`       | Is is sufficient that some type of bus may pass safely through the result route. |
+| `bus/tall_electric_bus` | Require that tall electric buses must pass safely through the result route. |
+| `metro`                 | Shortcut for `metro/generic_metro` |
+| `metro/generic_metro`   | Metro                              |
+| `train`                 | Shortcut for `train/generic_train` |
+| `train/generic_train`   | Train                              |
+| `tram`                  | Shortcut for `tram/generic_tram`   |
+| `tram/generic_tram`     | Tram                               |
 
 The table below describes the request options.
 
