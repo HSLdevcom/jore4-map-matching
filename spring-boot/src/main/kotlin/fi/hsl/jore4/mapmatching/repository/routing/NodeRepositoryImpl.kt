@@ -31,10 +31,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             throw IllegalArgumentException("Maximum of 4 node sequences exceeded")
         }
 
-        val query: String = getQueryForResolvingBestNodeSequenceOf4(vehicleType)
-
         val preparedStatementCreator = PreparedStatementCreator { conn ->
-            val pstmt: PreparedStatement = conn.prepareStatement(query)
+            val pstmt: PreparedStatement = conn.prepareStatement(RESOLVE_BEST_NODE_SEQUENCE_OF_4_SQL)
 
             // Setting array parameters can only be done through a java.sql.Connection object.
             pstmt.setArray(1, conn.createArrayOf("bigint", seq1.toTypedArray()))
@@ -44,6 +42,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
             pstmt.setLong(5, startLinkId)
             pstmt.setLong(6, endLinkId)
+
+            pstmt.setString(7, vehicleType.value)
 
             pstmt
         }
@@ -57,7 +57,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     }
 
     companion object {
-        private fun getQueryForResolvingBestNodeSequenceOf4(vehicleType: VehicleType): String =
+        private val RESOLVE_BEST_NODE_SEQUENCE_OF_4_SQL =
             "SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id \n" +
                 "FROM ( \n" +
                 "    SELECT _node_seq.* \n" +
@@ -75,7 +75,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 "CROSS JOIN LATERAL ( \n" +
                 "    SELECT max(pgr.route_agg_cost) AS route_agg_cost \n" +
                 "    FROM pgr_dijkstraVia( \n" +
-                "        ${QueryHelper.getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleType)}, \n" +
+                "        ${QueryHelper.getVehicleTypeConstrainedQueryForPgrDijkstra("?")}, \n" +
                 "        node_seq.node_arr, \n" +
                 "        directed := true, \n" +
                 "        strict := true, \n" +

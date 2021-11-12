@@ -27,13 +27,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
         val parameterSetter = PreparedStatementSetter { pstmt ->
             val conn: Connection = pstmt.connection
 
+            pstmt.setString(1, vehicleType.value)
+
             // Setting array parameters can only be done through a java.sql.Connection object.
-            pstmt.setArray(1, conn.createArrayOf("bigint", nodeIds.toTypedArray()))
+            pstmt.setArray(2, conn.createArrayOf("bigint", nodeIds.toTypedArray()))
         }
 
-        val query: String = getQueryForFindingRouteViaNodes(vehicleType)
-
-        return jdbcTemplate.jdbcOperations.query(query, parameterSetter) { rs: ResultSet, _: Int ->
+        return jdbcTemplate.jdbcOperations.query(FIND_ROUTE_VIA_NODES_SQL, parameterSetter) { rs: ResultSet, _: Int ->
             val routeSeqNum = rs.getInt("seq")
             val routeLegSeqNum = rs.getInt("path_seq")
 
@@ -66,7 +66,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     }
 
     companion object {
-        private fun getQueryForFindingRouteViaNodes(vehicleType: VehicleType): String =
+        private val FIND_ROUTE_VIA_NODES_SQL =
             "SELECT \n" +
                 "    pt.seq, \n" +
                 "    pt.path_seq, \n" +
@@ -84,7 +84,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 "FROM ( \n" +
                 "    SELECT seq, path_seq, node, edge, pgr.cost \n" +
                 "    FROM pgr_dijkstraVia( \n" +
-                "        ${QueryHelper.getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleType)}, \n" +
+                "        ${QueryHelper.getVehicleTypeConstrainedQueryForPgrDijkstra("?")}, \n" +
                 "        ?::bigint[], \n" +
                 "        directed := true, \n" +
                 "        strict := true, \n" +
