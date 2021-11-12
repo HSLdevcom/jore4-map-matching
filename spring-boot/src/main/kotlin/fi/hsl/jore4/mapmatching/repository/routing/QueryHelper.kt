@@ -1,21 +1,19 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
-import fi.hsl.jore4.mapmatching.model.VehicleType
-
 object QueryHelper {
 
-    internal fun getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleType: VehicleType,
+    internal fun getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleTypeBindVariableName: String,
                                                               withSurroundingQuotes: Boolean = true): String {
 
-        val dbValue: String = vehicleType.value
+        val quotedPlaceHolder = "' || $vehicleTypeBindVariableName || '"
 
         return if (withSurroundingQuotes)
-            "'${getVehicleTypeConstrainedQueryForPgrDijkstra("'$dbValue'")}'"
+            "'${getVehicleTypeConstrainedQueryForPgrDijkstra("''$quotedPlaceHolder''")}'"
         else
-            getVehicleTypeConstrainedQueryForPgrDijkstra(dbValue)
+            getVehicleTypeConstrainedQueryForPgrDijkstra(quotedPlaceHolder)
     }
 
-    private fun getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleType: String): String =
+    private fun getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleTypeParameter: String): String =
         "SELECT l.infrastructure_link_id AS id, " +
             "l.start_node_id AS source, " +
             "l.end_node_id AS target, " +
@@ -24,5 +22,5 @@ object QueryHelper {
             "FROM routing.infrastructure_link l " +
             "INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s " +
             "ON s.infrastructure_link_id = l.infrastructure_link_id " +
-            "WHERE s.vehicle_type = '$vehicleType'"
+            "WHERE s.vehicle_type = $vehicleTypeParameter"
 }
