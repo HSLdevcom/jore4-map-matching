@@ -45,7 +45,7 @@ GET /api/{service}/{version}/{profile}/{coordinates}[.{format}]?option=value&opt
 Example request:
 
 ```
-curl "https://<host>:<port>/api/route/v1/bus/24.95324,60.16980;24.83849,60.16707"
+curl "https://<host>:<port>/api/route/v1/bus/24.95324,60.16980~24.83849,60.16707"
 ```
 
 The table below describes the request parameters part of the URI path.
@@ -55,7 +55,7 @@ The table below describes the request parameters part of the URI path.
 | `service`     | Only `route` is currently available. |
 | `version`     | Version of the service. `v1` for `route` service. |
 | `profile`     | Mode of transportation and optional vehicle type separated by a slash. E.g. `bus/tall_electric_bus`. |
-| `coordinates` | String of format `{longitude},{latitude};{longitude},{latitude}[;{longitude},{latitude} ...]` |
+| `coordinates` | String of format `{longitude},{latitude}~{longitude},{latitude}[~{longitude},{latitude} ...]` |
 | `format`      | This parameter is optional and defaults to `json` which is the only supported value. |
 
 The table below describes the supported profiles that consist of transportation mode and optional vehicle type. Profiles are used to constrain infrastructure links to those safely traversable for given combination of transportation mode and optional vehicle type.

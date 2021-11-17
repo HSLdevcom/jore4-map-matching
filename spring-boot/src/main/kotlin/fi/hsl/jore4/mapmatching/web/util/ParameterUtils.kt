@@ -9,7 +9,7 @@ object ParameterUtils {
     private const val DECIMAL = "\\d+(?:\\.\\d+)?"
     private const val COORDINATE = "$DECIMAL,$DECIMAL"
     private const val FORMAT = "\\.json"
-    private const val COORDINATE_LIST: String = "($COORDINATE)((?:;$COORDINATE)*)((?:$FORMAT)?)"
+    private const val COORDINATE_LIST: String = "($COORDINATE)((?:~$COORDINATE)*)((?:$FORMAT)?)"
 
     private val COORDINATE_PATTERN: Pattern = Pattern.compile(COORDINATE_LIST)
 
@@ -27,7 +27,7 @@ object ParameterUtils {
             coordinates
 
         return stringToBeParsed
-            .split(";")
+            .split("~")
             .map { str ->
                 val lngLat: List<String> = str.split(",")
 
