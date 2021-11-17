@@ -24,10 +24,10 @@
         <build-properties.plugin.version>1.0.0</build-properties.plugin.version>
 
         <!-- Library versions -->
-        <flyway.version>7.13.0</flyway.version>
+        <flyway.version>8.0.4</flyway.version>
         <geolatte.version>1.8.2</geolatte.version>
         <jooq.version>3.14.13</jooq.version>
-        <postgresql.version>42.2.23</postgresql.version>
+        <postgresql.version>42.3.1</postgresql.version>
         <spring-boot.version>2.5.6</spring-boot.version>
 
         <!-- Other properties -->
