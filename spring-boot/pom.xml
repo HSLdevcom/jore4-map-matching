@@ -28,7 +28,7 @@
         <geolatte.version>1.8.2</geolatte.version>
         <jooq.version>3.14.13</jooq.version>
         <postgresql.version>42.2.23</postgresql.version>
-        <spring-boot.version>2.5.4</spring-boot.version>
+        <spring-boot.version>2.5.6</spring-boot.version>
 
         <!-- Other properties -->
         <start.class>fi.hsl.jore4.mapmatching.MapMatchingApplicationKt</start.class>
