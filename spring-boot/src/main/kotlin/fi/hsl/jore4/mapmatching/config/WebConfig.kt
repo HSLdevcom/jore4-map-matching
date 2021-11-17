@@ -22,12 +22,4 @@ class WebConfig : WebMvcConfigurer {
                 .allowedMethods("GET")
         }
     }
-
-    override fun configurePathMatch(pathMatchConfig: PathMatchConfigurer) {
-        // Prevent URL path variables from being split by semicolons in order to
-        // support semicolon separated coordinates as request parameter.
-        val urlPathHelper = UrlPathHelper()
-        urlPathHelper.setRemoveSemicolonContent(false)
-        pathMatchConfig.setUrlPathHelper(urlPathHelper)
-    }
 }

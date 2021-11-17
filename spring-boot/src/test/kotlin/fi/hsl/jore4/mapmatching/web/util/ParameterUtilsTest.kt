@@ -17,12 +17,12 @@ class ParameterUtilsTest {
         )
 
         assertThat(
-            parseCoordinates("24.123,60.456;24.987,60.654"),
+            parseCoordinates("24.123,60.456~24.987,60.654"),
             equalTo(listOf(LatLng(60.456, 24.123), LatLng(60.654, 24.987)))
         )
 
         assertThat(
-            parseCoordinates("24.123,60.456;24.789,60.123;24.456,60.789"),
+            parseCoordinates("24.123,60.456~24.789,60.123~24.456,60.789"),
             equalTo(listOf(LatLng(60.456, 24.123), LatLng(60.123, 24.789), LatLng(60.789, 24.456)))
         )
     }
@@ -37,7 +37,7 @@ class ParameterUtilsTest {
     @Test
     fun testParseCoordinates_withOptionalFormat() {
         assertThat(
-            parseCoordinates("24.123,60.456;24.987,60.654.json"),
+            parseCoordinates("24.123,60.456~24.987,60.654.json"),
             equalTo(listOf(LatLng(60.456, 24.123), LatLng(60.654, 24.987)))
         )
     }
@@ -57,9 +57,9 @@ class ParameterUtilsTest {
             // empty values
             "",
             "   ",
-            ";",
-            " ; ",
-            " ; ; ",
+            "~",
+            " ~ ",
+            " ~ ~ ",
             // no whitespace allowed
             " 24.123,60.456",
             "24.123 ,60.456",

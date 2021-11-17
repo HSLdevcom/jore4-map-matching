@@ -16,18 +16,6 @@ import org.springframework.security.web.firewall.StrictHttpFirewall
 @EnableWebSecurity
 class WebSecurityConfig : WebSecurityConfigurerAdapter() {
 
-    @Bean
-    fun allowSemicolonInUrlHttpFirewall(): HttpFirewall {
-        val firewall = StrictHttpFirewall()
-        firewall.setAllowSemicolon(true)
-        return firewall
-    }
-
-    override fun configure(webSec: WebSecurity) {
-        super.configure(webSec)
-        webSec.httpFirewall(allowSemicolonInUrlHttpFirewall())
-    }
-
     override fun configure(httpSec: HttpSecurity) {
         httpSec
             .sessionManagement()
