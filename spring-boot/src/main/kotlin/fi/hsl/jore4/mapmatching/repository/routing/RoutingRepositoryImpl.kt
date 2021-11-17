@@ -66,6 +66,10 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     }
 
     companion object {
+
+        // The following query uses '?' placeholder for bind variables since
+        // there exist SQL ARRAY parameters that cannot be set through named
+        // variables within Spring JDBC templates.
         private val FIND_ROUTE_VIA_NODES_SQL =
             "SELECT \n" +
                 "    pt.seq, \n" +
@@ -84,7 +88,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 "FROM ( \n" +
                 "    SELECT seq, path_seq, node, edge, pgr.cost \n" +
                 "    FROM pgr_dijkstraVia( \n" +
-                "        ${QueryHelper.getVehicleTypeConstrainedQueryForPgrDijkstra("?")}, \n" +
+
+                // An SQL query enclosed inside quotes is generated as parameter
+                // for pgr_dijkstraVia. '?' is used as a bind variable
+                // placeholder. Actual variable binding is left to occur within
+                // construction of PreparedStatement object.
+                "        ${QueryHelper.getVehicleTypeConstrainedLinksForPgrDijkstra("?")}, \n" +
+
                 "        ?::bigint[], \n" +
                 "        directed := true, \n" +
                 "        strict := true, \n" +
