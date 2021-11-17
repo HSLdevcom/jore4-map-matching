@@ -57,6 +57,10 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     }
 
     companion object {
+
+        // The following query uses '?' placeholder for bind variables since
+        // there exist SQL ARRAY parameters that cannot be set through named
+        // variables within Spring JDBC templates.
         private val RESOLVE_BEST_NODE_SEQUENCE_OF_4_SQL =
             "SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id \n" +
                 "FROM ( \n" +
@@ -75,7 +79,13 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 "CROSS JOIN LATERAL ( \n" +
                 "    SELECT max(pgr.route_agg_cost) AS route_agg_cost \n" +
                 "    FROM pgr_dijkstraVia( \n" +
-                "        ${QueryHelper.getVehicleTypeConstrainedQueryForPgrDijkstra("?")}, \n" +
+
+                // An SQL query enclosed inside quotes is generated as parameter
+                // for pgr_dijkstraVia. '?' is used as a bind variable
+                // placeholder. Actual variable binding is left to occur within
+                // construction of PreparedStatement object.
+                "        ${QueryHelper.getVehicleTypeConstrainedLinksForPgrDijkstra("?")}, \n" +
+
                 "        node_seq.node_arr, \n" +
                 "        directed := true, \n" +
                 "        strict := true, \n" +

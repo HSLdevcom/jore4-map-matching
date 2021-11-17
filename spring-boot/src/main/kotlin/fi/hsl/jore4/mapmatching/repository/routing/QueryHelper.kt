@@ -2,18 +2,33 @@ package fi.hsl.jore4.mapmatching.repository.routing
 
 object QueryHelper {
 
-    internal fun getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleTypeBindVariableName: String,
+    /**
+     * Generates an SQL query that fetches infrastructure links associated with
+     * a specific vehicle type. The generated query is intended to be passed as
+     * string parameter to pgr_dijkstraVia function.
+     *
+     * @param vehicleTypeOrVariablePlaceholder - the vehicle type or name of the
+     * bind variable for vehicle type. Could be e.g. '?'
+     * @param withSurroundingQuotes - indicates whether the generated query is
+     * to be enclosed inside quotes. Defaults to true.
+     *
+     * @return an SQL query as {@link java.lang.String}
+     */
+    internal fun getVehicleTypeConstrainedLinksForPgrDijkstra(vehicleTypeOrVariablePlaceholder: String,
                                                               withSurroundingQuotes: Boolean = true): String {
 
-        val quotedPlaceHolder = "' || $vehicleTypeBindVariableName || '"
+        // Using SQL string concatenation in order to be able to inject a bind
+        // variable placeholder into the query. This way we enable assigning the
+        // actual vehicle type value through PreparedStatement variable binding.
+        val quotedPlaceHolder = "' || $vehicleTypeOrVariablePlaceholder || '"
 
         return if (withSurroundingQuotes)
-            "'${getVehicleTypeConstrainedQueryForPgrDijkstra("''$quotedPlaceHolder''")}'"
+            "'${getVehicleTypeConstrainedLinksForPgrDijkstra("''$quotedPlaceHolder''")}'"
         else
-            getVehicleTypeConstrainedQueryForPgrDijkstra(quotedPlaceHolder)
+            getVehicleTypeConstrainedLinksForPgrDijkstra(quotedPlaceHolder)
     }
 
-    private fun getVehicleTypeConstrainedQueryForPgrDijkstra(vehicleTypeParameter: String): String =
+    private fun getVehicleTypeConstrainedLinksForPgrDijkstra(vehicleTypeParameter: String): String =
         "SELECT l.infrastructure_link_id AS id, " +
             "l.start_node_id AS source, " +
             "l.end_node_id AS target, " +
