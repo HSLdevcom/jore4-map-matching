@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
-import fi.hsl.jore4.mapmatching.service.routing.internal.NodeResolutionParams
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParams
 
 object RoutingServiceHelper {
 

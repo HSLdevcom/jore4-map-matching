@@ -2,7 +2,7 @@ package fi.hsl.jore4.mapmatching.service.routing
 
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleType
-import fi.hsl.jore4.mapmatching.service.routing.response.RoutingResponse
+import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 
 interface IRoutingService {
 

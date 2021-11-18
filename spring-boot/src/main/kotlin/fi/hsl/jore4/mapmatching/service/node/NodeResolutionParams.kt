@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.service.routing.internal
+package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState

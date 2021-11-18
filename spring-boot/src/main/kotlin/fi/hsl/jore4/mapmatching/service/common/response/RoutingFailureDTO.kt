@@ -1,9 +1,9 @@
-package fi.hsl.jore4.mapmatching.service.routing.response
+package fi.hsl.jore4.mapmatching.service.common.response
 
 import fi.hsl.jore4.mapmatching.model.LatLng
-import fi.hsl.jore4.mapmatching.service.routing.response.ResponseCode.InvalidUrl
-import fi.hsl.jore4.mapmatching.service.routing.response.ResponseCode.InvalidValue
-import fi.hsl.jore4.mapmatching.service.routing.response.ResponseCode.NoSegment
+import fi.hsl.jore4.mapmatching.service.common.response.ResponseCode.InvalidUrl
+import fi.hsl.jore4.mapmatching.service.common.response.ResponseCode.InvalidValue
+import fi.hsl.jore4.mapmatching.service.common.response.ResponseCode.NoSegment
 
 data class RoutingFailureDTO(override val code: ResponseCode, val message: String) : RoutingResponse {
 

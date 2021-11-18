@@ -3,9 +3,9 @@ package fi.hsl.jore4.mapmatching.api
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.service.common.response.RoutingFailureDTO
+import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.routing.IRoutingService
-import fi.hsl.jore4.mapmatching.service.routing.response.RoutingFailureDTO
-import fi.hsl.jore4.mapmatching.service.routing.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

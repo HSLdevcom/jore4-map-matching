@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.service.routing.response
+package fi.hsl.jore4.mapmatching.service.common.response
 
 import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousLines

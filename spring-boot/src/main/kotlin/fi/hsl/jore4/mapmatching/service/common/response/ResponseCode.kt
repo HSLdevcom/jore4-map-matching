@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.service.routing.response
+package fi.hsl.jore4.mapmatching.service.common.response
 
 enum class ResponseCode {
     Ok,

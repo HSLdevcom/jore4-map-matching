@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.service.routing.response
+package fi.hsl.jore4.mapmatching.service.common.response
 
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
