@@ -2,6 +2,7 @@ package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import org.slf4j.Logger
@@ -15,7 +16,8 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
 
     @Transactional(readOnly = true, noRollbackFor = [IllegalStateException::class])
     override fun resolveNodeIdSequence(nodeSequenceAlternatives: NodeSequenceAlternatives,
-                                       vehicleType: VehicleType)
+                                       vehicleType: VehicleType,
+                                       bufferAreaRestriction: BufferAreaRestriction?)
         : NodeIdSequence {
 
         val nodeIdSequences: List<NodeIdSequence> = nodeSequenceAlternatives.nodeIdSequences
@@ -32,7 +34,8 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
         return nodeRepository.resolveNodeSequence(nodeSequenceAlternatives.startLinkId,
                                                   nodeSequenceAlternatives.endLinkId,
                                                   nodeIdSequences,
-                                                  vehicleType)
+                                                  vehicleType,
+                                                  bufferAreaRestriction)
             ?: throw IllegalStateException(
                 "Could not resolve node identifier sequence from ${nodeSequenceAlternatives.toCompactString()}")
     }

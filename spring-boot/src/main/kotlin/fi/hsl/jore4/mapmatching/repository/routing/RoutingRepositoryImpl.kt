@@ -6,6 +6,7 @@ import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.extractLineStringG2D
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.fromEwkb
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
 import fi.hsl.jore4.mapmatching.util.MultilingualString
 import fi.hsl.jore4.mapmatching.util.component.IJsonbConverter
 import org.geolatte.geom.G2D
@@ -24,7 +25,9 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                                    val jsonbConverter: IJsonbConverter) : IRoutingRepository {
 
     @Transactional(readOnly = true)
-    override fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence, vehicleType: VehicleType)
+    override fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
+                                          vehicleType: VehicleType,
+                                          bufferAreaRestriction: BufferAreaRestriction?)
         : List<RouteLinkDTO> {
 
         val parameterSetter = PreparedStatementSetter { pstmt ->
@@ -32,13 +35,28 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
 
             pstmt.setString(1, vehicleType.value)
 
+            // Set additional parameters if restricting infrastructure links
+            // with a buffer area.
+            bufferAreaRestriction?.run {
+                pstmt.setLong(2, infrastructureLinkIdAtStart.value)
+                pstmt.setLong(3, infrastructureLinkIdAtEnd.value)
+                pstmt.setBytes(4, toEwkb(lineGeometry))
+                pstmt.setDouble(5, bufferRadiusInMeters)
+            }
+
+            val nodeIdsParamIndex: Int = when (bufferAreaRestriction != null) {
+                true -> 6
+                false -> 2
+            }
+
             val nodeIdArray: Array<Long> = nodeIdSequence.list.map { it.value }.toTypedArray()
 
             // Setting array parameters can only be done through a java.sql.Connection object.
-            pstmt.setArray(2, conn.createArrayOf("bigint", nodeIdArray))
+            pstmt.setArray(nodeIdsParamIndex, conn.createArrayOf("bigint", nodeIdArray))
         }
 
-        val query: String = getQueryForFindingRouteViaNodes()
+        val restrictWithBufferArea: Boolean = bufferAreaRestriction != null
+        val query: String = getQueryForFindingRouteViaNodes(restrictWithBufferArea)
 
         return jdbcTemplate.jdbcOperations.query(query, parameterSetter) { rs: ResultSet, _: Int ->
             val routeSeqNum = rs.getInt("seq")
@@ -78,12 +96,16 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          * there exist SQL ARRAY parameters that cannot be set via named
          * variables in Spring JDBC templates.
          */
-        private fun getQueryForFindingRouteViaNodes(): String {
+        private fun getQueryForFindingRouteViaNodes(restrictWithBufferArea: Boolean): String {
             // The produced SQL query is enclosed in quotes and passed as
             // parameter to pgr_dijkstraVia() function. '?' is used as a bind
             // variable placeholder. Actual variable binding is left to occur
             // within initialisation of PreparedStatement.
-            val linkSelectionQueryForPgrDijkstra: String = QueryHelper.getVehicleTypeConstrainedLinksQuery()
+            val linkSelectionQueryForPgrDijkstra: String =
+                if (restrictWithBufferArea)
+                    QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery()
+                else
+                    QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
             return "SELECT \n" +
                 "    pt.seq, \n" +

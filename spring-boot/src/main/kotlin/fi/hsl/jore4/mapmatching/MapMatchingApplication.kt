@@ -2,6 +2,8 @@ package fi.hsl.jore4.mapmatching
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.geolatte.geom.json.GeolatteGeomModule
 import org.geolatte.geom.json.Setting
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -48,6 +50,14 @@ class MapMatchingApplication {
 
         return ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            .registerModule(KotlinModule.Builder()
+                                .withReflectionCacheSize(512)
+                                .configure(KotlinFeature.NullToEmptyCollection, false)
+                                .configure(KotlinFeature.NullToEmptyMap, false)
+                                .configure(KotlinFeature.NullIsSameAsDefault, false)
+                                .configure(KotlinFeature.SingletonSupport, false)
+                                .configure(KotlinFeature.StrictNullChecks, true)
+                                .build())
             .registerModule(geolatteModule)
     }
 }

@@ -4,10 +4,13 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink
+import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkRecord
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Geometries.mkMultiPoint
 import org.geolatte.geom.Point
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -16,7 +19,25 @@ import org.springframework.transaction.annotation.Transactional
 import java.sql.ResultSet
 
 @Repository
-class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : ILinkRepository {
+class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate,
+                                                val dslContext: DSLContext)
+    : ILinkRepository {
+
+    @Transactional(readOnly = true)
+    override fun findByIds(ids: Collection<InfrastructureLinkId>): List<InfrastructureLinkRecord> {
+        if (ids.isEmpty()) {
+            return emptyList()
+        }
+
+        val idValues: List<Long> = ids.map { it.value }
+
+        return dslContext
+            .select()
+            .from(LINK)
+            .where(LINK.INFRASTRUCTURE_LINK_ID.`in`(idValues))
+            .fetch()
+            .into(InfrastructureLinkRecord::class.java)
+    }
 
     private data class ClosestLinkResult(val pointSeqNum: Int,
                                          val infrastructureLinkId: InfrastructureLinkId,
@@ -76,6 +97,8 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     }
 
     companion object {
+        private val LINK = InfrastructureLink.INFRASTRUCTURE_LINK
+
         private const val FIND_CLOSEST_LINKS_SQL =
             "SELECT \n" +
                 "    path[1] AS seq, \n" +

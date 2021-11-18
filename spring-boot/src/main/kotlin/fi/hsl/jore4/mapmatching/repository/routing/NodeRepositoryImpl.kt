@@ -4,6 +4,7 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.PreparedStatementCreator
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -18,7 +19,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     override fun resolveNodeSequence(startLinkId: InfrastructureLinkId,
                                      endLinkId: InfrastructureLinkId,
                                      nodeIdSequences: Iterable<NodeIdSequence>,
-                                     vehicleType: VehicleType)
+                                     vehicleType: VehicleType,
+                                     bufferAreaRestriction: BufferAreaRestriction?)
         : NodeIdSequence? {
 
         // There are at most four sequences of infrastructure network node identifiers that can be iterated over.
@@ -37,7 +39,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             throw IllegalArgumentException("Maximum of 4 node sequences exceeded")
         }
 
-        val query: String = getQueryForResolvingBestNodeSequenceOf4()
+        val restrictWithBufferArea: Boolean = bufferAreaRestriction != null
+        val query: String = getQueryForResolvingBestNodeSequenceOf4(restrictWithBufferArea)
 
         val preparedStatementCreator = PreparedStatementCreator { conn ->
             val pstmt: PreparedStatement = conn.prepareStatement(query)
@@ -52,6 +55,15 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             pstmt.setLong(6, endLinkId.value)
 
             pstmt.setString(7, vehicleType.value)
+
+            // Set additional parameters if restricting infrastructure links
+            // with a buffer area.
+            bufferAreaRestriction?.run {
+                pstmt.setLong(8, startLinkId.value)
+                pstmt.setLong(9, endLinkId.value)
+                pstmt.setBytes(10, toEwkb(lineGeometry))
+                pstmt.setDouble(11, bufferRadiusInMeters)
+            }
 
             pstmt
         }
@@ -70,12 +82,16 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
          * there exist SQL ARRAY parameters that cannot be set via named
          * variables in Spring JDBC templates.
          */
-        private fun getQueryForResolvingBestNodeSequenceOf4(): String {
+        private fun getQueryForResolvingBestNodeSequenceOf4(restrictWithBufferArea: Boolean): String {
             // The produced SQL query is enclosed in quotes and passed as
             // parameter to pgr_dijkstraVia() function. '?' is used as a bind
             // variable placeholder. Actual variable binding is left to occur
             // within initialisation of PreparedStatement.
-            val linkSelectionQueryForPgrDijkstra: String = QueryHelper.getVehicleTypeConstrainedLinksQuery()
+            val linkSelectionQueryForPgrDijkstra: String =
+                if (restrictWithBufferArea)
+                    QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery()
+                else
+                    QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
             return "SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id \n" +
                 "FROM ( \n" +

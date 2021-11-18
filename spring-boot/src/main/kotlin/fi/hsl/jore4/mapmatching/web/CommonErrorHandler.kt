@@ -4,6 +4,7 @@ import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.validation.FieldError
 import org.springframework.validation.ObjectError
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -47,6 +48,17 @@ class CommonErrorHandler {
         val message = errors.entries.joinToString(separator = ", ", prefix = "{", postfix = "}") { errorItem ->
             "\"${errorItem.key}\": \"${errorItem.value}\""
         }
+
+        return RoutingResponse.invalidValue(message)
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    fun onDeserializationException(ex: HttpMessageNotReadableException): RoutingResponse {
+        LOGGER.info("Handling deserialization exception: ${ex.message}")
+
+        val message: String = ex.message ?: ex.javaClass.name
 
         return RoutingResponse.invalidValue(message)
     }
