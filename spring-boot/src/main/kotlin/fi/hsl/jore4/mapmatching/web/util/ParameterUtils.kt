@@ -8,8 +8,7 @@ object ParameterUtils {
 
     private const val DECIMAL = "\\d+(?:\\.\\d+)?"
     private const val COORDINATE = "$DECIMAL,$DECIMAL"
-    private const val FORMAT = "\\.json"
-    private const val COORDINATE_LIST: String = "($COORDINATE)((?:~$COORDINATE)*)((?:$FORMAT)?)"
+    const val COORDINATE_LIST: String = "$COORDINATE(?:~$COORDINATE)*"
 
     private val COORDINATE_PATTERN: Pattern = Pattern.compile(COORDINATE_LIST)
 
@@ -20,23 +19,17 @@ object ParameterUtils {
             throw IllegalArgumentException("Invalid coordinate sequence: \"$coordinates\"")
         }
 
-        // Strip out optional format (.json). It is supported to mimic OSRM API.
-        val stringToBeParsed = if (matcher.groupCount() > 2)
-            matcher.group(1) + matcher.group(2)
-        else
-            coordinates
-
-        return stringToBeParsed
+        return coordinates
             .split("~")
-            .map { str ->
-                val lngLat: List<String> = str.split(",")
+            .map { coordinateToken ->
+                val lngLat: List<String> = coordinateToken.split(",")
 
                 try {
                     val lng = lngLat[0].toDouble()
                     val lat = lngLat[1].toDouble()
                     LatLng(lat, lng)
                 } catch (ex: RuntimeException) {
-                    throw IllegalArgumentException("Invalid coordinate: \"$str\"")
+                    throw IllegalArgumentException("Invalid coordinate: \"$coordinateToken\"")
                 }
             }
     }

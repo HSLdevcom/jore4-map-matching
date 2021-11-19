@@ -35,14 +35,6 @@ class ParameterUtilsTest {
     }
 
     @Test
-    fun testParseCoordinates_withOptionalFormat() {
-        assertThat(
-            parseCoordinates("24.123,60.456~24.987,60.654.json"),
-            equalTo(listOf(LatLng(60.456, 24.123), LatLng(60.654, 24.987)))
-        )
-    }
-
-    @Test
     fun testParseCoordinates_withInvalidCoordinates() {
         listOf(
             ",",

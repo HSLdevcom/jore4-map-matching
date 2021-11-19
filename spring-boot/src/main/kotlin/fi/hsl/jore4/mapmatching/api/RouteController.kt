@@ -6,7 +6,7 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.service.routing.IRoutingService
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingFailureDTO
 import fi.hsl.jore4.mapmatching.service.routing.response.RoutingResponse
-import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.parseCoordinates
+import fi.hsl.jore4.mapmatching.web.util.ParameterUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping(value = [RouteController.URL_PREFIX], produces = [MediaType.APPLICATION_JSON_VALUE])
 class RouteController @Autowired constructor(val routingService: IRoutingService) {
 
-    @GetMapping("/{transportationMode}/{coords}")
+    @GetMapping("/$MODE_PARAM/$COORDS_PARAM", "/$MODE_PARAM/$COORDS_PARAM.json")
     fun findRoute(@PathVariable transportationMode: String,
                   @PathVariable coords: String,
                   @RequestParam(required = false) linkSearchRadius: Int?
@@ -35,12 +35,12 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         }
 
         val vehicleType: VehicleType = findVehicleType(transportationMode, null)
-            ?: return RoutingFailureDTO.invalidUrl("Failed to resolve vehicle mode from: '$transportationMode'")
+            ?: return RoutingFailureDTO.invalidUrl("Failed to resolve transportation mode from: '$transportationMode'")
 
         return findRoute(vehicleType, coords, linkSearchRadius)
     }
 
-    @GetMapping("/{transportationMode}/{vehicleTypeParam}/{coords}")
+    @GetMapping("/$MODE_PARAM/$VEHICLE_TYPE_PARAM/$COORDS_PARAM", "/$MODE_PARAM/$VEHICLE_TYPE_PARAM/$COORDS_PARAM.json")
     fun findRoute(@PathVariable transportationMode: String,
                   @PathVariable vehicleTypeParam: String,
                   @PathVariable coords: String,
@@ -54,7 +54,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
 
         val vehicleType: VehicleType = findVehicleType(transportationMode, vehicleTypeParam)
             ?: return RoutingFailureDTO.invalidUrl(
-                "Failed to resolve a valid combination of vehicle mode and vehicle type from: '$transportationMode/$vehicleTypeParam'")
+                "Failed to resolve a valid combination of transportation mode and vehicle type from: '$transportationMode/$vehicleTypeParam'")
 
         return findRoute(vehicleType, coords, linkSearchRadius)
     }
@@ -64,7 +64,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         val parsedCoordinates: List<LatLng>
 
         try {
-            parsedCoordinates = parseCoordinates(coords)
+            parsedCoordinates = ParameterUtils.parseCoordinates(coords)
         } catch (ex: RuntimeException) {
             return RoutingFailureDTO.invalidUrl(ex.message ?: "Failed to parse coordinates")
         }
@@ -76,6 +76,10 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
 
     companion object {
         const val URL_PREFIX = "/api/route/v1"
+
+        private const val MODE_PARAM = "{transportationMode:[a-zA-Z-_]+}"
+        private const val VEHICLE_TYPE_PARAM = "{vehicleTypeParam:[a-zA-Z-_]+}"
+        private const val COORDS_PARAM = "{coords:${ParameterUtils.COORDINATE_LIST}}"
 
         private const val DEFAULT_LINK_SEARCH_RADIUS = 150
 
