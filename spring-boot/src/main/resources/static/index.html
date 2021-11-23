@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--
+      -- Landing page for testing route API
+      --
+      -- based on Mapbox map matching tutorial: https://docs.mapbox.com/help/tutorials/get-started-map-matching-api/
+      -->
+    <meta charset="utf-8" />
+    <title>Route finding against Jore4 Route API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script src="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.css" rel="stylesheet" />
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.3.0/mapbox-gl-draw.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.3.0/mapbox-gl-draw.css"
+          rel="stylesheet"
+          type="text/css" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .info-box {
+            position: absolute;
+            margin: 20px;
+            width: 15%;
+            max-width: 320px;
+            height: auto;
+            top: 0;
+            bottom: 20px;
+            padding: 20px;
+            background-color: #fff;
+            overflow-y: scroll;
+            display: none;
+        }
+
+        .text-error {
+            color: red;
+        }
+
+        .mapboxgl-ctrl-group button {
+            width: 45px;
+            height: 45px;
+        }
+
+        .mapbox-gl-draw_ctrl-draw-btn.active {
+            background-color: rgba(128, 128, 255, 0.55);
+        }
+
+        button.mapbox-gl-draw_ctrl-draw-btn:not(:disabled):hover {
+            background-color: rgba(128, 128, 255, 0.85);
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div class="info-box">
+        <div id="route-info"></div>
+    </div>
+
+    <script>
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                version: 8,
+                sources: {
+                    digitransit: {
+                        type: 'raster',
+                        tiles: [
+                            'https://cdn.digitransit.fi/map/v1/hsl-map/{z}/{x}/{y}.png'
+                        ],
+                        tileSize: 512,
+                        attribution:
+                            'Map tiles &copy; by <a target="_top" rel="noopener" href="https://digitransit.fi/">Helsinki Region Transport 2021</a>, under <a target="_top" rel="noopener" href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>.'
+                    }
+                },
+                layers: [
+                    {
+                        id: 'simple-tiles',
+                        type: 'raster',
+                        source: 'digitransit',
+                        minzoom: 0,
+                        maxzoom: 22
+                    }
+                ]
+            },
+            center: [24.934312236, 60.172351409],
+            zoom: 14
+        });
+
+        const draw = new MapboxDraw({
+            // Instead of showing all the draw tools, show only the line string and delete tools.
+            displayControlsDefault: false,
+            controls: {
+                line_string: true,
+                trash: true
+            },
+            // Set the draw mode to draw LineStrings by default.
+            defaultMode: 'draw_line_string',
+            styles: [
+                // Set the line style for the user-input coordinates.
+                {
+                    id: 'gl-draw-line',
+                    type: 'line',
+                    filter: [
+                        'all',
+                        ['==', '$type', 'LineString'],
+                        ['!=', 'mode', 'static']
+                    ],
+                    layout: {
+                        'line-cap': 'round',
+                        'line-join': 'round'
+                    },
+                    paint: {
+                        'line-color': '#438EE4',
+                        'line-dasharray': [0.2, 2],
+                        'line-width': 2,
+                        'line-opacity': 0.7
+                    }
+                },
+                {
+                    id: 'gl-draw-line-active',
+                    type: 'line',
+                    filter: ['all', ['==', '$type', 'LineString'],
+                        ['==', 'active', 'true']
+                    ],
+                    layout: {
+                        'line-cap': 'round',
+                        'line-join': 'round'
+                    },
+                    paint: {
+                        'line-color': '#3bb2d0',
+                        'line-dasharray': [0.2, 2],
+                        'line-width': 3
+                    }
+                },
+                {
+                    id: 'gl-draw-line-inactive',
+                    type: 'line',
+                    filter: ['all', ['==', 'active', 'false'],
+                        ['==', '$type', 'LineString'],
+                        ['!=', 'mode', 'static']
+                    ],
+                    layout: {
+                        'line-cap': 'round',
+                        'line-join': 'round'
+                    },
+                    paint: {
+                        'line-color': '#fb3f3f',
+                        'line-dasharray': [0.2, 2],
+                        'line-width': 3
+                    }
+                },
+                // Style the vertex point halos.
+                {
+                    id: 'gl-draw-polygon-and-line-vertex-halo-active',
+                    type: 'circle',
+                    filter: [
+                        'all',
+                        ['==', 'meta', 'vertex'],
+                        ['==', '$type', 'Point'],
+                        ['!=', 'mode', 'static']
+                    ],
+                    paint: {
+                        'circle-radius': 12,
+                        'circle-color': '#FFF'
+                    }
+                },
+                // Style the vertex points.
+                {
+                    id: 'gl-draw-polygon-and-line-vertex-active',
+                    type: 'circle',
+                    filter: [
+                        'all',
+                        ['==', 'meta', 'vertex'],
+                        ['==', '$type', 'Point'],
+                        ['!=', 'mode', 'static']
+                    ],
+                    paint: {
+                        'circle-radius': 8,
+                        'circle-color': '#438EE4'
+                    }
+                }
+            ]
+        });
+
+        // Add draw tool as overlay to the map.
+        map.addControl(draw);
+
+        // Add create, update, and delete actions.
+        map.on('draw.create', updateRoute);
+        map.on('draw.update', updateRoute);
+        map.on('draw.delete', removeRoute);
+
+        // Use the coordinates (drawn by user) to make a Route API request.
+        function updateRoute() {
+            // Remove any existing layers.
+            removeRoute();
+
+            // Extract the coordinates.
+            const data = draw.getAll();
+            const lastFeature = data.features.length - 1;
+            const coords = data.features[lastFeature].geometry.coordinates;
+
+            // Format the coordinates to conform to the route API.
+            const newCoords = coords.join('~');
+
+            findRoute(newCoords);
+        }
+
+        // Make a Route request.
+        async function findRoute(coordinates) {
+            try {
+                const query = await fetch(
+                    `/api/route/v1/bus/${coordinates}?linkSearchRadius=100`,
+                    { method: 'GET' }
+                );
+                const data = await query.json();
+
+                if (data.code === 'Ok') {
+                    const primaryRoute = data.routes[0];
+                    const coords = primaryRoute.geometry;
+
+                    // Draw the route on the map.
+                    addRoute(coords);
+                    showRouteInfo(primaryRoute);
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                showError();
+            }
+        }
+
+        // Draw the result route as a new layer on the map.
+        function addRoute(coords) {
+            // If a route is already loaded, remove it.
+            const routeWasPresent = removeRoute();
+
+            if (!routeWasPresent) {
+                map.addLayer({
+                    id: 'route',
+                    type: 'line',
+                    source: {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: coords
+                        }
+                    },
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': '#03AA46',
+                        'line-width': 8,
+                        'line-opacity': 0.8
+                    }
+                });
+            }
+        }
+
+        function showRouteInfo(route) {
+            // Target the sidebar to add route overview.
+            const routeInfo = document.getElementById('route-info');
+            let routeLinks = '';
+
+            // Output summary for each infrastructure link of route in the response object.
+            if (route.paths) {
+                for (const path of route.paths) {
+                    routeLinks += `<li>${path.infrastructureLinkName.fi}, ${path.distance.toFixed(1)} m</li>`;
+                }
+            }
+
+            routeInfo.innerHTML = `<p><strong>Route distance: ${Math.floor(route.distance)} m</strong></p>`
+
+            if (routeLinks) {
+                routeInfo.innerHTML += `<strong>Infrastructure links:</strong><ol>${routeLinks}</ol>`;
+            }
+
+            // Make info box visible.
+            routeInfo.parentElement.style.display = 'block';
+        }
+
+        // If the user clicks the delete draw button, remove the layer if it exists.
+        // Return boolean value indicating whether a previously-created route was present.
+        function removeRoute() {
+            removeRouteInfo();
+
+            if (map.getSource('route')) {
+                map.removeLayer('route');
+                map.removeSource('route');
+                return true;
+            }
+
+            return false;
+        }
+
+        function removeRouteInfo() {
+            const routeInfo = document.getElementById('route-info');
+            routeInfo.parentElement.style.display = 'none';
+            routeInfo.innerHTML = '';
+        }
+
+        function showError(responseMessage) {
+            const routeInfo = document.getElementById('route-info');
+            let errorContent = '';
+
+            if (responseMessage) {
+                errorContent = `<p>Error from Route API:</p><p>${responseMessage}</p>`;
+            } else {
+                errorContent = '<p>Error while making request to the Route API</p>';
+            }
+
+            routeInfo.innerHTML = `<div class="text-error">${errorContent}</div>`
+
+            // Make info box visible.
+            routeInfo.parentElement.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
