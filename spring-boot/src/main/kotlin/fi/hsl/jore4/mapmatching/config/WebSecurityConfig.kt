@@ -22,7 +22,8 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
             .authorizeRequests()
             .antMatchers(HttpMethod.GET,
                          RouteController.URL_PREFIX + "/**",
-                         "/actuator/health"
+                         "/actuator/health",
+                         "/*" // matches static landing page for examining results from route API
             ).permitAll()
             .anyRequest().denyAll()
     }
