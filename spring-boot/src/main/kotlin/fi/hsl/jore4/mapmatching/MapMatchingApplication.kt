@@ -43,11 +43,11 @@ class MapMatchingApplication {
     @Bean
     @Primary
     fun objectMapper(): ObjectMapper {
-        val geomlatteModule = GeolatteGeomModule()
-        geomlatteModule.set(Setting.SUPPRESS_CRS_SERIALIZATION, true)
+        val geolatteModule = GeolatteGeomModule()
+        geolatteModule.set(Setting.SUPPRESS_CRS_SERIALIZATION, true)
 
         return ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            .registerModule(geomlatteModule)
+            .registerModule(geolatteModule)
     }
 }
