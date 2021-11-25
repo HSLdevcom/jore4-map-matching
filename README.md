@@ -36,7 +36,7 @@ The application will be available through http://localhost:8080. The database us
 
 ## Making requests to API
 
-The common structure for all requests is:
+The structure of HTTP(S) request line for routing request is:
 
 ```
 GET /api/{service}/{version}/{profile}/{coordinates}[.{format}]?option=value&option=value
@@ -44,7 +44,7 @@ GET /api/{service}/{version}/{profile}/{coordinates}[.{format}]?option=value&opt
 
 Example request:
 
-```
+```sh
 curl "https://<host>:<port>/api/route/v1/bus/24.95324,60.16980~24.83849,60.16707"
 ```
 
@@ -80,40 +80,40 @@ The table below describes the request options.
 
 ## Response format
 
-A successful routing response has the following JSON structure:
+An example JSON response for successful processing of routing request has the following structure:
 
-```
+```json
 {
-    code: "Ok",
-    routes: [
+    "code": "Ok",
+    "routes": [
         {
-            geometry: {
-                type: "LineString",
-                coordinates: [...]
-            }
-            paths: [
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [ ... ]
+            },
+            "paths": [
                 {
-                    infrastructureLinkId: <integer>,
-                    externalLinkRef: {
-                        externalLinkId: <string>,
-                        infrastructureSource: "digiroad_r"
+                    "infrastructureLinkId": 225656,
+                    "externalLinkRef": {
+                        "externalLinkId": "441874",
+                        "infrastructureSource": "digiroad_r"
                     },
-                    traversalForwards: <boolean>,
-                    geometry: {
-                        type: "LineString",
-                        coordinates: [...]
+                    "traversalForwards": true,
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [ ... ]
                     },
-                    infrastructureLinkName: {
-                        fi: <string>,
-                        sv: <string>
+                    "infrastructureLinkName": {
+                        "fi": "Meritullintori",
+                        "sv": "Sjötullstorget"
                     },
-                    distance: <double>,
-                    weight: <double>
+                    "distance": 101.8133766916051,
+                    "weight": 101.8133766916051
                 },
                 ...
             ],
-            distance: <double>,
-            weight: <double>
+            "distance": 6000.976119656034,
+            "weight": 6000.976119656034
         }
     ]
 }
