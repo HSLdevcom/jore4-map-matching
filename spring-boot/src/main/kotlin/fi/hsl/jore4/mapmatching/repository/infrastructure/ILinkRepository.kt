@@ -24,5 +24,5 @@ interface ILinkRepository {
      */
     fun findClosestLinks(coordinates: List<LatLng>,
                          vehicleType: VehicleType,
-                         distanceInMeters: Double): Map<Int, SnapToLinkDTO>
+                         distanceInMeters: Double): Map<Int, SnapPointToLinkDTO>
 }

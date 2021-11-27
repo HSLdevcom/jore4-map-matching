@@ -25,7 +25,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     @Transactional(readOnly = true)
     override fun findClosestLinks(coordinates: List<LatLng>,
                                   vehicleType: VehicleType,
-                                  distanceInMeters: Double): Map<Int, SnapToLinkDTO> {
+                                  distanceInMeters: Double): Map<Int, SnapPointToLinkDTO> {
 
         if (coordinates.isEmpty()) {
             return emptyMap()
@@ -62,14 +62,14 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             val coordinateIndex = it.coordinateSeqNum - 1
             val point = coordinates[coordinateIndex]
 
-            SnapToLinkDTO(point,
-                          distanceInMeters,
-                          SnappedLinkState(it.infrastructureLinkId,
-                                           it.closestDistance,
-                                           it.startNodeId,
-                                           it.endNodeId,
-                                           it.distanceToStartNode,
-                                           it.distanceToEndNode))
+            SnapPointToLinkDTO(point,
+                               distanceInMeters,
+                               SnappedLinkState(it.infrastructureLinkId,
+                                                it.closestDistance,
+                                                it.startNodeId,
+                                                it.endNodeId,
+                                                it.distanceToStartNode,
+                                                it.distanceToEndNode))
         })
     }
 

@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
@@ -39,7 +39,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.invalidValue("At least 2 distinct coordinates must be given")
         }
 
-        val closestLinksResult: SortedMap<Int, SnapToLinkDTO> = linkRepository
+        val closestLinksResult: SortedMap<Int, SnapPointToLinkDTO> = linkRepository
             .findClosestLinks(filteredCoords, vehicleType, linkQueryDistance.toDouble())
             .toSortedMap()
 
@@ -50,7 +50,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
                          })
         }
 
-        val closestLinks: Collection<SnapToLinkDTO> = closestLinksResult.values
+        val closestLinks: Collection<SnapPointToLinkDTO> = closestLinksResult.values
 
         if (closestLinks.size < filteredCoords.size) {
             return RoutingResponse.noSegment(findUnmatchedCoordinates(closestLinks, filteredCoords))
