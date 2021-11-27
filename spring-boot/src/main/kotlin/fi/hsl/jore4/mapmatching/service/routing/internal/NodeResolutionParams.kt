@@ -16,12 +16,13 @@ data class NodeResolutionParams(val vehicleType: VehicleType, private val snappe
      * Models a continuous sequence of node visitations on endpoints of one
      * single infrastructure link.
      *
-     * Contains an ID of an infrastructure link and a sequence of node
-     * identifiers. The node IDs are required to reference either of the
+     * Contains an identifier of an infrastructure link and a sequence of node
+     * identifiers. The node identifiers are required to reference either of the
      * endpoints of the link.
      *
-     * The `subsequentNodeIds` parameter may contain consecutive duplicate values.
-     * The `filteredNodeIds` property is cleaned from consecutive duplicates.
+     * @property subsequentNodeIds may contain consecutive duplicate values
+     * @property filteredNodeIds is cleaned from consecutive duplicates within
+     * initialisation
      */
     data class ContinuousLinkVisitation(val infrastructureLinkId: Long, private val subsequentNodeIds: List<Long>) {
 

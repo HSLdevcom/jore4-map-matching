@@ -7,12 +7,12 @@ object QueryHelper {
      * a specific vehicle type. The generated query is intended to be passed as
      * string parameter to pgr_dijkstraVia function.
      *
-     * @param vehicleTypeOrVariablePlaceholder - the vehicle type or name of the
-     * bind variable for vehicle type. Could be e.g. '?'
-     * @param withSurroundingQuotes - indicates whether the generated query is
+     * @param vehicleTypeOrVariablePlaceholder the vehicle type or name of the
+     * bind variable for vehicle type. Could be e.g. "?"
+     * @param withSurroundingQuotes indicates whether the generated query is
      * to be enclosed inside quotes. Defaults to true.
      *
-     * @return an SQL query as {@link java.lang.String}
+     * @return an SQL query as [java.lang.String]
      */
     internal fun getVehicleTypeConstrainedLinksForPgrDijkstra(vehicleTypeOrVariablePlaceholder: String,
                                                               withSurroundingQuotes: Boolean = true): String {
