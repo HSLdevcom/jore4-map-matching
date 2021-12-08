@@ -1,20 +1,20 @@
 package fi.hsl.jore4.mapmatching.service.routing
 
-import fi.hsl.jore4.mapmatching.model.LatLng
-import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceProducer
+import org.geolatte.geom.G2D
+import org.geolatte.geom.Point
 
 object RoutingServiceHelper {
 
-    internal fun findUnmatchedCoordinates(snaps: Collection<SnapPointToLinkDTO>,
-                                          allCoordinates: List<LatLng>)
-        : List<LatLng> {
+    internal fun findUnmatchedPoints(snaps: Collection<SnapPointToLinkDTO>,
+                                     allPoints: List<Point<G2D>>)
+        : List<Point<G2D>> {
 
-        val snappedCoordinates = snaps.map { it.point }.toSet()
+        val snappedPoints = snaps.map { it.point }.toSet()
 
-        return allCoordinates.filter { !snappedCoordinates.contains(it) }
+        return allPoints.filter { !snappedPoints.contains(it) }
     }
 
     internal fun createNodeSequenceProducer(snaps: Collection<SnapPointToLinkDTO>): NodeSequenceProducer {

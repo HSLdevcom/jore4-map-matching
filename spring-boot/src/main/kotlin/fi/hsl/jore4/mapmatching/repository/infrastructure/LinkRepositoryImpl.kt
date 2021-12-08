@@ -1,9 +1,10 @@
 package fi.hsl.jore4.mapmatching.repository.infrastructure
 
-import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
-import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toMultiPoint
+import org.geolatte.geom.G2D
+import org.geolatte.geom.Geometries.mkMultiPoint
+import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -14,7 +15,7 @@ import java.sql.ResultSet
 @Repository
 class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : ILinkRepository {
 
-    private data class ClosestLinkResult(val coordinateSeqNum: Int,
+    private data class ClosestLinkResult(val pointSeqNum: Int,
                                          val infrastructureLinkId: Long,
                                          val closestDistance: Double,
                                          val startNodeId: Long,
@@ -23,16 +24,16 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                          val distanceToEndNode: Double)
 
     @Transactional(readOnly = true)
-    override fun findClosestLinks(coordinates: List<LatLng>,
+    override fun findClosestLinks(points: List<Point<G2D>>,
                                   vehicleType: VehicleType,
                                   distanceInMeters: Double): Map<Int, SnapPointToLinkDTO> {
 
-        if (coordinates.isEmpty()) {
+        if (points.isEmpty()) {
             return emptyMap()
         }
 
-        // Input coordinates are transformed to binary MultiPoint format (for compact representation).
-        val ewkb: ByteArray = toEwkb(toMultiPoint(coordinates))
+        // List of points is transformed to binary MultiPoint format (for compact representation).
+        val ewkb: ByteArray = toEwkb(mkMultiPoint(points))
 
         val params = MapSqlParameterSource()
             .addValue("ewkb", ewkb)
@@ -41,7 +42,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
         val resultItems: List<ClosestLinkResult> =
             jdbcTemplate.query(FIND_CLOSEST_LINKS_SQL, params) { rs: ResultSet, _: Int ->
-                val coordinateSeqNum = rs.getInt("seq")
+                val pointSeqNum = rs.getInt("seq")
                 val infrastructureLinkId = rs.getLong("infrastructure_link_id")
                 val closestDistance = rs.getDouble("closest_distance")
                 val startNodeId = rs.getLong("start_node_id")
@@ -49,7 +50,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 val distanceToStartNode = rs.getDouble("start_node_distance")
                 val distanceToEndNode = rs.getDouble("end_node_distance")
 
-                ClosestLinkResult(coordinateSeqNum,
+                ClosestLinkResult(pointSeqNum,
                                   infrastructureLinkId,
                                   closestDistance,
                                   startNodeId,
@@ -58,9 +59,9 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                   distanceToEndNode)
             }
 
-        return resultItems.associateBy(keySelector = { it.coordinateSeqNum }, valueTransform = {
-            val coordinateIndex = it.coordinateSeqNum - 1
-            val point = coordinates[coordinateIndex]
+        return resultItems.associateBy(keySelector = { it.pointSeqNum }, valueTransform = {
+            val pointIndex = it.pointSeqNum - 1
+            val point = points[pointIndex]
 
             SnapPointToLinkDTO(point,
                                distanceInMeters,
@@ -81,23 +82,23 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 "    closest_link.distance AS closest_distance, \n" +
                 "    closest_link.start_node_id, \n" +
                 "    closest_link.end_node_id, \n" +
-                "    coords.geom <-> start_node.the_geom AS start_node_distance, \n" +
-                "    coords.geom <-> end_node.the_geom AS end_node_distance \n" +
+                "    point.geom <-> start_node.the_geom AS start_node_distance, \n" +
+                "    point.geom <-> end_node.the_geom AS end_node_distance \n" +
                 "FROM ( \n" +
                 "    SELECT (g.gdump).path AS path, (g.gdump).geom AS geom \n" +
                 "    FROM ( \n" +
                 "        SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump \n" +
                 "    ) AS g \n" +
-                ") AS coords, LATERAL ( \n" +
+                ") AS point, LATERAL ( \n" +
                 "    SELECT \n" +
                 "        link.infrastructure_link_id, \n" +
                 "        link.start_node_id, \n" +
                 "        link.end_node_id, \n" +
-                "        coords.geom <-> link.geom AS distance \n" +
+                "        point.geom <-> link.geom AS distance \n" +
                 "    FROM routing.infrastructure_link link \n" +
                 "    INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe \n" +
                 "        ON safe.infrastructure_link_id = link.infrastructure_link_id \n" +
-                "    WHERE ST_DWithin(coords.geom, link.geom, :distance) \n" +
+                "    WHERE ST_DWithin(point.geom, link.geom, :distance) \n" +
                 "        AND safe.vehicle_type = :vehicleType \n" +
                 "    ORDER BY distance \n" +
                 "    LIMIT 1 \n" +

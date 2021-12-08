@@ -1,6 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.common.response
 
-import fi.hsl.jore4.mapmatching.model.LatLng
+import org.geolatte.geom.G2D
+import org.geolatte.geom.Point
 
 sealed interface RoutingResponse {
     val code: ResponseCode
@@ -24,7 +25,7 @@ sealed interface RoutingResponse {
 
         fun noSegment(message: String) = RoutingFailureDTO(ResponseCode.NoSegment, message)
 
-        fun noSegment(unmatchedCoordinates: List<LatLng>) =
-            noSegment("Could not match infrastructure link for following coordinates: $unmatchedCoordinates")
+        fun noSegment(unmatchedPoints: List<Point<G2D>>) =
+            noSegment("Could not match infrastructure link for following points: $unmatchedPoints")
     }
 }

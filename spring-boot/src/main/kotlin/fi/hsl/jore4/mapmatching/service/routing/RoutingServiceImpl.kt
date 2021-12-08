@@ -1,6 +1,5 @@
 package fi.hsl.jore4.mapmatching.service.routing
 
-import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
@@ -12,9 +11,11 @@ import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceProducer
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeSequenceProducer
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedCoordinates
+import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
+import org.geolatte.geom.G2D
+import org.geolatte.geom.Point
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,31 +30,31 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
     : IRoutingService {
 
     @Transactional(readOnly = true)
-    override fun findRoute(coordinates: List<LatLng>,
+    override fun findRoute(viaPoints: List<Point<G2D>>,
                            vehicleType: VehicleType,
                            linkQueryDistance: Int): RoutingResponse {
 
-        val filteredCoords = filterOutConsecutiveDuplicates(coordinates)
+        val filteredPoints = filterOutConsecutiveDuplicates(viaPoints)
 
-        if (filteredCoords.distinct().size < 2) {
-            return RoutingResponse.invalidValue("At least 2 distinct coordinates must be given")
+        if (filteredPoints.distinct().size < 2) {
+            return RoutingResponse.invalidValue("At least 2 distinct points must be given")
         }
 
         val closestLinksResult: SortedMap<Int, SnapPointToLinkDTO> = linkRepository
-            .findClosestLinks(filteredCoords, vehicleType, linkQueryDistance.toDouble())
+            .findClosestLinks(filteredPoints, vehicleType, linkQueryDistance.toDouble())
             .toSortedMap()
 
         if (LOGGER.isDebugEnabled) {
             LOGGER.debug("Found closest links within $linkQueryDistance m radius: {}",
                          joinToLogString(closestLinksResult.entries) {
-                             "Coordinate #${it.key}: ${it.value}"
+                             "Point #${it.key}: ${it.value}"
                          })
         }
 
         val closestLinks: Collection<SnapPointToLinkDTO> = closestLinksResult.values
 
-        if (closestLinks.size < filteredCoords.size) {
-            return RoutingResponse.noSegment(findUnmatchedCoordinates(closestLinks, filteredCoords))
+        if (closestLinks.size < filteredPoints.size) {
+            return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
         }
 
         val nodeSequenceProducer: NodeSequenceProducer = createNodeSequenceProducer(closestLinks)

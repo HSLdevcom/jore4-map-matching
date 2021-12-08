@@ -4,11 +4,9 @@ import fi.hsl.jore4.mapmatching.model.LatLng
 import org.geolatte.geom.ByteBuffer
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Geometries.mkLineString
-import org.geolatte.geom.Geometries.mkMultiPoint
 import org.geolatte.geom.Geometry
 import org.geolatte.geom.GeometryType
 import org.geolatte.geom.LineString
-import org.geolatte.geom.MultiPoint
 import org.geolatte.geom.Point
 import org.geolatte.geom.PositionSequenceBuilders
 import org.geolatte.geom.codec.Wkb
@@ -17,8 +15,6 @@ import org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84
 object GeolatteUtils {
 
     fun toPoints(coords: List<LatLng>): List<Point<G2D>> = coords.map { it.toGeolattePoint() }
-
-    fun toMultiPoint(coords: List<LatLng>): MultiPoint<G2D> = mkMultiPoint(toPoints(coords))
 
     fun toEwkb(geometry: Geometry<*>): ByteArray = Wkb.toWkb(geometry).toByteArray()
 

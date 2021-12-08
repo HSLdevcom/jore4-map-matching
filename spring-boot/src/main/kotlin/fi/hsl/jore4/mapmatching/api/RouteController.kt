@@ -4,6 +4,7 @@ import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.routing.IRoutingService
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toPoints
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
 import org.slf4j.Logger
@@ -69,7 +70,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
             return RoutingResponse.invalidUrl(ex.message ?: "Failed to parse coordinates")
         }
 
-        return routingService.findRoute(parsedCoordinates,
+        return routingService.findRoute(toPoints(parsedCoordinates),
                                         vehicleType,
                                         linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS)
     }
