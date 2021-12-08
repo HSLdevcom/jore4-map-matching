@@ -1,11 +1,11 @@
 package fi.hsl.jore4.mapmatching.api
 
 import fi.hsl.jore4.mapmatching.model.LatLng
-import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.routing.IRoutingService
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils
+import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,7 +22,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping(value = [RouteController.URL_PREFIX], produces = [MediaType.APPLICATION_JSON_VALUE])
 class RouteController @Autowired constructor(val routingService: IRoutingService) {
 
-    @GetMapping("/$MODE_PARAM/$COORDS_PARAM", "/$MODE_PARAM/$COORDS_PARAM.json")
+    @GetMapping("/$TRANSPORTATION_MODE_PARAM/$COORDS_PARAM",
+                "/$TRANSPORTATION_MODE_PARAM/$COORDS_PARAM.json")
     fun findRoute(@PathVariable transportationMode: String,
                   @PathVariable coords: String,
                   @RequestParam(required = false) linkSearchRadius: Int?
@@ -39,7 +40,8 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         return findRoute(vehicleType, coords, linkSearchRadius)
     }
 
-    @GetMapping("/$MODE_PARAM/$VEHICLE_TYPE_PARAM/$COORDS_PARAM", "/$MODE_PARAM/$VEHICLE_TYPE_PARAM/$COORDS_PARAM.json")
+    @GetMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/$COORDS_PARAM",
+                "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/$COORDS_PARAM.json")
     fun findRoute(@PathVariable transportationMode: String,
                   @PathVariable vehicleTypeParam: String,
                   @PathVariable coords: String,
@@ -58,7 +60,6 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
     }
 
     private fun findRoute(vehicleType: VehicleType, coords: String, linkSearchRadius: Int?): RoutingResponse {
-
         val parsedCoordinates: List<LatLng>
 
         try {
@@ -75,34 +76,12 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
     companion object {
         const val URL_PREFIX = "/api/route/v1"
 
-        private const val MODE_PARAM = "{transportationMode:[a-zA-Z-_]+}"
+        private const val TRANSPORTATION_MODE_PARAM = "{transportationMode:[a-zA-Z-_]+}"
         private const val VEHICLE_TYPE_PARAM = "{vehicleTypeParam:[a-zA-Z-_]+}"
         private const val COORDS_PARAM = "{coords:${ParameterUtils.COORDINATE_LIST}}"
 
         private const val DEFAULT_LINK_SEARCH_RADIUS = 150
 
         private val LOGGER: Logger = LoggerFactory.getLogger(RouteController::class.java)
-
-        private fun findVehicleType(transportationModeParam: String, vehicleTypeParam: String?): VehicleType? {
-            return VehicleMode.from(transportationModeParam)?.let { vehicleMode: VehicleMode ->
-                findVehicleType(vehicleMode, vehicleTypeParam)
-            }
-        }
-
-        private fun findVehicleType(vehicleMode: VehicleMode, vehicleTypeParam: String?): VehicleType? {
-            if (vehicleTypeParam != null) {
-                // Vehicle type must match with its vehicle mode.
-                return VehicleType.from(vehicleTypeParam)?.takeIf { it.vehicleMode == vehicleMode }
-            }
-
-            // When given vehicleType is null, resolve default deduced from vehicleMode.
-            return when (vehicleMode) {
-                VehicleMode.BUS -> VehicleType.GENERIC_BUS
-                VehicleMode.FERRY -> VehicleType.GENERIC_FERRY
-                VehicleMode.METRO -> VehicleType.GENERIC_METRO
-                VehicleMode.TRAIN -> VehicleType.GENERIC_TRAIN
-                VehicleMode.TRAM -> VehicleType.GENERIC_TRAM
-            }
-        }
     }
 }

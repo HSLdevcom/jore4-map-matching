@@ -1,6 +1,8 @@
 package fi.hsl.jore4.mapmatching.web.util
 
 import fi.hsl.jore4.mapmatching.model.LatLng
+import fi.hsl.jore4.mapmatching.model.VehicleMode
+import fi.hsl.jore4.mapmatching.model.VehicleType
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -32,5 +34,27 @@ object ParameterUtils {
                     throw IllegalArgumentException("Invalid coordinate: \"$coordinateToken\"")
                 }
             }
+    }
+
+    fun findVehicleType(transportationModeParam: String, vehicleTypeParam: String?): VehicleType? {
+        return VehicleMode.from(transportationModeParam)?.let { vehicleMode: VehicleMode ->
+            findVehicleType(vehicleMode, vehicleTypeParam)
+        }
+    }
+
+    fun findVehicleType(vehicleMode: VehicleMode, vehicleTypeParam: String?): VehicleType? {
+        if (vehicleTypeParam != null) {
+            // Vehicle type must match with its vehicle mode.
+            return VehicleType.from(vehicleTypeParam)?.takeIf { it.vehicleMode == vehicleMode }
+        }
+
+        // When given vehicleType is null, resolve default deduced from vehicleMode.
+        return when (vehicleMode) {
+            VehicleMode.BUS -> VehicleType.GENERIC_BUS
+            VehicleMode.FERRY -> VehicleType.GENERIC_FERRY
+            VehicleMode.METRO -> VehicleType.GENERIC_METRO
+            VehicleMode.TRAIN -> VehicleType.GENERIC_TRAIN
+            VehicleMode.TRAM -> VehicleType.GENERIC_TRAM
+        }
     }
 }
