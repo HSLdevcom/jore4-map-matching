@@ -10,7 +10,7 @@ import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplica
  * the shortest path passing through the links (that have already been resolved
  * as closest to a given sequence of coordinates).
  */
-data class NodeResolutionParams(val vehicleType: VehicleType, private val snappedLinks: List<SnappedLinkState>) {
+data class NodeResolutionParams(private val snappedLinks: List<SnappedLinkState>, val vehicleType: VehicleType) {
 
     /**
      * Models a continuous sequence of node visitations on endpoints of one

@@ -56,14 +56,14 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedCoordinates(closestLinks, filteredCoords))
         }
 
-        val nodeParams: NodeResolutionParams = createNodeResolutionParams(vehicleType, closestLinks)
+        val nodeParams: NodeResolutionParams = createNodeResolutionParams(closestLinks, vehicleType)
         val nodeIds: List<Long> = nodeService.resolveNodeSequence(nodeParams)
 
         if (LOGGER.isDebugEnabled) {
             LOGGER.debug("Resolved params ${nodeParams.toCompactString()} to node sequence $nodeIds")
         }
 
-        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(vehicleType, nodeIds)
+        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIds, vehicleType)
 
         if (LOGGER.isDebugEnabled) {
             LOGGER.debug("Got route links for node sequence $nodeIds: {}", joinToLogString(routeLinks))

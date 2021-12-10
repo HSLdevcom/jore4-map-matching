@@ -17,11 +17,12 @@ object RoutingServiceHelper {
         return allCoordinates.filter { !snappedCoordinates.contains(it) }
     }
 
-    internal fun createNodeResolutionParams(vehicleType: VehicleType,
-                                            snaps: Collection<SnapPointToLinkDTO>)
+    internal fun createNodeResolutionParams(snaps: Collection<SnapPointToLinkDTO>,
+                                            vehicleType: VehicleType)
         : NodeResolutionParams {
 
         val links: List<SnappedLinkState> = snaps.map { it.link }
-        return NodeResolutionParams(vehicleType, links)
+
+        return NodeResolutionParams(links, vehicleType)
     }
 }

@@ -23,7 +23,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                                    val jsonbConverter: IJsonbConverter) : IRoutingRepository {
 
     @Transactional(readOnly = true)
-    override fun findRouteViaNetworkNodes(vehicleType: VehicleType, nodeIds: List<Long>): List<RouteLinkDTO> {
+    override fun findRouteViaNetworkNodes(nodeIds: List<Long>, vehicleType: VehicleType): List<RouteLinkDTO> {
         val parameterSetter = PreparedStatementSetter { pstmt ->
             val conn: Connection = pstmt.connection
 
