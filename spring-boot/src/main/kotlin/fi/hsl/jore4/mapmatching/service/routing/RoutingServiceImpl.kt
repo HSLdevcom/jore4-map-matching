@@ -10,8 +10,8 @@ import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParams
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeResolutionParams
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceProducer
+import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeSequenceProducer
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedCoordinates
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
@@ -56,11 +56,11 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedCoordinates(closestLinks, filteredCoords))
         }
 
-        val nodeParams: NodeResolutionParams = createNodeResolutionParams(closestLinks, vehicleType)
-        val nodeIds: List<Long> = nodeService.resolveNodeSequence(nodeParams)
+        val nodeSequenceProducer: NodeSequenceProducer = createNodeSequenceProducer(closestLinks)
+        val nodeIds: List<Long> = nodeService.resolveNodeSequence(nodeSequenceProducer, vehicleType)
 
         if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Resolved params ${nodeParams.toCompactString()} to node sequence $nodeIds")
+            LOGGER.debug("Resolved params ${nodeSequenceProducer.toCompactString()} to node sequence $nodeIds")
         }
 
         val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIds, vehicleType)

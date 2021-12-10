@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParams
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceProducer
 
 object RoutingServiceHelper {
 
@@ -17,12 +17,9 @@ object RoutingServiceHelper {
         return allCoordinates.filter { !snappedCoordinates.contains(it) }
     }
 
-    internal fun createNodeResolutionParams(snaps: Collection<SnapPointToLinkDTO>,
-                                            vehicleType: VehicleType)
-        : NodeResolutionParams {
-
+    internal fun createNodeSequenceProducer(snaps: Collection<SnapPointToLinkDTO>): NodeSequenceProducer {
         val links: List<SnappedLinkState> = snaps.map { it.link }
 
-        return NodeResolutionParams(links, vehicleType)
+        return NodeSequenceProducer(links)
     }
 }

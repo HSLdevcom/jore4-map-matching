@@ -1,16 +1,13 @@
 package fi.hsl.jore4.mapmatching.service.node
 
-import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 
 /**
- * Contains a sequence of link information items based on which an optimal node
- * sequence through a topology network can be determined in order to resolve
- * the shortest path passing through the links (that have already been resolved
- * as closest to a given sequence of coordinates).
+ * Extracts possible sequences of infrastructure network nodes based on given
+ * infrastructure link items.
  */
-data class NodeResolutionParams(private val snappedLinks: List<SnappedLinkState>, val vehicleType: VehicleType) {
+data class NodeSequenceProducer(private val snappedLinks: List<SnappedLinkState>) {
 
     /**
      * Models a continuous sequence of node visitations on endpoints of one
