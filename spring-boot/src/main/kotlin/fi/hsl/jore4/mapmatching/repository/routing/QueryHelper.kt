@@ -4,31 +4,26 @@ object QueryHelper {
 
     /**
      * Generates an SQL query that fetches infrastructure links associated with
-     * a specific vehicle type. The generated query is intended to be passed as
-     * string parameter to pgr_dijkstraVia function.
+     * a specific vehicle type. The generated query is enclosed in quotes and
+     * intended to be passed as string parameter to pgr_dijkstraVia SQL
+     * function.
      *
-     * @param vehicleTypeOrVariablePlaceholder the vehicle type or name of the
-     * bind variable for vehicle type. Could be e.g. "?"
-     * @param withSurroundingQuotes indicates whether the generated query is
-     * to be enclosed inside quotes. Defaults to true.
+     * @param vehicleTypePlaceholder the vehicle type or name of the bind
+     * variable for vehicle type. Defaults to "?".
      *
-     * @return an SQL query as [java.lang.String]
+     * @return an SQL query enclosed in quotes as [java.lang.String]
      */
-    internal fun getVehicleTypeConstrainedLinksForPgrDijkstra(vehicleTypeOrVariablePlaceholder: String,
-                                                              withSurroundingQuotes: Boolean = true): String {
+    fun getVehicleTypeConstrainedLinksQuery(vehicleTypePlaceholder: String = "?"): String {
 
         // Using SQL string concatenation in order to be able to inject a bind
         // variable placeholder into the query. This way we enable assigning the
         // actual vehicle type value through PreparedStatement variable binding.
-        val quotedPlaceHolder = "' || $vehicleTypeOrVariablePlaceholder || '"
+        val quotedPlaceHolder = "' || $vehicleTypePlaceholder || '"
 
-        return if (withSurroundingQuotes)
-            "'${getVehicleTypeConstrainedLinksForPgrDijkstra("''$quotedPlaceHolder''")}'"
-        else
-            getVehicleTypeConstrainedLinksForPgrDijkstra(quotedPlaceHolder)
+        return "'${getVehicleTypeConstrainedLinksQueryInternal("''$quotedPlaceHolder''")}'"
     }
 
-    private fun getVehicleTypeConstrainedLinksForPgrDijkstra(vehicleTypeParameter: String): String =
+    private fun getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter: String): String =
         "SELECT l.infrastructure_link_id AS id, " +
             "l.start_node_id AS source, " +
             "l.end_node_id AS target, " +

@@ -5,8 +5,8 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 interface IRoutingRepository {
 
     /**
-     * Find route through infrastructure network via given nodes and constrained
-     * by the given vehicle type.
+     * Find the shortest route through infrastructure network via given nodes
+     * and constrained by the given vehicle type.
      *
      * @param nodeIds list of identifiers for infrastructure network nodes that
      * the route must pass through. The list must not contain consecutive
@@ -18,7 +18,7 @@ interface IRoutingRepository {
      * @return a list of route links that together constitute the resulting
      * route. Each route link contains a path element that consists of a
      * reference to an infrastructure link and the direction of traversal on it.
-     * If a matching route could not be found then an empty list is returned.
+     * If a route could not be found then an empty list is returned.
      */
     fun findRouteViaNetworkNodes(nodeIds: List<Long>, vehicleType: VehicleType): List<RouteLinkDTO>
 }

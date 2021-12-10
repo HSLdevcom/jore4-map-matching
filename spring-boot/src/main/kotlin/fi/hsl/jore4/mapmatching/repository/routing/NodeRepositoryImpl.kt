@@ -14,7 +14,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     override fun resolveNodeSequence(startLinkId: Long,
                                      endLinkId: Long,
                                      nodeSequences: Iterable<List<Long>>,
-                                     vehicleType: VehicleType): List<Long>? {
+                                     vehicleType: VehicleType)
+        : List<Long>? {
 
         val iter: Iterator<List<Long>> = nodeSequences.iterator()
 
@@ -31,8 +32,10 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             throw IllegalArgumentException("Maximum of 4 node sequences exceeded")
         }
 
+        val query: String = getQueryForResolvingBestNodeSequenceOf4()
+
         val preparedStatementCreator = PreparedStatementCreator { conn ->
-            val pstmt: PreparedStatement = conn.prepareStatement(RESOLVE_BEST_NODE_SEQUENCE_OF_4_SQL)
+            val pstmt: PreparedStatement = conn.prepareStatement(query)
 
             // Setting array parameters can only be done through a java.sql.Connection object.
             pstmt.setArray(1, conn.createArrayOf("bigint", seq1.toTypedArray()))
@@ -57,12 +60,19 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     }
 
     companion object {
+        /**
+         * The generated query uses '?' placeholder for bind variables since
+         * there exist SQL ARRAY parameters that cannot be set via named
+         * variables in Spring JDBC templates.
+         */
+        private fun getQueryForResolvingBestNodeSequenceOf4(): String {
+            // The produced SQL query is enclosed in quotes and passed as
+            // parameter to pgr_dijkstraVia() function. '?' is used as a bind
+            // variable placeholder. Actual variable binding is left to occur
+            // within initialisation of PreparedStatement.
+            val linkSelectionQueryForPgrDijkstra: String = QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
-        // The following query uses '?' placeholder for bind variables since
-        // there exist SQL ARRAY parameters that cannot be set through named
-        // variables within Spring JDBC templates.
-        private val RESOLVE_BEST_NODE_SEQUENCE_OF_4_SQL =
-            "SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id \n" +
+            return "SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id \n" +
                 "FROM ( \n" +
                 "    SELECT _node_seq.* \n" +
                 "    FROM ( \n" +
@@ -75,17 +85,11 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 ") AS node_seq \n" +
                 "CROSS JOIN ( \n" +
                 "    SELECT ? AS start_link_id, ? AS end_link_id \n" +
-                ") AS terminal_links \n" +
+                ") AS terminus_links \n" +
                 "CROSS JOIN LATERAL ( \n" +
                 "    SELECT max(pgr.route_agg_cost) AS route_agg_cost \n" +
                 "    FROM pgr_dijkstraVia( \n" +
-
-                // An SQL query enclosed inside quotes is generated as parameter
-                // for pgr_dijkstraVia. '?' is used as a bind variable
-                // placeholder. Actual variable binding is left to occur within
-                // construction of PreparedStatement object.
-                "        ${QueryHelper.getVehicleTypeConstrainedLinksForPgrDijkstra("?")}, \n" +
-
+                "        $linkSelectionQueryForPgrDijkstra, \n" +
                 "        node_seq.node_arr, \n" +
                 "        directed := true, \n" +
                 "        strict := true, \n" +
@@ -95,5 +99,6 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 "    HAVING array_agg(edge) @> ARRAY[start_link_id, end_link_id] \n" +
                 ") route_overview \n" +
                 "ORDER BY start_link_id, route_agg_cost; \n"
+        }
     }
 }

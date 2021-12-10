@@ -17,7 +17,7 @@ interface INodeRepository {
      * last two entries. This guarantees that the first and last link on the
      * route are traversed end-to-end since it is not sufficient that the route
      * just starts from one end of the first link and terminates at one end of
-     * the last link. At first, this may sound trivial but it requires some
+     * the last link. At first, this may sound trivial, but it requires
      * attention within algorithmic implementation.
      *
      * @param startLinkId identifier for the first infrastructure link on the
@@ -40,5 +40,6 @@ interface INodeRepository {
     fun resolveNodeSequence(startLinkId: Long,
                             endLinkId: Long,
                             nodeSequences: Iterable<List<Long>>,
-                            vehicleType: VehicleType): List<Long>?
+                            vehicleType: VehicleType)
+        : List<Long>?
 }
