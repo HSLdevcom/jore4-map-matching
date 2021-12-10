@@ -26,7 +26,7 @@
         <!-- Library versions -->
         <flyway.version>8.0.4</flyway.version>
         <geolatte.version>1.8.2</geolatte.version>
-        <jooq.version>3.14.13</jooq.version>
+        <jooq-meta.version>3.14.15</jooq-meta.version>
         <postgresql.version>42.3.1</postgresql.version>
         <spring-boot.version>2.6.1</spring-boot.version>
 
@@ -151,7 +151,7 @@
                     <plugin>
                         <groupId>org.jooq</groupId>
                         <artifactId>jooq-codegen-maven</artifactId>
-                        <version>${jooq.version}</version>
+                        <version>${jooq-meta.version}</version>
 
                         <executions>
                             <execution>
@@ -174,12 +174,12 @@
                             <dependency>
                                 <groupId>org.jooq</groupId>
                                 <artifactId>jooq-codegen</artifactId>
-                                <version>${jooq.version}</version>
+                                <version>${jooq-meta.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>org.jooq</groupId>
                                 <artifactId>jooq-meta</artifactId>
-                                <version>${jooq.version}</version>
+                                <version>${jooq-meta.version}</version>
                             </dependency>
                         </dependencies>
 
@@ -502,13 +502,6 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
             <version>${flyway.version}</version>
-        </dependency>
-
-        <!-- jOOQ -->
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>jooq</artifactId>
-            <version>${jooq.version}</version>
         </dependency>
 
         <!-- Geolatte for handling geometry types in Java -->
