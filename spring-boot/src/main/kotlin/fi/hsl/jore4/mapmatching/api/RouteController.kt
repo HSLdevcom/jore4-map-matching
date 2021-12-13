@@ -3,7 +3,6 @@ package fi.hsl.jore4.mapmatching.api
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
-import fi.hsl.jore4.mapmatching.service.common.response.RoutingFailureDTO
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.routing.IRoutingService
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils
@@ -35,7 +34,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         }
 
         val vehicleType: VehicleType = findVehicleType(transportationMode, null)
-            ?: return RoutingFailureDTO.invalidUrl("Failed to resolve transportation mode from: '$transportationMode'")
+            ?: return RoutingResponse.invalidTransportationMode(transportationMode)
 
         return findRoute(vehicleType, coords, linkSearchRadius)
     }
@@ -53,8 +52,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         }
 
         val vehicleType: VehicleType = findVehicleType(transportationMode, vehicleTypeParam)
-            ?: return RoutingFailureDTO.invalidUrl(
-                "Failed to resolve a valid combination of transportation mode and vehicle type from: '$transportationMode/$vehicleTypeParam'")
+            ?: return RoutingResponse.invalidTransportationProfile(transportationMode, vehicleTypeParam)
 
         return findRoute(vehicleType, coords, linkSearchRadius)
     }
@@ -66,7 +64,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         try {
             parsedCoordinates = ParameterUtils.parseCoordinates(coords)
         } catch (ex: RuntimeException) {
-            return RoutingFailureDTO.invalidUrl(ex.message ?: "Failed to parse coordinates")
+            return RoutingResponse.invalidUrl(ex.message ?: "Failed to parse coordinates")
         }
 
         return routingService.findRoute(parsedCoordinates,

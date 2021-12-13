@@ -5,11 +5,11 @@ import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousLines
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
-object RoutingResultTransformer {
+object RoutingResponseCreator {
 
-    fun createResponse(paths: List<PathTraversal>): RoutingResponse {
+    fun create(paths: List<PathTraversal>): RoutingResponse {
         if (paths.isEmpty()) {
-            return RoutingFailureDTO.noSegment("Could not find a matching route")
+            return RoutingResponse.noSegment("Could not find a matching route")
         }
 
         val pathGeometries: List<LineString<G2D>> = paths.map { it.geom }
@@ -18,7 +18,7 @@ object RoutingResultTransformer {
         try {
             mergedLine = mergeContinuousLines(pathGeometries)
         } catch (ex: Exception) {
-            return RoutingFailureDTO.noSegment(ex.message ?: "")
+            return RoutingResponse.noSegment(ex.message ?: "Merging compound LineString from multiple parts failed")
         }
 
         val totalCost = paths.fold(0.0) { accumulatedCost, path -> accumulatedCost + path.cost }
@@ -27,6 +27,6 @@ object RoutingResultTransformer {
 
         val route = RouteResultDTO(mergedLine, totalCost, totalCost, linkResults)
 
-        return RoutingSuccessDTO(ResponseCode.Ok, listOf(route))
+        return RoutingResponse.ok(route)
     }
 }

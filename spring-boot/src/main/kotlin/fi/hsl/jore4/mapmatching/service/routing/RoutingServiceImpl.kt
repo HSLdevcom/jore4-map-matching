@@ -7,9 +7,8 @@ import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
-import fi.hsl.jore4.mapmatching.service.common.response.RoutingFailureDTO
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
-import fi.hsl.jore4.mapmatching.service.common.response.RoutingResultTransformer
+import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParams
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeResolutionParams
@@ -37,7 +36,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         val filteredCoords = filterOutConsecutiveDuplicates(coordinates)
 
         if (filteredCoords.distinct().size < 2) {
-            return RoutingFailureDTO.invalidValue("At least 2 distinct coordinates must be given")
+            return RoutingResponse.invalidValue("At least 2 distinct coordinates must be given")
         }
 
         val closestLinksResult: SortedMap<Int, SnapToLinkDTO> = linkRepository
@@ -54,7 +53,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         val closestLinks: Collection<SnapToLinkDTO> = closestLinksResult.values
 
         if (closestLinks.size < filteredCoords.size) {
-            return RoutingFailureDTO.noSegment(findUnmatchedCoordinates(closestLinks, filteredCoords))
+            return RoutingResponse.noSegment(findUnmatchedCoordinates(closestLinks, filteredCoords))
         }
 
         val nodeParams: NodeResolutionParams = createNodeResolutionParams(vehicleType, closestLinks)
@@ -72,7 +71,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
 
         val traversedPaths: List<PathTraversal> = routeLinks.map { it.path }
 
-        return RoutingResultTransformer.createResponse(traversedPaths)
+        return RoutingResponseCreator.create(traversedPaths)
     }
 
     companion object {
