@@ -5,6 +5,7 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.matching.IMatchingService
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters
+import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -60,10 +61,14 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
             LOGGER.debug("Given route points: ${request.routePoints}")
         }
 
-        return matchingService.findMatchForPublicTransportRoute(request.routeGeometry,
-                                                                request.routePoints,
-                                                                vehicleType,
-                                                                getMatchingParameters(request))
+        return try {
+            matchingService.findMatchForPublicTransportRoute(request.routeGeometry,
+                                                             request.routePoints,
+                                                             vehicleType,
+                                                             getMatchingParameters(request))
+        } catch (ex: Exception) {
+            RoutingResponse.invalidUrl(ex.message ?: "Map-matching failed")
+        }
     }
 
     companion object {
@@ -74,6 +79,9 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
 
         private const val DEFAULT_BUFFER_RADIUS_IN_METERS: Double = 50.0
         private const val DEFAULT_TERMINUS_LINK_QUERY_DISTANCE: Double = 50.0
+        private const val DEFAULT_ROAD_JUNCTION_MATCHING_ENABLED: Boolean = true
+        private const val DEFAULT_JUNCTION_NODE_MATCH_DISTANCE: Double = 5.0
+        private const val DEFAULT_JUNCTION_NODE_CLEARING_DISTANCE: Double = 30.0
 
         private val LOGGER: Logger = LoggerFactory.getLogger(MapMatchingController::class.java)
 
@@ -86,7 +94,19 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
             val terminusLinkQueryDistance: Double =
                 parameters?.terminusLinkQueryDistance ?: DEFAULT_TERMINUS_LINK_QUERY_DISTANCE
 
-            return PublicTransportRouteMatchingParameters(bufferRadiusInMeters, terminusLinkQueryDistance)
+            val roadJunctionMatchingParameters: JunctionMatchingParameters? =
+                if (parameters?.roadJunctionMatchingEnabled ?: DEFAULT_ROAD_JUNCTION_MATCHING_ENABLED) {
+                    val junctionNodeMatchDistance: Double =
+                        parameters?.junctionNodeMatchDistance ?: DEFAULT_JUNCTION_NODE_MATCH_DISTANCE
+                    val junctionNodeClearingDistance: Double =
+                        parameters?.junctionNodeClearingDistance ?: DEFAULT_JUNCTION_NODE_CLEARING_DISTANCE
+
+                    JunctionMatchingParameters(junctionNodeMatchDistance, junctionNodeClearingDistance)
+                } else null
+
+            return PublicTransportRouteMatchingParameters(bufferRadiusInMeters,
+                                                          terminusLinkQueryDistance,
+                                                          roadJunctionMatchingParameters)
         }
     }
 }

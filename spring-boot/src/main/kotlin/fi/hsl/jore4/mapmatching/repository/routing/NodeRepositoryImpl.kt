@@ -3,10 +3,15 @@ package fi.hsl.jore4.mapmatching.repository.routing
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
+import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
+import org.geolatte.geom.G2D
+import org.geolatte.geom.Geometries.mkMultiPoint
+import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.PreparedStatementCreator
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.Connection
@@ -15,6 +20,45 @@ import java.sql.ResultSet
 
 @Repository
 class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : INodeRepository {
+
+    override fun findNClosestNodes(points: List<Point<G2D>>, vehicleType: VehicleType, distanceInMeters: Double)
+        : Map<Int, SnapPointToNodesDTO> {
+
+        if (points.isEmpty()) {
+            return emptyMap()
+        }
+
+        // List of points is transformed to binary MultiPoint format (for compact representation).
+        val ewkb: ByteArray = toEwkb(mkMultiPoint(points))
+
+        val params = MapSqlParameterSource()
+            .addValue("ewkb", ewkb)
+            .addValue("vehicleType", vehicleType.value)
+            .addValue("distance", distanceInMeters)
+
+        // one-based index
+        val resultItems: List<Pair<Int, NodeProximity>> =
+            jdbcTemplate.query(FIND_N_CLOSEST_NODES_SQL, params) { rs: ResultSet, _: Int ->
+                val pointSeqNum = rs.getInt("point_seq")
+                val nodeId = rs.getLong("node_id")
+                val nodeDistance = rs.getDouble("node_distance")
+
+                Pair(pointSeqNum,
+                     NodeProximity(InfrastructureNodeId(nodeId), nodeDistance))
+            }
+
+        return resultItems
+            .groupBy(keySelector = { it.first }, valueTransform = { it.second })
+            .mapValues { entry ->
+                val pointSeqNum: Int = entry.key
+                val nodeList: List<NodeProximity> = entry.value
+
+                val pointIndex: Int = pointSeqNum - 1
+                val sourcePoint: Point<G2D> = points[pointIndex]
+
+                SnapPointToNodesDTO(sourcePoint, distanceInMeters, nodeList)
+            }
+    }
 
     override fun resolveNodeSequence(startLinkId: InfrastructureLinkId,
                                      endLinkId: InfrastructureLinkId,
@@ -77,6 +121,33 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     }
 
     companion object {
+        private const val FIND_N_CLOSEST_NODES_SQL =
+            "SELECT \n" +
+                "    path[1] AS point_seq, \n" +
+                "    close_node.id AS node_id, \n" +
+                "    close_node.distance AS node_distance \n" +
+                "FROM ( \n" +
+                "    SELECT (g.gdump).path AS path, (g.gdump).geom AS geom \n" +
+                "    FROM ( \n" +
+                "        SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump \n" +
+                "    ) AS g \n" +
+                ") AS point, LATERAL ( \n" +
+                "    SELECT \n" +
+                "        node.id, \n" +
+                "        point.geom <-> node.the_geom AS distance \n" +
+                "    FROM routing.infrastructure_link_vertices_pgr node \n" +
+                "    WHERE ST_DWithin(point.geom, node.the_geom, :distance) \n" +
+                "        AND EXISTS ( \n" +
+                "            SELECT 1 \n" +
+                "            FROM routing.infrastructure_link link \n" +
+                "            INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe \n" +
+                "                ON safe.infrastructure_link_id = link.infrastructure_link_id \n" +
+                "            WHERE safe.vehicle_type = :vehicleType \n" +
+                "                AND (link.start_node_id = node.id OR link.end_node_id = node.id) \n" +
+                "        ) \n" +
+                ") AS close_node \n" +
+                "ORDER BY point_seq ASC, distance ASC; \n"
+
         /**
          * The generated query uses '?' placeholder for bind variables since
          * there exist SQL ARRAY parameters that cannot be set via named

@@ -37,8 +37,39 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
      * stop from route endpoints. Terminus links generally fall partly outside
      * the buffer area used to restrict infrastructure links. Hence, terminus
      * links need to be treated separately.
+     * @property roadJunctionMatchingEnabled indicates whether road junction
+     * nodes should be taken into account in map-matching. If explicitly set to
+     * false, then road junction matching is disabled and parameters
+     * [junctionNodeMatchDistance] and [junctionNodeClearingDistance] must be
+     * null.
+     * @property junctionNodeMatchDistance the distance in meters within which
+     * an infrastructure network node must locate from a route point of road
+     * junction type in order to be matched with it.
+     * @property junctionNodeClearingDistance the distance in meters within
+     * which an infrastructure node must be the only node in proximity of a
+     * route point (of road junction type) in order to be accepted as the match
+     * for it. In other words, no other infrastructure network nodes are allowed
+     * to exist within this distance from the route point for a match to occur.
      */
-    data class MapMatchingParametersDTO(val bufferRadiusInMeters: Double?, val terminusLinkQueryDistance: Double?)
+    data class MapMatchingParametersDTO(val bufferRadiusInMeters: Double?,
+                                        val terminusLinkQueryDistance: Double?,
+                                        val roadJunctionMatchingEnabled: Boolean?,
+                                        val junctionNodeMatchDistance: Double?,
+                                        val junctionNodeClearingDistance: Double?) {
+
+        private val isRoadJunctionMatchingEnabled: Boolean
+            get() = roadJunctionMatchingEnabled?.let { it } != false
+
+        @AssertTrue(message = "false")
+        fun isJunctionNodeDistancesAbsentWhenJunctionMatchingDisabled(): Boolean =
+            isRoadJunctionMatchingEnabled || junctionNodeMatchDistance == null && junctionNodeClearingDistance == null
+
+        @AssertTrue(message = "false")
+        fun isJunctionNodeMatchDistanceNotGreaterThanClearingDistance(): Boolean =
+            if (junctionNodeMatchDistance != null && junctionNodeClearingDistance != null)
+                junctionNodeMatchDistance <= junctionNodeClearingDistance
+            else true
+    }
 
     @AssertTrue(message = "false")
     fun isAtLeastTwoRoutePointsGiven(): Boolean = routePoints.size >= 2
