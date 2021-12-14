@@ -29,6 +29,7 @@
         <geolatte.version>1.8.2</geolatte.version>
         <jooq-meta.version>3.14.15</jooq-meta.version>
         <postgresql.version>42.3.1</postgresql.version>
+        <quicktheories.version>0.26</quicktheories.version>
         <spring-boot.version>2.6.1</spring-boot.version>
 
         <!-- Other properties -->
@@ -531,6 +532,13 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.quicktheories</groupId>
+            <artifactId>quicktheories</artifactId>
+            <version>${quicktheories.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

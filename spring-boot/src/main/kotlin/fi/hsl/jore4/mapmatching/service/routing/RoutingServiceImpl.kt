@@ -9,8 +9,8 @@ import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceProducer
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeSequenceProducer
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
+import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeSequenceAlternatives
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
@@ -57,22 +57,43 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
         }
 
-        val nodeSequenceProducer: NodeSequenceProducer = createNodeSequenceProducer(closestLinks)
-        val nodeIds: List<Long> = nodeService.resolveNodeSequence(nodeSequenceProducer, vehicleType)
+        val nodeIds: List<Long>
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Resolved params ${nodeSequenceProducer.toCompactString()} to node sequence $nodeIds")
+        try {
+            nodeIds = resolveNetworkNodeIds(closestLinks, vehicleType)
+        } catch (ex: Exception) {
+            val errMessage: String = ex.message ?: "Failure while resolving infrastructure network nodes"
+            LOGGER.warn(errMessage)
+            return RoutingResponse.noSegment(errMessage)
         }
 
         val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIds, vehicleType)
 
         if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Got route links for node sequence $nodeIds: {}", joinToLogString(routeLinks))
+            LOGGER.debug("Got route links for node identifier sequence $nodeIds: {}", joinToLogString(routeLinks))
         }
 
         val traversedPaths: List<PathTraversal> = routeLinks.map { it.path }
 
         return RoutingResponseCreator.create(traversedPaths)
+    }
+
+    /**
+     * @throws [IllegalStateException]
+     */
+    private fun resolveNetworkNodeIds(closestLinks: Collection<SnapPointToLinkDTO>,
+                                      vehicleType: VehicleType)
+        : List<Long> {
+
+        val nodeSequenceAlternatives: NodeSequenceAlternatives = createNodeSequenceAlternatives(closestLinks)
+        val nodeIds: List<Long> = nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)
+
+        if (LOGGER.isDebugEnabled) {
+            LOGGER.debug(
+                "Resolved params ${nodeSequenceAlternatives.toCompactString()} to node identifier sequence $nodeIds")
+        }
+
+        return nodeIds
     }
 
     companion object {

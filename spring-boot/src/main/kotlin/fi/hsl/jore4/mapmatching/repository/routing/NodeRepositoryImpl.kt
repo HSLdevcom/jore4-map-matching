@@ -13,11 +13,11 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
     override fun resolveNodeSequence(startLinkId: Long,
                                      endLinkId: Long,
-                                     nodeSequences: Iterable<List<Long>>,
+                                     nodeIdSequences: Iterable<List<Long>>,
                                      vehicleType: VehicleType)
         : List<Long>? {
 
-        val iter: Iterator<List<Long>> = nodeSequences.iterator()
+        val iter: Iterator<List<Long>> = nodeIdSequences.iterator()
 
         if (!iter.hasNext()) {
             return null

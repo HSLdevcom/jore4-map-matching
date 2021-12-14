@@ -6,7 +6,7 @@ interface INodeRepository {
 
     /**
      * Resolves the best sequence of infrastructure node identifiers from the
-     * given [nodeSequences] alternatives. This method is used while resolving
+     * given [nodeIdSequences] alternatives. This method is used while resolving
      * a route through infrastructure network.
      *
      * The best alternative is selected by the criteria that it yields the
@@ -26,7 +26,7 @@ interface INodeRepository {
      * @param endLinkId identifier for the last infrastructure link on the
      * route. It is required that the last two entries in the result list
      * include the identifiers for both endpoint nodes of the referenced link.
-     * @param nodeSequences contains at most four lists of infrastructure
+     * @param nodeIdSequences contains at most four lists of infrastructure
      * network node identifiers of which the optimal one is to be selected and
      * returned.
      * @param vehicleType vehicle type constraint applied while resolving the
@@ -34,12 +34,12 @@ interface INodeRepository {
      * those network nodes that appear as endpoints of such infrastructure links
      * that are safely traversable by the given vehicle type.
      *
-     * @return the best fit from [nodeSequences] alternatives or null if the
+     * @return the best fit from [nodeIdSequences] alternatives or null if the
      * conditions are not met.
      */
     fun resolveNodeSequence(startLinkId: Long,
                             endLinkId: Long,
-                            nodeSequences: Iterable<List<Long>>,
+                            nodeIdSequences: Iterable<List<Long>>,
                             vehicleType: VehicleType)
         : List<Long>?
 }
