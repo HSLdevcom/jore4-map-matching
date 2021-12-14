@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.repository.infrastructure
 
+import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
 import org.geolatte.geom.G2D
@@ -67,10 +68,8 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                distanceInMeters,
                                SnappedLinkState(it.infrastructureLinkId,
                                                 it.closestDistance,
-                                                it.startNodeId,
-                                                it.endNodeId,
-                                                it.distanceToStartNode,
-                                                it.distanceToEndNode))
+                                                NodeProximity(it.startNodeId, it.distanceToStartNode),
+                                                NodeProximity(it.endNodeId, it.distanceToEndNode)))
         })
     }
 

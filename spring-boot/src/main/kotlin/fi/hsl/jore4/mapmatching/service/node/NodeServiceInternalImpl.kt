@@ -12,30 +12,28 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRepository) : INodeServiceInternal {
 
-    @Transactional(readOnly = true)
-    override fun resolveNodeSequence(nodeSequenceProducer: NodeSequenceProducer,
-                                     vehicleType: VehicleType)
+    @Transactional(readOnly = true, noRollbackFor = [IllegalStateException::class])
+    override fun resolveNodeIdSequence(nodeSequenceAlternatives: NodeSequenceAlternatives,
+                                       vehicleType: VehicleType)
         : List<Long> {
 
-        val nodeSequences: Set<List<Long>> = nodeSequenceProducer.resolvePossibleNodeSequences()
+        val nodeIdSequences: List<List<Long>> = nodeSequenceAlternatives.nodeIdSequences
 
-        if (nodeSequences.size == 1) {
-            return nodeSequences.first()
+        if (nodeIdSequences.size == 1) {
+            return nodeIdSequences.first()
         }
 
         if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Resolving best node sequence among alternatives: {}", joinToLogString(nodeSequences))
+            LOGGER.debug("Resolving best node identifier sequence among alternatives: {}",
+                         joinToLogString(nodeIdSequences))
         }
 
-        val startLinkId: Long = nodeSequenceProducer.firstLink.infrastructureLinkId
-        val endLinkId: Long = nodeSequenceProducer.lastLink.infrastructureLinkId
-
-        return nodeRepository.resolveNodeSequence(startLinkId,
-                                                  endLinkId,
-                                                  nodeSequences,
+        return nodeRepository.resolveNodeSequence(nodeSequenceAlternatives.startLinkId,
+                                                  nodeSequenceAlternatives.endLinkId,
+                                                  nodeIdSequences,
                                                   vehicleType)
             ?: throw IllegalStateException(
-                "Could not resolve node sequence from ${nodeSequenceProducer.toCompactString()}")
+                "Could not resolve node identifier sequence from ${nodeSequenceAlternatives.toCompactString()}")
     }
 
     companion object {
