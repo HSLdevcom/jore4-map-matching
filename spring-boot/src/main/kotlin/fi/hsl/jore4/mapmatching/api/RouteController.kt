@@ -16,16 +16,17 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import javax.validation.constraints.Pattern
 
 @RestController
 @Validated
 @RequestMapping(value = [RouteController.URL_PREFIX], produces = [MediaType.APPLICATION_JSON_VALUE])
 class RouteController @Autowired constructor(val routingService: IRoutingService) {
 
-    @GetMapping("/$TRANSPORTATION_MODE_PARAM/$COORDS_PARAM",
-                "/$TRANSPORTATION_MODE_PARAM/$COORDS_PARAM.json")
+    @GetMapping("/$TRANSPORTATION_MODE_PARAM/{coords}",
+                "/$TRANSPORTATION_MODE_PARAM/{coords}.json")
     fun findRoute(@PathVariable transportationMode: String,
-                  @PathVariable coords: String,
+                  @Pattern(regexp = ParameterUtils.COORDINATE_LIST) @PathVariable coords: String,
                   @RequestParam(required = false) linkSearchRadius: Int?
     ): RoutingResponse {
 
@@ -40,13 +41,13 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         return findRoute(vehicleType, coords, linkSearchRadius)
     }
 
-    @GetMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/$COORDS_PARAM",
-                "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/$COORDS_PARAM.json")
+    @GetMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}",
+                "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}.json")
     fun findRoute(@PathVariable transportationMode: String,
                   @PathVariable vehicleTypeParam: String,
-                  @PathVariable coords: String,
-                  @RequestParam(required = false) linkSearchRadius: Int?
-    ): RoutingResponse {
+                  @Pattern(regexp = ParameterUtils.COORDINATE_LIST) @PathVariable coords: String,
+                  @RequestParam(required = false) linkSearchRadius: Int?)
+        : RoutingResponse {
 
         if (LOGGER.isDebugEnabled) {
             LOGGER.debug("Given profile: $transportationMode/$vehicleTypeParam")
@@ -78,7 +79,6 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
 
         private const val TRANSPORTATION_MODE_PARAM = "{transportationMode:[a-zA-Z-_]+}"
         private const val VEHICLE_TYPE_PARAM = "{vehicleTypeParam:[a-zA-Z-_]+}"
-        private const val COORDS_PARAM = "{coords:${ParameterUtils.COORDINATE_LIST}}"
 
         private const val DEFAULT_LINK_SEARCH_RADIUS = 150
 

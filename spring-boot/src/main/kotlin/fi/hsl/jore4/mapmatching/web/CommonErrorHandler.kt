@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.web
 
+import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -21,26 +22,33 @@ import javax.validation.ConstraintViolationException
 class CommonErrorHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException::class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    fun onMissingParameterException(ex: MissingServletRequestParameterException): String {
-        LOGGER.info("Handling missing request parameter", ex)
+    fun onMissingParameterException(ex: MissingServletRequestParameterException): RoutingResponse {
+        LOGGER.info("Handling missing request parameter: ${ex.message}")
 
-        return "Required request parameter '${ex.parameterName}' missing"
+        val message = "Required request parameter missing: \"${ex.parameterName}\""
+
+        return RoutingResponse.invalidUrl(message)
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    fun onValidationException(ex: MethodArgumentNotValidException): Map<String, String?> {
-        LOGGER.info("Handling invalid method argument", ex)
+    fun onValidationException(ex: MethodArgumentNotValidException): RoutingResponse {
+        LOGGER.info("Handling invalid method argument: ${ex.message}")
 
         val errors: MutableMap<String, String?> = HashMap()
         ex.bindingResult.allErrors.forEach(Consumer { error: ObjectError ->
             val fieldName = (error as FieldError).field
             errors[fieldName] = error.getDefaultMessage()
         })
-        return errors
+
+        val message = errors.entries.joinToString(separator = ", ", prefix = "{", postfix = "}") { errorItem ->
+            "\"${errorItem.key}\": \"${errorItem.value}\""
+        }
+
+        return RoutingResponse.invalidValue(message)
     }
 
     @ExceptionHandler(ConstraintViolationException::class)
