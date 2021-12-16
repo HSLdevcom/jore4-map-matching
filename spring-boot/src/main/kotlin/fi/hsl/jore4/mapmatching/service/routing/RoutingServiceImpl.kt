@@ -33,7 +33,8 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
     @Transactional(readOnly = true)
     override fun findRoute(viaPoints: List<Point<G2D>>,
                            vehicleType: VehicleType,
-                           linkQueryDistance: Int): RoutingResponse {
+                           linkQueryDistance: Int)
+        : RoutingResponse {
 
         val filteredPoints = filterOutConsecutiveDuplicates(viaPoints)
 
@@ -41,18 +42,8 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.invalidValue("At least 2 distinct points must be given")
         }
 
-        val closestLinksResult: SortedMap<Int, SnapPointToLinkDTO> = linkRepository
-            .findClosestLinks(filteredPoints, vehicleType, linkQueryDistance.toDouble())
-            .toSortedMap()
-
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Found closest links within $linkQueryDistance m radius: {}",
-                         joinToLogString(closestLinksResult.entries) {
-                             "Point #${it.key}: ${it.value}"
-                         })
-        }
-
-        val closestLinks: Collection<SnapPointToLinkDTO> = closestLinksResult.values
+        val closestLinks: Collection<SnapPointToLinkDTO> =
+            findClosestInfrastructureLinks(filteredPoints, vehicleType, linkQueryDistance)
 
         if (closestLinks.size < filteredPoints.size) {
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
@@ -68,15 +59,28 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(errMessage)
         }
 
-        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIdSeq, vehicleType)
-
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Got route links for $nodeIdSeq: {}", joinToLogString(routeLinks))
-        }
-
-        val traversedPaths: List<PathTraversal> = routeLinks.map { it.path }
+        val traversedPaths: List<PathTraversal> = findRoute(nodeIdSeq, vehicleType)
 
         return RoutingResponseCreator.create(traversedPaths)
+    }
+
+    private fun findClosestInfrastructureLinks(points: List<Point<G2D>>,
+                                               vehicleType: VehicleType,
+                                               linkQueryDistance: Int)
+        : Collection<SnapPointToLinkDTO> {
+
+        val closestLinksResult: SortedMap<Int, SnapPointToLinkDTO> = linkRepository
+            .findClosestLinks(points, vehicleType, linkQueryDistance.toDouble())
+            .toSortedMap()
+
+        if (LOGGER.isDebugEnabled) {
+            LOGGER.debug("Found closest links within $linkQueryDistance m radius: {}",
+                         joinToLogString(closestLinksResult.entries) {
+                             "Point #${it.key}: ${it.value}"
+                         })
+        }
+
+        return closestLinksResult.values
     }
 
     /**
@@ -94,6 +98,16 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         }
 
         return nodeIdSeq
+    }
+
+    fun findRoute(nodeIdSequence: NodeIdSequence, vehicleType: VehicleType) : List<PathTraversal> {
+        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIdSequence, vehicleType)
+
+        if (LOGGER.isDebugEnabled) {
+            LOGGER.debug("Got route links for $nodeIdSequence: {}", joinToLogString(routeLinks))
+        }
+
+        return routeLinks.map { it.path }
     }
 
     companion object {
