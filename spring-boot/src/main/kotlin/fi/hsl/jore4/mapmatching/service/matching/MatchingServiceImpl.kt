@@ -18,8 +18,7 @@ import fi.hsl.jore4.mapmatching.repository.infrastructure.IStopRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
-import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.getTerminusLinkOrThrowException
@@ -43,8 +42,8 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopRepository,
                                                  val linkRepository: ILinkRepository,
-                                                 val routingRepository: IRoutingRepository,
-                                                 val nodeService: INodeServiceInternal)
+                                                 val nodeService: INodeServiceInternal,
+                                                 val routingService: IRoutingServiceInternal)
     : IMatchingService {
 
     data class InfrastructureLinksOnRoute(val startLink: SnappedLinkState,
@@ -82,7 +81,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             return RoutingResponse.noSegment(errMessage)
         }
 
-        val traversedPaths: List<PathTraversal> = findRoute(nodeIdSeq, vehicleType, bufferAreaRestriction)
+        val traversedPaths: List<PathTraversal> =
+            routingService.findRoute(nodeIdSeq, vehicleType, bufferAreaRestriction)
 
         return RoutingResponseCreator.create(traversedPaths)
     }
@@ -278,20 +278,6 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         }
 
         return nodeIdSeq
-    }
-
-    fun findRoute(nodeIdSequence: NodeIdSequence,
-                  vehicleType: VehicleType,
-                  bufferAreaRestriction: BufferAreaRestriction)
-        : List<PathTraversal> {
-
-        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIdSequence, vehicleType)
-
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Got route links for $nodeIdSequence: {}", joinToLogString(routeLinks))
-        }
-
-        return routeLinks.map { it.path }
     }
 
     companion object {

@@ -5,8 +5,7 @@ import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
-import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
@@ -26,8 +25,8 @@ import java.util.SortedMap
 
 @Service
 class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkRepository,
-                                                val routingRepository: IRoutingRepository,
-                                                val nodeService: INodeServiceInternal)
+                                                val nodeService: INodeServiceInternal,
+                                                val routingServiceInternal: IRoutingServiceInternal)
     : IRoutingService {
 
     @Transactional(readOnly = true)
@@ -59,7 +58,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(errMessage)
         }
 
-        val traversedPaths: List<PathTraversal> = findRoute(nodeIdSeq, vehicleType)
+        val traversedPaths: List<PathTraversal> = routingServiceInternal.findRoute(nodeIdSeq, vehicleType)
 
         return RoutingResponseCreator.create(traversedPaths)
     }
@@ -98,16 +97,6 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         }
 
         return nodeIdSeq
-    }
-
-    fun findRoute(nodeIdSequence: NodeIdSequence, vehicleType: VehicleType) : List<PathTraversal> {
-        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIdSequence, vehicleType)
-
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Got route links for $nodeIdSequence: {}", joinToLogString(routeLinks))
-        }
-
-        return routeLinks.map { it.path }
     }
 
     companion object {
