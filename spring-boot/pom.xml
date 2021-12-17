@@ -19,11 +19,11 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <!-- Maven build plugins -->
-        <build-helper.plugin.version>3.2.0</build-helper.plugin.version>
-        <build-properties.plugin.version>1.0.0</build-properties.plugin.version>
+        <build-helper-plugin.version>3.2.0</build-helper-plugin.version>
+        <build-properties-plugin.version>1.0.0</build-properties-plugin.version>
         <flyway-plugin.version>8.0.4</flyway-plugin.version>
-        <kotlin.plugin.version>1.6.0</kotlin.plugin.version>
-        <surefire.plugin.version>2.22.2</surefire.plugin.version>
+        <kotlin-plugin.version>1.6.0</kotlin-plugin.version>
+        <surefire-plugin.version>2.22.2</surefire-plugin.version>
 
         <!-- Library versions -->
         <geolatte.version>1.8.2</geolatte.version>
@@ -70,7 +70,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>properties-maven-plugin</artifactId>
-                        <version>${build-properties.plugin.version}</version>
+                        <version>${build-properties-plugin.version}</version>
 
                         <configuration>
                             <files>
@@ -321,7 +321,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>${build-helper.plugin.version}</version>
+                <version>${build-helper-plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
@@ -340,7 +340,7 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.plugin.version}</version>
+                <version>${kotlin-plugin.version}</version>
                 <configuration>
                     <compilerPlugins>
                         <plugin>spring</plugin>
@@ -370,12 +370,12 @@
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>
                         <artifactId>kotlin-maven-noarg</artifactId>
-                        <version>${kotlin.plugin.version}</version>
+                        <version>${kotlin-plugin.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>
                         <artifactId>kotlin-maven-allopen</artifactId>
-                        <version>${kotlin.plugin.version}</version>
+                        <version>${kotlin-plugin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -420,7 +420,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire.plugin.version}</version>
+                <version>${surefire-plugin.version}</version>
             </plugin>
 
             <plugin>
