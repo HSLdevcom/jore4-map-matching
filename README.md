@@ -34,12 +34,12 @@ This avoids rebuilding Docker image every the code is changed. The application i
 
 The application will be available through http://localhost:8080. The database used by the application is initially empty. Hence, no meaningful routing results can be expected (unless some data is populated e.g. from a dump available through [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import)).
 
-## Making requests to API
+## Routing API
 
 The structure of HTTP(S) request line for routing request is:
 
 ```
-GET /api/{service}/{version}/{profile}/{coordinates}[.{format}]?option=value&option=value
+GET /api/route/{version}/{profile}/{coordinates}[.{format}]?option=value&option=value
 ```
 
 Example request:
@@ -52,7 +52,6 @@ The table below describes the request parameters part of the URI path.
 
 | Parameter     | Description |
 | ------------- | ----------- |
-| `service`     | Only `route` is currently available. |
 | `version`     | Version of the service. `v1` for `route` service. |
 | `profile`     | Mode of transportation and optional vehicle type separated by a slash. E.g. `bus/tall_electric_bus`. |
 | `coordinates` | String of format `{longitude},{latitude}~{longitude},{latitude}[~{longitude},{latitude} ...]` |
@@ -78,9 +77,9 @@ The table below describes the request options.
 | -------------------- | ------------|
 | `link_search_radius` | Limit search radius (in meters) while finding closest infrastructure link for each given coordinate. Defaults to `150` meters if not present. |
 
-## Response format
+## Common response format
 
-An example JSON response for successful processing of routing request has the following structure:
+An example JSON response for successful processing of routing/map-matching request has the following structure:
 
 ```json
 {
@@ -89,7 +88,7 @@ An example JSON response for successful processing of routing request has the fo
         {
             "geometry": {
                 "type": "LineString",
-                "coordinates": [ ... ]
+                "coordinates": [ [24.957757980575668, 60.168433705609274], ... ]
             },
             "paths": [
                 {
@@ -98,10 +97,10 @@ An example JSON response for successful processing of routing request has the fo
                         "externalLinkId": "441874",
                         "infrastructureSource": "digiroad_r"
                     },
-                    "traversalForwards": true,
+                    "isTraversalForwards": true,
                     "geometry": {
                         "type": "LineString",
-                        "coordinates": [ ... ]
+                        "coordinates": [ [24.957757980575668, 60.168433705609274], ... ]
                     },
                     "infrastructureLinkName": {
                         "fi": "Meritullintori",
@@ -119,7 +118,7 @@ An example JSON response for successful processing of routing request has the fo
 }
 ```
 
-The `infrastructureLinkId` attribute in the response is local to the service. Linking to other infrastructure sources (such as **Digiroad R**) may be done using a pair of `externalLinkId` and `infrastructureSource` attributes. The geometry for an entire route is given in GeoJSON format at route's top-level `geometry` attribute. A `geometry` is also provided for each individual infrastructure link appearing in `paths`. The `traversalForwards` attribute tells whether a single link is traversed either forwards or backwards (`null` not possible) with regard to its directed `LineString` geometry.
+The `infrastructureLinkId` attribute in the response is local to the service. Linking to other infrastructure sources (such as **Digiroad R**) may be done using a pair of `externalLinkId` and `infrastructureSource` attributes. The geometry for an entire route is given in GeoJSON format at route's top-level `geometry` attribute. A `geometry` attribute is also provided for each individual infrastructure link appearing in `paths`. The `isTraversalForwards` attribute tells whether a single link is traversed either forwards or backwards (`null` not possible) with regard to its directed `LineString` geometry.
 
 The table below describes the possible response codes.
 
@@ -128,7 +127,104 @@ The table below describes the possible response codes.
 | `Ok`           | Request was successfully parsed and a route was successfully resolved. |
 | `InvalidUrl`   | An error occurred while parsing request parameters or options. |
 | `InvalidValue` | Invalid values given e.g. at least two distinct coordinates must be given. |
-| `NoSegment`    | Could not resolve a route for given coordinates. |
+| `NoSegment`    | Could not resolve a route for given parameters. |
+
+## Map-matching API - for public transport routes
+
+Map-matching API accepts HTTP(S) POST requests.
+
+The request line for map-matching request has the following form:
+
+```
+POST /api/match/public-transport-route/{version}/{profile}[.{format}]
+```
+
+The table below describes the parameters of the URI path.
+
+| Parameter | Description |
+| --------- | ----------- |
+| `version` | Version of the match service. `v1` is the only option for `match` service for the time being. |
+| `profile` | Mode of transportation and optional vehicle type separated by a slash. See above for more details. |
+| `format`  | This parameter is optional and defaults to `json` which is the only supported value. |
+
+An example of map-matching request body is given below:
+
+```json
+{
+    "routeId": "1234X-1",
+    "routeGeometry": {
+        "type": "LineString",
+        "coordinates": [
+            [24.974325, 60.167355],
+            [24.974089, 60.167294],
+            [24.97202, 60.16677],
+            ...
+        ]
+    },
+    "routePoints": [
+        {
+            "type": "PUBLIC_TRANSPORT_STOP",
+            "location": {
+                "type": "Point",
+                "coordinates": [24.97428, 60.16735]
+            },
+            "stopPointInfo": {
+                "passengerId": "H1234"
+            }
+        },
+        {
+            "type": "PUBLIC_TRANSPORT_STOP",
+            "location": {
+                "type": "Point",
+                "coordinates": [24.97179, 60.16669]
+            },
+            "stopPointInfo": {
+                "nationalId": 123456,
+                "passengerId": "H5678"
+            }
+        },
+        {
+            "type": "ROAD_JUNCTION",
+            "location": {
+                "type": "Point",
+                "coordinates": [24.97153, 60.166648]
+            }
+        },
+        ...
+    ],
+    "matchingParameters": {
+        "bufferRadiusInMeters": 100.0,
+        "roadJunctionMatchingEnabled": false
+    }
+}
+```
+
+The table below describes the main request body elements.
+
+| Element              | Description |
+| -------------------- | ----------- |
+| `routeId`            | Optional string identifier for the route being matched. May be helpful in debugging when viewing logs. |
+| `routeGeometry`      | `LineString` geometry of the route being matched in GeoJSON format |
+| `routePoints`        | Route points of the route being matched |
+| `matchingParameters` | Optional set of parameters with which map-matching functionality can be adjusted or fine-tuned |
+
+Route points have the properties described in the table below.
+
+| Property        | Description |
+| --------------- | ----------- |
+| `type`          | The type of route point. One of the following: `PUBLIC_TRANSPORT_STOP`, `ROAD_JUNCTION`, `OTHER` |
+| `location`      | `Point` geometry for the route point in GeoJSON format |
+| `stopPointInfo` | Allowed only for route points that denote public transport stops. May contain properties `nationalId` (number) and/or `passengerId` (string). |
+
+The optional adjustable map-matching parameters are described in the following below.
+
+| Parameter                      | Description |
+| ------------------------------ | ----------- |
+| `bufferRadiusInMeters`         | The radius in meters that is used to expand the input geometry in all directions. The resulting polygon will be used to restrict the set of available infrastructure links while resolving matching route. Defaults to 50 meters. |
+| `terminusLinkQueryDistance`    | The distance in meters within which the first or last infrastructure link for matching route is searched in case terminus link cannot be determined via matching public transport stop from route endpoints. Terminus links generally fall partly outside the buffer area used to restrict infrastructure links. Hence, terminus links need to be treated separately. Defaults to 50 meters. |
+| `roadJunctionMatchingEnabled`  | Indicates whether road junction nodes should be taken into account in map-matching. If explicitly set to false, then road junction matching is disabled and parameters `junctionNodeMatchDistance` and `junctionNodeClearingDistance` must be absent or null. Defaults to true. |
+| `junctionNodeMatchDistance`    | The distance in meters within which an infrastructure network node must locate from a route point of road junction type in order to be matched with it. Must not be greater than `junctionNodeClearingDistance`. Defaults to 5 meters. |
+| `junctionNodeClearingDistance` | The distance in meters within which an infrastructure node must be the only node in proximity of a route point (of road junction type) in order to be accepted as the match for it. In other words, no other infrastructure network nodes are allowed to exist within this distance from the route point for a match to occur. Defaults to 30 meters. |
 
 ## Building
 
