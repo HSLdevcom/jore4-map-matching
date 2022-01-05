@@ -1,6 +1,7 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
 import fi.hsl.jore4.mapmatching.model.ExternalLinkReference
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.extractLineStringG2D
@@ -23,7 +24,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                                    val jsonbConverter: IJsonbConverter) : IRoutingRepository {
 
     @Transactional(readOnly = true)
-    override fun findRouteViaNetworkNodes(nodeIds: List<Long>, vehicleType: VehicleType)
+    override fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence, vehicleType: VehicleType)
         : List<RouteLinkDTO> {
 
         val parameterSetter = PreparedStatementSetter { pstmt ->
@@ -31,8 +32,10 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
 
             pstmt.setString(1, vehicleType.value)
 
+            val nodeIdArray: Array<Long> = nodeIdSequence.list.map { it.value }.toTypedArray()
+
             // Setting array parameters can only be done through a java.sql.Connection object.
-            pstmt.setArray(2, conn.createArrayOf("bigint", nodeIds.toTypedArray()))
+            pstmt.setArray(2, conn.createArrayOf("bigint", nodeIdArray))
         }
 
         val query: String = getQueryForFindingRouteViaNodes()
@@ -107,7 +110,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 "    ) AS pgr \n" +
                 ") AS pt \n" +
                 "INNER JOIN routing.infrastructure_link link ON pt.edge = link.infrastructure_link_id \n" +
-                "INNER JOIN routing.infrastructure_source src ON src.infrastructure_source_id = link.infrastructure_source_id; \n";
+                "INNER JOIN routing.infrastructure_source src ON src.infrastructure_source_id = link.infrastructure_source_id; \n"
         }
     }
 }

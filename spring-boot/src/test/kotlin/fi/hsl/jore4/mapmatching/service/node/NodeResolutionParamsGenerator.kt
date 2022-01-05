@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.node
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.CONNECTED
@@ -70,7 +71,7 @@ object NodeResolutionParamsGenerator {
     private fun generateViaNodes(nodeSource: Gen<NodeProximity>): Gen<List<NodeProximity>> =
         lists().of(nodeSource).ofSizeBetween(1, MAX_NUMBER_OF_VIA_NODES)
 
-    private fun pickExcluding(list: List<NodeProximity>, excludedIds: Set<Long>): Gen<NodeProximity> {
+    private fun pickExcluding(list: List<NodeProximity>, excludedIds: Set<InfrastructureNodeId>): Gen<NodeProximity> {
         val filtered: List<NodeProximity> = list.filter { !excludedIds.contains(it.id) }
 
         return arbitrary().pick(filtered)
@@ -89,7 +90,7 @@ object NodeResolutionParamsGenerator {
             val allNodesOfTerminusLinks: List<NodeProximity> =
                 listOf(startLink.closerNode, startLink.furtherNode, endLink.closerNode, endLink.furtherNode)
 
-            val idsExcludedFromFirstNode: Set<Long> =
+            val idsExcludedFromFirstNode: Set<InfrastructureNodeId> =
                 if (numViaNodes == 1)
                     setOf(startLink.closerNodeId, endLink.closerNodeId)
                 else

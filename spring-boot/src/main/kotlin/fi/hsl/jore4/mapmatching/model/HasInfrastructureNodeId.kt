@@ -1,5 +1,5 @@
 package fi.hsl.jore4.mapmatching.model
 
 interface HasInfrastructureNodeId {
-    fun getInfrastructureNodeId(): Long
+    fun getInfrastructureNodeId(): InfrastructureNodeId
 }

@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.node
 
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 
 interface INodeServiceInternal {
@@ -19,5 +20,5 @@ interface INodeServiceInternal {
      */
     fun resolveNodeIdSequence(nodeSequenceAlternatives: NodeSequenceAlternatives,
                               vehicleType: VehicleType)
-        : List<Long>
+        : NodeIdSequence
 }

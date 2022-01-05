@@ -1,6 +1,8 @@
 package fi.hsl.jore4.mapmatching.repository.infrastructure
 
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.util.MathUtils
 import java.lang.IllegalArgumentException
@@ -16,7 +18,7 @@ import java.lang.IllegalArgumentException
  * @property startNode the node at the start point of the infrastructure link
  * @property endNode the node at the end point of the infrastructure link
  */
-data class SnappedLinkState(val infrastructureLinkId: Long,
+data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
                             val closestDistance: Double,
                             val startNode: NodeProximity,
                             val endNode: NodeProximity)
@@ -62,19 +64,19 @@ data class SnappedLinkState(val infrastructureLinkId: Long,
     /**
      * Returns the ID of the node that is closer to the point being snapped.
      */
-    val closerNodeId: Long
+    val closerNodeId: InfrastructureNodeId
         get() = closerNode.id
 
     /**
      * Returns the ID of the node that lies further away from the point being
      * snapped.
      */
-    val furtherNodeId: Long
+    val furtherNodeId: InfrastructureNodeId
         get() = furtherNode.id
 
     override fun getInfrastructureNodeId() = closerNodeId
 
-    fun hasNode(nodeId: Long) = startNode.id == nodeId || endNode.id == nodeId
+    fun hasNode(nodeId: InfrastructureNodeId) = startNode.id == nodeId || endNode.id == nodeId
 
     fun hasSharedNode(that: SnappedLinkState) = hasNode(that.startNode.id) || hasNode(that.endNode.id)
 }
