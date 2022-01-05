@@ -1,32 +1,36 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.PreparedStatementCreator
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
 @Repository
 class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : INodeRepository {
 
-    override fun resolveNodeSequence(startLinkId: Long,
-                                     endLinkId: Long,
-                                     nodeIdSequences: Iterable<List<Long>>,
+    override fun resolveNodeSequence(startLinkId: InfrastructureLinkId,
+                                     endLinkId: InfrastructureLinkId,
+                                     nodeIdSequences: Iterable<NodeIdSequence>,
                                      vehicleType: VehicleType)
-        : List<Long>? {
+        : NodeIdSequence? {
 
-        val iter: Iterator<List<Long>> = nodeIdSequences.iterator()
+        val iter: Iterator<NodeIdSequence> = nodeIdSequences.iterator()
 
         if (!iter.hasNext()) {
             return null
         }
 
-        val seq1: List<Long> = iter.next()
-        val seq2: List<Long> = if (iter.hasNext()) iter.next() else emptyList()
-        val seq3: List<Long> = if (iter.hasNext()) iter.next() else emptyList()
-        val seq4: List<Long> = if (iter.hasNext()) iter.next() else emptyList()
+        val seq1: NodeIdSequence = iter.next()
+        val seq2: NodeIdSequence? = if (iter.hasNext()) iter.next() else null
+        val seq3: NodeIdSequence? = if (iter.hasNext()) iter.next() else null
+        val seq4: NodeIdSequence? = if (iter.hasNext()) iter.next() else null
 
         if (iter.hasNext()) {
             throw IllegalArgumentException("Maximum of 4 node sequences exceeded")
@@ -38,25 +42,25 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             val pstmt: PreparedStatement = conn.prepareStatement(query)
 
             // Setting array parameters can only be done through a java.sql.Connection object.
-            pstmt.setArray(1, conn.createArrayOf("bigint", seq1.toTypedArray()))
-            pstmt.setArray(2, conn.createArrayOf("bigint", seq2.toTypedArray()))
-            pstmt.setArray(3, conn.createArrayOf("bigint", seq3.toTypedArray()))
-            pstmt.setArray(4, conn.createArrayOf("bigint", seq4.toTypedArray()))
+            pstmt.setArray(1, toSqlArray(seq1, conn))
+            pstmt.setArray(2, toSqlArray(seq2, conn))
+            pstmt.setArray(3, toSqlArray(seq3, conn))
+            pstmt.setArray(4, toSqlArray(seq4, conn))
 
-            pstmt.setLong(5, startLinkId)
-            pstmt.setLong(6, endLinkId)
+            pstmt.setLong(5, startLinkId.value)
+            pstmt.setLong(6, endLinkId.value)
 
             pstmt.setString(7, vehicleType.value)
 
             pstmt
         }
 
-        val result: List<Long> =
+        val result: List<InfrastructureNodeId> =
             jdbcTemplate.jdbcOperations.query(preparedStatementCreator) { rs: ResultSet, _: Int ->
-                rs.getLong("node_id")
+                InfrastructureNodeId(rs.getLong("node_id"))
             }
 
-        return result.ifEmpty { null }
+        return if (result.isNotEmpty()) NodeIdSequence(result) else null
     }
 
     companion object {
@@ -99,6 +103,13 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 "    HAVING array_agg(edge) @> ARRAY[start_link_id, end_link_id] \n" +
                 ") route_overview \n" +
                 "ORDER BY start_link_id, route_agg_cost; \n"
+        }
+
+        private fun toSqlArray(nodeIdSequence: NodeIdSequence?, conn: Connection): java.sql.Array {
+            val nodeIdArr: Array<Long> =
+                nodeIdSequence?.list?.let { nodeIds -> nodeIds.map { it.value }.toTypedArray() } ?: emptyArray()
+
+            return conn.createArrayOf("bigint", nodeIdArr)
         }
     }
 }

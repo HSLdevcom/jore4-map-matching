@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.routing
 
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
@@ -57,20 +58,20 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
         }
 
-        val nodeIds: List<Long>
+        val nodeIdSeq: NodeIdSequence
 
         try {
-            nodeIds = resolveNetworkNodeIds(closestLinks, vehicleType)
+            nodeIdSeq = resolveNetworkNodeIds(closestLinks, vehicleType)
         } catch (ex: Exception) {
             val errMessage: String = ex.message ?: "Failure while resolving infrastructure network nodes"
             LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
 
-        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIds, vehicleType)
+        val routeLinks: List<RouteLinkDTO> = routingRepository.findRouteViaNetworkNodes(nodeIdSeq, vehicleType)
 
         if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Got route links for node identifier sequence $nodeIds: {}", joinToLogString(routeLinks))
+            LOGGER.debug("Got route links for $nodeIdSeq: {}", joinToLogString(routeLinks))
         }
 
         val traversedPaths: List<PathTraversal> = routeLinks.map { it.path }
@@ -83,17 +84,16 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
      */
     private fun resolveNetworkNodeIds(closestLinks: Collection<SnapPointToLinkDTO>,
                                       vehicleType: VehicleType)
-        : List<Long> {
+        : NodeIdSequence {
 
         val nodeSequenceAlternatives: NodeSequenceAlternatives = createNodeSequenceAlternatives(closestLinks)
-        val nodeIds: List<Long> = nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)
+        val nodeIdSeq: NodeIdSequence = nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)
 
         if (LOGGER.isDebugEnabled) {
-            LOGGER.debug(
-                "Resolved params ${nodeSequenceAlternatives.toCompactString()} to node identifier sequence $nodeIds")
+            LOGGER.debug("Resolved params ${nodeSequenceAlternatives.toCompactString()} to $nodeIdSeq")
         }
 
-        return nodeIds
+        return nodeIdSeq
     }
 
     companion object {

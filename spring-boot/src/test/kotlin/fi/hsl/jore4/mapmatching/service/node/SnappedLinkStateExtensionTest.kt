@@ -1,5 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.node
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.getNodeIdSequenceCombinations
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toNodeIdList
@@ -29,7 +31,7 @@ class SnappedLinkStateExtensionTest {
         fun whenDistanceToStartNodeIsLessThanOrEqualToDistanceToEndNode() {
             return withSnappedLink(START_NODE_CLOSER_OR_EQUAL_DISTANCE)
                 .checkAssert { snappedLink ->
-                    val nodeIds: List<Long> = snappedLink.toNodeIdList()
+                    val nodeIds: List<InfrastructureNodeId> = snappedLink.toNodeIdList()
 
                     assertThat(nodeIds)
                         .isEqualTo(listOf(snappedLink.startNode.id, snappedLink.endNode.id))
@@ -41,7 +43,7 @@ class SnappedLinkStateExtensionTest {
         fun whenDistanceToStartNodeIsGreaterThanDistanceToEndNode() {
             return withSnappedLink(END_NODE_CLOSER)
                 .checkAssert { snappedLink ->
-                    val nodeIds: List<Long> = snappedLink.toNodeIdList()
+                    val nodeIds: List<InfrastructureNodeId> = snappedLink.toNodeIdList()
 
                     assertThat(nodeIds)
                         .isEqualTo(listOf(snappedLink.endNode.id, snappedLink.startNode.id))
@@ -58,12 +60,12 @@ class SnappedLinkStateExtensionTest {
         fun whenDistanceToStartNodeIsLessThanOrEqualToDistanceToEndNode() {
             return withSnappedLink(START_NODE_CLOSER_OR_EQUAL_DISTANCE)
                 .checkAssert { snappedLink ->
-                    val nodeIdSequences: List<List<Long>> = snappedLink.getNodeIdSequenceCombinations()
+                    val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
 
                     assertThat(nodeIdSequences)
                         .isEqualTo(listOf(
-                            listOf(snappedLink.startNode.id, snappedLink.endNode.id),
-                            listOf(snappedLink.endNode.id, snappedLink.startNode.id)))
+                            NodeIdSequence(listOf(snappedLink.startNode.id, snappedLink.endNode.id)),
+                            NodeIdSequence(listOf(snappedLink.endNode.id, snappedLink.startNode.id))))
                 }
         }
 
@@ -72,12 +74,12 @@ class SnappedLinkStateExtensionTest {
         fun whenDistanceToStartNodeIsGreaterThanDistanceToEndNode() {
             return withSnappedLink(END_NODE_CLOSER)
                 .checkAssert { snappedLink ->
-                    val nodeIdSequences: List<List<Long>> = snappedLink.getNodeIdSequenceCombinations()
+                    val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
 
                     assertThat(nodeIdSequences)
                         .isEqualTo(listOf(
-                            listOf(snappedLink.endNode.id, snappedLink.startNode.id),
-                            listOf(snappedLink.startNode.id, snappedLink.endNode.id)))
+                            NodeIdSequence(listOf(snappedLink.endNode.id, snappedLink.startNode.id)),
+                            NodeIdSequence(listOf(snappedLink.startNode.id, snappedLink.endNode.id))))
                 }
         }
     }

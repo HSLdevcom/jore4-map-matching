@@ -1,5 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.node
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toNodeIdList
@@ -74,10 +76,10 @@ class NodeSequenceAlternativesCreatorTest {
                 val output: NodeSequenceAlternatives = createOutput(input)
 
                 assertThat(output.nodeIdSequences)
-                    .allMatch { nodeIds ->
-                        val firstTwoItems: List<Long> = nodeIds.take(2)
+                    .allMatch { nodeIdSeq ->
+                        val firstTwoItems: List<InfrastructureNodeId> = nodeIdSeq.list.take(2)
 
-                        val startLinkAsNodeIdList: List<Long> = input.startLink.toNodeIdList()
+                        val startLinkAsNodeIdList: List<InfrastructureNodeId> = input.startLink.toNodeIdList()
 
                         firstTwoItems == startLinkAsNodeIdList || firstTwoItems == startLinkAsNodeIdList.reversed()
                     }
@@ -93,10 +95,10 @@ class NodeSequenceAlternativesCreatorTest {
                 val output: NodeSequenceAlternatives = createOutput(input)
 
                 assertThat(output.nodeIdSequences)
-                    .allMatch { nodeIds ->
-                        val lastTwoItems: List<Long> = nodeIds.takeLast(2)
+                    .allMatch { nodeIdSeq ->
+                        val lastTwoItems: List<InfrastructureNodeId> = nodeIdSeq.list.takeLast(2)
 
-                        val endLinkAsNodeIdList: List<Long> = input.endLink.toNodeIdList()
+                        val endLinkAsNodeIdList: List<InfrastructureNodeId> = input.endLink.toNodeIdList()
 
                         lastTwoItems == endLinkAsNodeIdList || lastTwoItems == endLinkAsNodeIdList.reversed()
                     }
@@ -111,15 +113,14 @@ class NodeSequenceAlternativesCreatorTest {
             : TheoryBuilder<NodeResolutionParams> = forInputs(terminusLinkRelation, ViaNodeGenerationScheme.EMPTY)
 
         @Test
-        @DisplayName("List of via node IDs should be empty")
+        @DisplayName("Sequence of via node IDs should be empty")
         fun viaNodeIdsShouldBeEmpty() {
             forEmptyViaNodeInputs(TerminusLinkRelation.ANY)
                 .checkAssert { input: NodeResolutionParams ->
 
                     assertThat(createOutput(input))
                         .extracting { it.viaNodeIds }
-                        .asList()
-                        .isEmpty()
+                        .isEqualTo(NodeIdSequence.empty())
                 }
         }
 
@@ -168,7 +169,7 @@ class NodeSequenceAlternativesCreatorTest {
                             .extracting { it.nodeIdSequences }
                             .asList()
                             .element(0)
-                            .isEqualTo(listOf(snappedLink.closerNodeId, snappedLink.furtherNodeId))
+                            .isEqualTo(NodeIdSequence(listOf(snappedLink.closerNodeId, snappedLink.furtherNodeId)))
                     }
             }
         }
@@ -205,12 +206,12 @@ class NodeSequenceAlternativesCreatorTest {
                             .asList()
                             .hasSizeGreaterThanOrEqualTo(1)
                             .element(0)
-                            .isEqualTo(
+                            .isEqualTo(NodeIdSequence(
                                 filterOutConsecutiveDuplicates(
                                     listOf(input.startLink.closerNodeId,
                                            input.startLink.furtherNodeId,
                                            input.endLink.closerNodeId,
-                                           input.endLink.furtherNodeId)))
+                                           input.endLink.furtherNodeId))))
                     }
             }
 
@@ -225,12 +226,12 @@ class NodeSequenceAlternativesCreatorTest {
                             .asList()
                             .hasSizeGreaterThanOrEqualTo(2)
                             .element(1)
-                            .isEqualTo(
+                            .isEqualTo(NodeIdSequence(
                                 filterOutConsecutiveDuplicates(
                                     listOf(input.startLink.closerNodeId,
                                            input.startLink.furtherNodeId,
                                            input.endLink.furtherNodeId,
-                                           input.endLink.closerNodeId)))
+                                           input.endLink.closerNodeId))))
                     }
             }
 
@@ -245,12 +246,12 @@ class NodeSequenceAlternativesCreatorTest {
                             .asList()
                             .hasSizeGreaterThanOrEqualTo(3)
                             .element(2)
-                            .isEqualTo(
+                            .isEqualTo(NodeIdSequence(
                                 filterOutConsecutiveDuplicates(
                                     listOf(input.startLink.furtherNodeId,
                                            input.startLink.closerNodeId,
                                            input.endLink.closerNodeId,
-                                           input.endLink.furtherNodeId)))
+                                           input.endLink.furtherNodeId))))
                     }
             }
 
@@ -265,12 +266,12 @@ class NodeSequenceAlternativesCreatorTest {
                             .asList()
                             .hasSizeGreaterThanOrEqualTo(4)
                             .element(3)
-                            .isEqualTo(
+                            .isEqualTo(NodeIdSequence(
                                 filterOutConsecutiveDuplicates(
                                     listOf(input.startLink.furtherNodeId,
                                            input.startLink.closerNodeId,
                                            input.endLink.furtherNodeId,
-                                           input.endLink.closerNodeId)))
+                                           input.endLink.closerNodeId))))
                     }
             }
 
@@ -353,7 +354,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.viaNodeIds }
+                            .extracting { it.viaNodeIds.list }
                             .asList()
                             .isEmpty()
                     }
@@ -393,7 +394,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.viaNodeIds }
+                            .extracting { it.viaNodeIds.list }
                             .asList()
                             .isNotEmpty()
                     }
@@ -405,12 +406,12 @@ class NodeSequenceAlternativesCreatorTest {
                 forNonRedundantViaNodeInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
-                        val expectedViaNodeIds: List<Long> = filterOutConsecutiveDuplicates(
+                        val expectedViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(
                             input.viaNodeResolvers.map { it.getInfrastructureNodeId() }
                         )
 
                         assertThat(createOutput(input))
-                            .extracting { it.viaNodeIds }
+                            .extracting { it.viaNodeIds.list }
                             .asList()
                             .isEqualTo(expectedViaNodeIds)
                     }
@@ -424,16 +425,16 @@ class NodeSequenceAlternativesCreatorTest {
 
                         val output: NodeSequenceAlternatives = createOutput(input)
 
-                        val viaNodeIds: List<Long> = output.viaNodeIds
+                        val viaNodeIds: List<InfrastructureNodeId> = output.viaNodeIds.list
 
                         assertThat(output.nodeIdSequences)
-                            .allMatch { nodeIds: List<Long> ->
+                            .allMatch { nodeIdSeq: NodeIdSequence ->
 
                                 // try 2 x 2 = 4 different candidates
                                 listOf(1, 2)
                                     .flatMap { dropFromStart ->
                                         listOf(1, 2).map { dropFromEnd ->
-                                            nodeIds.drop(dropFromStart).dropLast(dropFromEnd)
+                                            nodeIdSeq.list.drop(dropFromStart).dropLast(dropFromEnd)
                                         }
                                     }
                                     .any { it == viaNodeIds }
@@ -462,25 +463,25 @@ class NodeSequenceAlternativesCreatorTest {
                         .build()
                         .describedAs { params ->
                             val viaNodeIds: List<Long> =
-                                params.viaNodeResolvers.map { it.getInfrastructureNodeId() }
+                                params.viaNodeResolvers.map { it.getInfrastructureNodeId().value }
 
                             // Make assertion failures more readable.
                             "{\n" +
                                 "    startLink: {\n" +
-                                "        id: ${params.startLink.infrastructureLinkId},\n" +
+                                "        id: ${params.startLink.infrastructureLinkId.value},\n" +
                                 "        closestDistance: ${params.startLink.closestDistance},\n" +
-                                "        startNodeId: ${params.startLink.startNode.id},\n" +
+                                "        startNodeId: ${params.startLink.startNode.id.value},\n" +
                                 "        startNodeDistance: ${params.startLink.startNode.distanceToNode},\n" +
-                                "        endNodeId: ${params.startLink.endNode.id},\n" +
+                                "        endNodeId: ${params.startLink.endNode.id.value},\n" +
                                 "        endNodeDistance: ${params.startLink.endNode.distanceToNode}\n" +
                                 "    },\n" +
                                 "    viaNodeIds: $viaNodeIds,\n" +
                                 "    endLink: {\n" +
-                                "        id: ${params.endLink.infrastructureLinkId},\n" +
+                                "        id: ${params.endLink.infrastructureLinkId.value},\n" +
                                 "        closestDistance: ${params.endLink.closestDistance},\n" +
-                                "        startNodeId: ${params.endLink.startNode.id},\n" +
+                                "        startNodeId: ${params.endLink.startNode.id.value},\n" +
                                 "        startNodeDistance: ${params.endLink.startNode.distanceToNode},\n" +
-                                "        endNodeId: ${params.endLink.endNode.id},\n" +
+                                "        endNodeId: ${params.endLink.endNode.id.value},\n" +
                                 "        endNodeDistance: ${params.endLink.endNode.distanceToNode}\n" +
                                 "    }\n" +
                                 "}"

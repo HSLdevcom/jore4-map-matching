@@ -1,5 +1,8 @@
 package fi.hsl.jore4.mapmatching.service.node
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
+
 /**
  * Models alternative sequences of infrastructure network node identifiers
  * between infrastructure links at route start and end. The variance between
@@ -21,10 +24,10 @@ package fi.hsl.jore4.mapmatching.service.node
  * sequences from which the best needs to be resolved. Includes both endpoint
  * nodes for the start link and the end link
  */
-data class NodeSequenceAlternatives(val startLinkId: Long,
-                                    val endLinkId: Long,
-                                    val viaNodeIds: List<Long>,
-                                    val nodeIdSequences: List<List<Long>>) {
+data class NodeSequenceAlternatives(val startLinkId: InfrastructureLinkId,
+                                    val endLinkId: InfrastructureLinkId,
+                                    val viaNodeIds: NodeIdSequence,
+                                    val nodeIdSequences: List<NodeIdSequence>) {
 
     init {
         if (nodeIdSequences.isEmpty()) {

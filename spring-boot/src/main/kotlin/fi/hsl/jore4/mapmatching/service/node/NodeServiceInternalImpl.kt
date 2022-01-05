@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.node
 
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
@@ -15,9 +16,9 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
     @Transactional(readOnly = true, noRollbackFor = [IllegalStateException::class])
     override fun resolveNodeIdSequence(nodeSequenceAlternatives: NodeSequenceAlternatives,
                                        vehicleType: VehicleType)
-        : List<Long> {
+        : NodeIdSequence {
 
-        val nodeIdSequences: List<List<Long>> = nodeSequenceAlternatives.nodeIdSequences
+        val nodeIdSequences: List<NodeIdSequence> = nodeSequenceAlternatives.nodeIdSequences
 
         if (nodeIdSequences.size == 1) {
             return nodeIdSequences.first()

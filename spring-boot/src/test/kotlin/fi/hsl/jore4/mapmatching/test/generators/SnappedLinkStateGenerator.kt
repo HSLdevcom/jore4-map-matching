@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.test.generators
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.ZERO_DOUBLE
@@ -110,7 +111,7 @@ object SnappedLinkStateGenerator {
             }
     }
 
-    private fun createSnappedLinkState(infrastructureLinkId: Long,
+    private fun createSnappedLinkState(infrastructureLinkId: InfrastructureLinkId,
                                        generatedDistanceValue: Double,
                                        startNode: NodeProximity,
                                        endNode: NodeProximity): SnappedLinkState {
@@ -121,7 +122,7 @@ object SnappedLinkStateGenerator {
         return SnappedLinkState(infrastructureLinkId, closestDistanceToLink, startNode, endNode)
     }
 
-    private fun createSnappedLinkState(infrastructureLinkId: Long,
+    private fun createSnappedLinkState(infrastructureLinkId: InfrastructureLinkId,
                                        generatedDistanceValue: Double,
                                        nodes: Pair<NodeProximity, NodeProximity>): SnappedLinkState {
 

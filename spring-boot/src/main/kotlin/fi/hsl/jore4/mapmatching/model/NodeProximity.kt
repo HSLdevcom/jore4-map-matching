@@ -7,7 +7,7 @@ import java.lang.IllegalArgumentException
  * @property distanceToNode is the distance from an arbitrary point to the
  * infrastructure node
  */
-data class NodeProximity(val id: Long, val distanceToNode: Double)
+data class NodeProximity(val id: InfrastructureNodeId, val distanceToNode: Double)
     : HasInfrastructureNodeId {
 
     init {

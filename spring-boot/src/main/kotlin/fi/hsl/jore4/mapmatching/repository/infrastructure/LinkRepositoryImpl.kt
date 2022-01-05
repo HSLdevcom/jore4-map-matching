@@ -1,5 +1,7 @@
 package fi.hsl.jore4.mapmatching.repository.infrastructure
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
@@ -17,10 +19,10 @@ import java.sql.ResultSet
 class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : ILinkRepository {
 
     private data class ClosestLinkResult(val pointSeqNum: Int,
-                                         val infrastructureLinkId: Long,
+                                         val infrastructureLinkId: InfrastructureLinkId,
                                          val closestDistance: Double,
-                                         val startNodeId: Long,
-                                         val endNodeId: Long,
+                                         val startNodeId: InfrastructureNodeId,
+                                         val endNodeId: InfrastructureNodeId,
                                          val distanceToStartNode: Double,
                                          val distanceToEndNode: Double)
 
@@ -52,10 +54,10 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 val distanceToEndNode = rs.getDouble("end_node_distance")
 
                 ClosestLinkResult(pointSeqNum,
-                                  infrastructureLinkId,
+                                  InfrastructureLinkId(infrastructureLinkId),
                                   closestDistance,
-                                  startNodeId,
-                                  endNodeId,
+                                  InfrastructureNodeId(startNodeId),
+                                  InfrastructureNodeId(endNodeId),
                                   distanceToStartNode,
                                   distanceToEndNode)
             }
