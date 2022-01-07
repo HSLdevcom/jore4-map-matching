@@ -21,8 +21,8 @@
         <!-- Maven build plugins -->
         <build-helper-plugin.version>3.2.0</build-helper-plugin.version>
         <build-properties-plugin.version>1.0.0</build-properties-plugin.version>
-        <flyway-plugin.version>8.0.4</flyway-plugin.version>
-        <kotlin-plugin.version>1.6.0</kotlin-plugin.version>
+        <flyway-plugin.version>8.0.5</flyway-plugin.version>
+        <kotlin-plugin.version>1.6.10</kotlin-plugin.version>
         <surefire-plugin.version>2.22.2</surefire-plugin.version>
 
         <!-- Library versions -->
@@ -30,7 +30,7 @@
         <jooq-meta.version>3.14.15</jooq-meta.version>
         <postgresql.version>42.3.1</postgresql.version>
         <quicktheories.version>0.26</quicktheories.version>
-        <spring-boot.version>2.6.1</spring-boot.version>
+        <spring-boot.version>2.6.3</spring-boot.version>
 
         <!-- Other properties -->
         <start.class>fi.hsl.jore4.mapmatching.MapMatchingApplicationKt</start.class>
