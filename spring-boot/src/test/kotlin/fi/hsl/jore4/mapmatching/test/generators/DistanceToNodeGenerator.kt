@@ -8,12 +8,12 @@ import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.STA
 import fi.hsl.jore4.mapmatching.test.util.Quadruple
 import fi.hsl.jore4.mapmatching.util.MathUtils
 import org.quicktheories.core.Gen
-import org.quicktheories.generators.SourceDSL
+import org.quicktheories.generators.SourceDSL.doubles
 
 object DistanceToNodeGenerator {
 
     // random distances from arbitrary point to either endpoint of the closest link
-    private val POSITIVE_DISTANCE: Gen<Double> = SourceDSL.doubles().between(0.5, 500.0)
+    private val POSITIVE_DISTANCE: Gen<Double> = doubles().between(0.5, 500.0)
 
     // mix 5% zeros
     private val NON_NEGATIVE_DISTANCE: Gen<Double> = POSITIVE_DISTANCE.mix(CommonGenerators.ZERO_DOUBLE, 5)

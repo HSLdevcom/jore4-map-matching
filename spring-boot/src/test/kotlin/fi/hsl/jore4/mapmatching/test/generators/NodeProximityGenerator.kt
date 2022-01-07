@@ -17,7 +17,7 @@ object NodeProximityGenerator {
     private val SINGLE: Gen<NodeProximity> =
         infrastructureNodeId().zip(nonNegativeDistance()) { id, distanceToNode -> NodeProximity(id, distanceToNode) }
 
-    private val UNIQUE_PAIR: Gen<Pair<NodeProximity, NodeProximity>> =
+    private val DISTINCT_PAIR: Gen<Pair<NodeProximity, NodeProximity>> =
         infrastructureNodeIdPair().zip(nodeDistancePair()) { (node1Id, node2Id),
                                                              (distance1, distance2) ->
 
@@ -25,7 +25,7 @@ object NodeProximityGenerator {
                  NodeProximity(node2Id, distance2))
         }
 
-    private val UNIQUE_TRIPLE: Gen<Triple<NodeProximity, NodeProximity, NodeProximity>> =
+    private val DISTINCT_TRIPLE: Gen<Triple<NodeProximity, NodeProximity, NodeProximity>> =
         infrastructureNodeIdTriple().zip(nodeDistanceTriple()) { (node1Id, node2Id, node3Id),
                                                                  (distance1, distance2, distance3) ->
 
@@ -34,7 +34,7 @@ object NodeProximityGenerator {
                    NodeProximity(node3Id, distance3))
         }
 
-    private val UNIQUE_QUADRUPLE: Gen<Quadruple<NodeProximity, NodeProximity, NodeProximity, NodeProximity>> =
+    private val DISTINCT_QUADRUPLE: Gen<Quadruple<NodeProximity, NodeProximity, NodeProximity, NodeProximity>> =
         infrastructureNodeIdQuadruple().zip(nodeDistanceQuadruple()) { (node1Id, node2Id, node3Id, node4Id),
                                                                        (distance1, distance2, distance3, distance4) ->
 
@@ -46,7 +46,7 @@ object NodeProximityGenerator {
 
     fun node(): Gen<NodeProximity> = SINGLE
 
-    fun uniqueNodePair(): Gen<Pair<NodeProximity, NodeProximity>> = UNIQUE_PAIR
+    fun distinctNodePair(): Gen<Pair<NodeProximity, NodeProximity>> = DISTINCT_PAIR
 
     fun endpointNodesOfInfrastructureLink(nodeProximityFilter: LinkEndpointsProximityFilter)
         : Gen<Pair<NodeProximity, NodeProximity>> {
@@ -60,7 +60,7 @@ object NodeProximityGenerator {
             }
     }
 
-    fun uniqueNodeTriple(): Gen<Triple<NodeProximity, NodeProximity, NodeProximity>> = UNIQUE_TRIPLE
+    fun distinctNodeTriple(): Gen<Triple<NodeProximity, NodeProximity, NodeProximity>> = DISTINCT_TRIPLE
 
-    fun uniqueNodeQuadruple(): Gen<Quadruple<NodeProximity, NodeProximity, NodeProximity, NodeProximity>> = UNIQUE_QUADRUPLE
+    fun distinctNodeQuadruple(): Gen<Quadruple<NodeProximity, NodeProximity, NodeProximity, NodeProximity>> = DISTINCT_QUADRUPLE
 }

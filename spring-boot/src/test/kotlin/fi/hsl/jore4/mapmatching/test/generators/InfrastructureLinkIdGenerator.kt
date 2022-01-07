@@ -1,21 +1,15 @@
 package fi.hsl.jore4.mapmatching.test.generators
 
+import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.distinctPair
 import org.quicktheories.core.Gen
-import org.quicktheories.generators.Generate
+import org.quicktheories.generators.Generate.longRange
 
 object InfrastructureLinkIdGenerator {
 
-    private val LINK_ID: Gen<Long> = Generate.longRange(1, 9_999)
+    private val ID: Gen<Long> = longRange(1, 9_999)
+
+    fun infrastructureLinkId(): Gen<Long> = ID
 
     // Generate pairs of distinct link IDs.
-    private val LINK_ID_PAIR: Gen<Pair<Long, Long>> =
-        LINK_ID.flatMap { firstLinkId ->
-            LINK_ID
-                .assuming { it != firstLinkId }
-                .map { secondLinkId -> Pair(firstLinkId, secondLinkId) }
-        }
-
-    fun infrastructureLinkId(): Gen<Long> = LINK_ID
-
-    fun infrastructureLinkIdPair(): Gen<Pair<Long, Long>> = LINK_ID_PAIR
+    fun infrastructureLinkIdPair(): Gen<Pair<Long, Long>> = distinctPair(ID)
 }

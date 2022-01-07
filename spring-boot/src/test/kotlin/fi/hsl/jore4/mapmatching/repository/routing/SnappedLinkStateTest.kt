@@ -18,7 +18,7 @@ class SnappedLinkStateTest {
         @Test
         @DisplayName("Should return true when given ID of start node")
         fun shouldReturnTrueForStartNodeId() {
-            qt().forAll(SnappedLinkStateGenerator.snappedLinkState())
+            qt().forAll(SnappedLinkStateGenerator.snapLink())
                 .checkAssert { link: SnappedLinkState ->
 
                     assertThat(link.hasNode(link.startNode.id))
@@ -29,7 +29,7 @@ class SnappedLinkStateTest {
         @Test
         @DisplayName("Should return true when given ID of end node")
         fun shouldReturnTrueForEndNodeId() {
-            qt().forAll(SnappedLinkStateGenerator.snappedLinkState())
+            qt().forAll(SnappedLinkStateGenerator.snapLink())
                 .checkAssert { link: SnappedLinkState ->
 
                     assertThat(link.hasNode(link.endNode.id))
@@ -40,7 +40,7 @@ class SnappedLinkStateTest {
         @Test
         @DisplayName("Should return false when given other node ID")
         fun whenTwoLinksDoNotShareNode() {
-            qt().forAll(SnappedLinkStateGenerator.twoUnconnectedLinks())
+            qt().forAll(SnappedLinkStateGenerator.snapTwoUnconnectedLinks())
                 .checkAssert { (firstLink: SnappedLinkState, secondLink: SnappedLinkState) ->
 
                     assertThat(firstLink.hasNode(secondLink.startNode.id) || firstLink.hasNode(secondLink.endNode.id))
@@ -56,7 +56,7 @@ class SnappedLinkStateTest {
         @Test
         @DisplayName("When two infrastructure links have a common node")
         fun whenTwoLinksShareNode() {
-            qt().forAll(SnappedLinkStateGenerator.twoConnectedLinks())
+            qt().forAll(SnappedLinkStateGenerator.snapTwoConnectedLinks())
                 .checkAssert { (firstLink: SnappedLinkState, secondLink: SnappedLinkState) ->
 
                     assertThat(firstLink.hasSharedNode(secondLink))
@@ -67,7 +67,7 @@ class SnappedLinkStateTest {
         @Test
         @DisplayName("When two infrastructure links do not have a common node")
         fun whenTwoLinksDoNotShareNode() {
-            qt().forAll(SnappedLinkStateGenerator.twoUnconnectedLinks())
+            qt().forAll(SnappedLinkStateGenerator.snapTwoUnconnectedLinks())
                 .checkAssert { (firstLink: SnappedLinkState, secondLink: SnappedLinkState) ->
 
                     assertThat(firstLink.hasSharedNode(secondLink))
