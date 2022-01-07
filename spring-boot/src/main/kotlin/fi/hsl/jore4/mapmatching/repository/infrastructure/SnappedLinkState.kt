@@ -49,17 +49,29 @@ data class SnappedLinkState(val infrastructureLinkId: Long,
         get() = MathUtils.compare(startNode.distanceToNode, endNode.distanceToNode) > 0
 
     /**
+     * Returns the node that is closer to the point being snapped.
+     */
+    val closerNode: NodeProximity
+        get() = if (!isEndNodeCloser) startNode else endNode
+
+    /**
+     * Returns the node that is closer to the point being snapped.
+     */
+    val furtherNode: NodeProximity
+        get() = if (!isEndNodeCloser) endNode else startNode
+
+    /**
      * Returns the ID of the node that is closer to the point being snapped.
      */
     val closerNodeId: Long
-        get() = if (!isEndNodeCloser) startNode.id else endNode.id
+        get() = closerNode.id
 
     /**
      * Returns the ID of the node that lies further away from the point being
      * snapped.
      */
     val furtherNodeId: Long
-        get() = if (!isEndNodeCloser) endNode.id else startNode.id
+        get() = furtherNode.id
 
     override fun getInfrastructureNodeId() = closerNodeId
 

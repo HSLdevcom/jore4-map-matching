@@ -11,10 +11,12 @@ import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.END
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.NODES_AT_EQUAL_DISTANCE
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.START_NODE_CLOSER
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.START_NODE_CLOSER_OR_EQUAL_DISTANCE
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.distinctNodePair
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.distinctNodeQuadruple
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.distinctNodeTriple
 import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.endpointNodesOfInfrastructureLink
-import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.uniqueNodeQuadruple
-import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.uniqueNodeTriple
 import org.quicktheories.core.Gen
+import org.quicktheories.generators.Generate.booleans
 import org.quicktheories.generators.SourceDSL.doubles
 import kotlin.math.min
 
@@ -38,30 +40,46 @@ object SnappedLinkStateGenerator {
         .mix(SNAPPED_LINK_HAVING_END_NODE_CLOSER, 50)
         .mix(SNAPPED_LINK_HAVING_BOTH_NODES_AT_EQUAL_DISTANCE, 5)
 
+    private val SNAP_SINGLE_LINK_TWICE: Gen<Pair<SnappedLinkState, SnappedLinkState>> =
+        infrastructureLinkId().zip(DISTANCE_PAIR, distinctNodePair(), booleans()) { linkId,
+                                                                                    (distance1, distance2),
+                                                                                    (node1, node2),
+                                                                                    flipOrder ->
+            val nodesOfFirstLink = Pair(node1, node2)
+
+            val nodesOfSecondLink: Pair<NodeProximity, NodeProximity> = when (flipOrder) {
+                true -> nodesOfFirstLink
+                else -> Pair(node2, node1)
+            }
+
+            Pair(createSnappedLinkState(linkId, distance1, nodesOfFirstLink),
+                 createSnappedLinkState(linkId, distance2, nodesOfSecondLink))
+        }
+
     // Generate pairs of links having common node.
-    private val TWO_CONNECTED_LINKS: Gen<Pair<SnappedLinkState, SnappedLinkState>> =
-        infrastructureLinkIdPair().zip(DISTANCE_PAIR, uniqueNodeTriple()) { (firstLinkId, secondLinkId),
-                                                                            (distanceToFirstLink, distanceToSecondLink),
-                                                                            (node1, node2, node3) ->
+    private val SNAP_TWO_CONNECTED_LINKS: Gen<Pair<SnappedLinkState, SnappedLinkState>> =
+        infrastructureLinkIdPair().zip(DISTANCE_PAIR, distinctNodeTriple()) { (firstLinkId, secondLinkId),
+                                                                              (distanceToFirstLink, distanceToSecondLink),
+                                                                              (node1, node2, node3) ->
 
             Pair(createSnappedLinkState(firstLinkId, distanceToFirstLink, node1, node2),
                  createSnappedLinkState(secondLinkId, distanceToSecondLink, node2, node3))
         }
 
     // Generate pairs of links that do not have a common node.
-    private val TWO_UNCONNECTED_LINKS: Gen<Pair<SnappedLinkState, SnappedLinkState>> =
+    private val SNAP_TWO_UNCONNECTED_LINKS: Gen<Pair<SnappedLinkState, SnappedLinkState>> =
         infrastructureLinkIdPair()
-            .zip(DISTANCE_PAIR, uniqueNodeQuadruple()) { (firstLinkId, secondLinkId),
-                                                         (distanceToFirstLink, distanceToSecondLink),
-                                                         (node1, node2, node3, node4) ->
+            .zip(DISTANCE_PAIR, distinctNodeQuadruple()) { (firstLinkId, secondLinkId),
+                                                           (distanceToFirstLink, distanceToSecondLink),
+                                                           (node1, node2, node3, node4) ->
 
                 Pair(createSnappedLinkState(firstLinkId, distanceToFirstLink, node1, node2),
                      createSnappedLinkState(secondLinkId, distanceToSecondLink, node3, node4))
             }
 
-    fun snappedLinkState(): Gen<SnappedLinkState> = MIXED_SNAPPED_LINK
+    fun snapLink(): Gen<SnappedLinkState> = MIXED_SNAPPED_LINK
 
-    fun snappedLinkState(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> {
+    fun snapLink(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> {
         return when (nodeProximityFilter) {
             START_NODE_CLOSER -> SNAPPED_LINK_HAVING_START_NODE_CLOSER
             END_NODE_CLOSER -> SNAPPED_LINK_HAVING_END_NODE_CLOSER
@@ -75,10 +93,12 @@ object SnappedLinkStateGenerator {
         }
     }
 
-    // Connected links have one common node.
-    fun twoConnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> = TWO_CONNECTED_LINKS
+    fun snapSingleLinkTwice(): Gen<Pair<SnappedLinkState, SnappedLinkState>> = SNAP_SINGLE_LINK_TWICE
 
-    fun twoUnconnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> = TWO_UNCONNECTED_LINKS
+    // Connected links have one common node.
+    fun snapTwoConnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> = SNAP_TWO_CONNECTED_LINKS
+
+    fun snapTwoUnconnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> = SNAP_TWO_UNCONNECTED_LINKS
 
     private fun generateSnappedLinkState(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> {
         return infrastructureLinkId()
@@ -99,5 +119,12 @@ object SnappedLinkStateGenerator {
             min(generatedDistanceValue, min(startNode.distanceToNode, endNode.distanceToNode))
 
         return SnappedLinkState(infrastructureLinkId, closestDistanceToLink, startNode, endNode)
+    }
+
+    private fun createSnappedLinkState(infrastructureLinkId: Long,
+                                       generatedDistanceValue: Double,
+                                       nodes: Pair<NodeProximity, NodeProximity>): SnappedLinkState {
+
+        return createSnappedLinkState(infrastructureLinkId, generatedDistanceValue, nodes.first, nodes.second)
     }
 }

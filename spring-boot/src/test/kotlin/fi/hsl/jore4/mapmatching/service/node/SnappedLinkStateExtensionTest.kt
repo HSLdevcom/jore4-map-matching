@@ -18,7 +18,7 @@ import org.quicktheories.dsl.TheoryBuilder
 class SnappedLinkStateExtensionTest {
 
     private fun withSnappedLink(nodeProximityFilter: LinkEndpointsProximityFilter): TheoryBuilder<SnappedLinkState> =
-        qt().forAll(SnappedLinkStateGenerator.snappedLinkState(nodeProximityFilter))
+        qt().forAll(SnappedLinkStateGenerator.snapLink(nodeProximityFilter))
 
     @Nested
     @DisplayName("toNodeList")
