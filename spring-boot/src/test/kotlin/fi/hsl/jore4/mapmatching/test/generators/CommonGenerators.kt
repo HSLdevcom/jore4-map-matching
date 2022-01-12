@@ -2,12 +2,9 @@ package fi.hsl.jore4.mapmatching.test.generators
 
 import fi.hsl.jore4.mapmatching.test.util.Quadruple
 import org.quicktheories.core.Gen
-import org.quicktheories.generators.Generate.booleans
 import org.quicktheories.generators.Generate.constant
 
 object CommonGenerators {
-
-    val BOOLEAN: Gen<Boolean> = booleans()
 
     val ZERO_DOUBLE: Gen<Double> = constant(0.0)
 

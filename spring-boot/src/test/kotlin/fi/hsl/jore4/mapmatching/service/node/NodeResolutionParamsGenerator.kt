@@ -66,7 +66,6 @@ object NodeResolutionParamsGenerator {
     }
 
     private val EMPTY_VIA_NODE_LIST: Gen<List<NodeProximity>> = constant(emptyList())
-    private val RANDOM_VIA_NODES: Gen<List<NodeProximity>> = generateViaNodes(randomNode())
 
     private fun generateViaNodes(nodeSource: Gen<NodeProximity>): Gen<List<NodeProximity>> =
         lists().of(nodeSource).ofSizeBetween(1, MAX_NUMBER_OF_VIA_NODES)
@@ -176,14 +175,14 @@ object NodeResolutionParamsGenerator {
 
                 val viaNodeListGen: Gen<List<NodeProximity>> = when (viaNodeScheme) {
                     EMPTY -> EMPTY_VIA_NODE_LIST
-                    RANDOM -> RANDOM_VIA_NODES
+                    RANDOM -> generateViaNodes(randomNode())
                     NON_REDUNDANT_WITH_TERMINUS_LINKS -> {
                         generateNonRedundantViaNodesWithRegardToTerminusLinks(startLink, endLink)
                     }
                     FULLY_REDUNDANT_WITH_TERMINUS_LINKS -> {
                         generateFullyRedundantViaNodesWithRegardToTerminusLinks(startLink, endLink)
                     }
-                    ViaNodeGenerationScheme.ANY -> oneOf(EMPTY_VIA_NODE_LIST, RANDOM_VIA_NODES)
+                    ViaNodeGenerationScheme.ANY -> oneOf(EMPTY_VIA_NODE_LIST, generateViaNodes(randomNode()))
                 }
 
                 viaNodeListGen.map { viaNodeList -> NodeResolutionParams(startLink, viaNodeList, endLink) }
