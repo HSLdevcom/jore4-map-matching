@@ -5,6 +5,7 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toNodeIdList
+import fi.hsl.jore4.mapmatching.test.util.ConsumerStackTracePrinter
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.quicktheories.QuickTheory.qt
 import org.quicktheories.dsl.TheoryBuilder
+import java.util.function.Consumer
 
 @DisplayName("Test NodeSequenceAlternativesCreator class")
 class NodeSequenceAlternativesCreatorTest {
@@ -391,20 +393,20 @@ class NodeSequenceAlternativesCreatorTest {
             @DisplayName("Sequence of via node IDs should not be empty")
             fun viaNodeIdsShouldNotBeEmpty() {
                 forNonRedundantViaNodeInputs()
-                    .checkAssert { input: NodeResolutionParams ->
+                    .checkAssert(traceException { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
                             .extracting { it.viaNodeIds.list }
                             .asList()
                             .isNotEmpty()
-                    }
+                    })
             }
 
             @Test
             @DisplayName("Check validity of via node ID sequence")
             fun verifyViaNodeIdSequence() {
                 forNonRedundantViaNodeInputs()
-                    .checkAssert { input: NodeResolutionParams ->
+                    .checkAssert(traceException { input: NodeResolutionParams ->
 
                         val expectedViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(
                             input.viaNodeResolvers.map { it.getInfrastructureNodeId() }
@@ -414,14 +416,14 @@ class NodeSequenceAlternativesCreatorTest {
                             .extracting { it.viaNodeIds.list }
                             .asList()
                             .isEqualTo(expectedViaNodeIds)
-                    }
+                    })
             }
 
             @Test
             @DisplayName("Verify that each alternative node ID sequence contains via node IDs in the middle")
             fun verifyEachNodeIdSequenceContainsViaNodeIdsInTheMiddle() {
                 forNonRedundantViaNodeInputs()
-                    .checkAssert { input: NodeResolutionParams ->
+                    .checkAssert(traceException { input: NodeResolutionParams ->
 
                         val output: NodeSequenceAlternatives = createOutput(input)
 
@@ -439,7 +441,7 @@ class NodeSequenceAlternativesCreatorTest {
                                     }
                                     .any { it == viaNodeIds }
                             }
-                    }
+                    })
             }
         }
     }
@@ -491,5 +493,7 @@ class NodeSequenceAlternativesCreatorTest {
 
         private fun forAllKindOfInputs(): TheoryBuilder<NodeResolutionParams> =
             forInputs(TerminusLinkRelation.ANY, ViaNodeGenerationScheme.ANY)
+
+        private fun <T> traceException(consumer: Consumer<T>): Consumer<T> = ConsumerStackTracePrinter(consumer)
     }
 }
