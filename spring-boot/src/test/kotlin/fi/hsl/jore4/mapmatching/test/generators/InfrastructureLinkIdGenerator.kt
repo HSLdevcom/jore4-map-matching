@@ -9,10 +9,9 @@ object InfrastructureLinkIdGenerator {
 
     private val ID_VALUE: Gen<Long> = longRange(1, 9_999)
 
-    private val ID: Gen<InfrastructureLinkId> = ID_VALUE.map { id: Long -> InfrastructureLinkId(id) }
-
-    fun infrastructureLinkId(): Gen<InfrastructureLinkId> = ID
+    fun infrastructureLinkId(): Gen<InfrastructureLinkId> = ID_VALUE.map { id: Long -> InfrastructureLinkId(id) }
 
     // Generate pairs of distinct link IDs.
-    fun infrastructureLinkIdPair(): Gen<Pair<InfrastructureLinkId, InfrastructureLinkId>> = distinctPair(ID)
+    fun infrastructureLinkIdPair(): Gen<Pair<InfrastructureLinkId, InfrastructureLinkId>> =
+        distinctPair(infrastructureLinkId())
 }
