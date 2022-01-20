@@ -1,6 +1,5 @@
 package fi.hsl.jore4.mapmatching.service.node
 
-import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.CONNECTED
@@ -18,7 +17,6 @@ import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapTw
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate.constant
 import org.quicktheories.generators.Generate.oneOf
-import org.quicktheories.generators.SourceDSL.arbitrary
 import org.quicktheories.generators.SourceDSL.integers
 import org.quicktheories.generators.SourceDSL.lists
 import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.node as randomNode
@@ -70,53 +68,32 @@ object NodeResolutionParamsGenerator {
     private fun generateViaNodes(nodeSource: Gen<NodeProximity>): Gen<List<NodeProximity>> =
         lists().of(nodeSource).ofSizeBetween(1, MAX_NUMBER_OF_VIA_NODES)
 
-    private fun pickExcluding(list: List<NodeProximity>, excludedIds: Set<InfrastructureNodeId>): Gen<NodeProximity> {
-        val filtered: List<NodeProximity> = list.filter { !excludedIds.contains(it.id) }
-
-        return arbitrary().pick(filtered)
-    }
-
     private fun generateNonRedundantViaNodesWithRegardToTerminusLinks(startLink: SnappedLinkState,
                                                                       endLink: SnappedLinkState)
         : Gen<List<NodeProximity>> {
 
-        val randomNodeGen = Retry(randomNode()) { node ->
-            node.id != startLink.closerNodeId && node.id != endLink.closerNodeId
-        }
-
         return integers().between(1, MAX_NUMBER_OF_VIA_NODES).flatMap { numViaNodes ->
 
-            val allNodesOfTerminusLinks: List<NodeProximity> =
-                listOf(startLink.closerNode, startLink.furtherNode, endLink.closerNode, endLink.furtherNode)
+            val firstNodeGen: Gen<NodeProximity> = Retry(randomNode()) { node ->
+                node.id != startLink.closerNodeId
+                    && (node.id != endLink.closerNodeId || startLink.infrastructureLinkId != endLink.infrastructureLinkId && numViaNodes > 1)
+            }
 
-            val idsExcludedFromFirstNode: Set<InfrastructureNodeId> =
-                if (numViaNodes == 1)
-                    setOf(startLink.closerNodeId, endLink.closerNodeId)
-                else
-                    setOf(startLink.closerNodeId)
-
-            val firstNodeGen: Gen<NodeProximity> = oneOf(randomNodeGen,
-                                                         pickExcluding(allNodesOfTerminusLinks,
-                                                                       idsExcludedFromFirstNode))
-
-            val lastNodeGen: Gen<NodeProximity> = oneOf(randomNodeGen,
-                                                        pickExcluding(allNodesOfTerminusLinks,
-                                                                      setOf(endLink.closerNodeId)))
+            val lastNodeGen: Gen<NodeProximity> = Retry(randomNode()) { node ->
+                node.id != endLink.closerNodeId
+            }
 
             when (numViaNodes) {
                 1 -> firstNodeGen.map { node -> listOf(node) }
                 2 -> firstNodeGen.zip(lastNodeGen) { firstNode, secondNode -> listOf(firstNode, secondNode) }
                 else -> {
-                    val middleViaNodeGen: Gen<NodeProximity> =
-                        oneOf(randomNodeGen, arbitrary().pick(allNodesOfTerminusLinks))
+                    val middleNodesGen: Gen<List<NodeProximity>> = lists().of(randomNode()).ofSize(numViaNodes - 2)
 
-                    val middleViaNodeListGen: Gen<List<NodeProximity>> =
-                        lists().of(middleViaNodeGen).ofSize(numViaNodes - 2)
+                    firstNodeGen.zip(middleNodesGen,
+                                     lastNodeGen) { firstNode, middleNodes, lastNode ->
 
-                    firstNodeGen
-                        .zip(middleViaNodeListGen, lastNodeGen) { firstNode, middleNodes, lastNode ->
-                            listOf(firstNode) + middleNodes + lastNode
-                        }
+                        listOf(firstNode) + middleNodes + lastNode
+                    }
                 }
             }
         }

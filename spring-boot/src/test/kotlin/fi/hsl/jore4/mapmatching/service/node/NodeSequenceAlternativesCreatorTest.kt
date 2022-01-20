@@ -5,7 +5,6 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toNodeIdList
-import fi.hsl.jore4.mapmatching.test.util.ConsumerStackTracePrinter
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -13,7 +12,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.quicktheories.QuickTheory.qt
 import org.quicktheories.dsl.TheoryBuilder
-import java.util.function.Consumer
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 @DisplayName("Test NodeSequenceAlternativesCreator class")
 class NodeSequenceAlternativesCreatorTest {
@@ -385,28 +385,29 @@ class NodeSequenceAlternativesCreatorTest {
         @DisplayName("When sequence of via nodes is not redundant with regard to terminus links")
         inner class WhenViaNodesAreNonRedundantWithTerminusLinks {
 
-            private fun forNonRedundantViaNodeInputs(): TheoryBuilder<NodeResolutionParams> =
+            private fun forNonRedundantViaNodeInputs(randomnessSeed: Long): TheoryBuilder<NodeResolutionParams> =
                 forInputs(TerminusLinkRelation.ANY,
-                          ViaNodeGenerationScheme.NON_REDUNDANT_WITH_TERMINUS_LINKS)
+                          ViaNodeGenerationScheme.NON_REDUNDANT_WITH_TERMINUS_LINKS,
+                          randomnessSeed)
 
             @Test
             @DisplayName("Sequence of via node IDs should not be empty")
             fun viaNodeIdsShouldNotBeEmpty() {
-                forNonRedundantViaNodeInputs()
-                    .checkAssert(traceException { input: NodeResolutionParams ->
+                findTheoryBuilderWithWorkingRandomnessSeed { seed -> forNonRedundantViaNodeInputs(seed) }
+                    .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
                             .extracting { it.viaNodeIds.list }
                             .asList()
                             .isNotEmpty()
-                    })
+                    }
             }
 
             @Test
             @DisplayName("Check validity of via node ID sequence")
             fun verifyViaNodeIdSequence() {
-                forNonRedundantViaNodeInputs()
-                    .checkAssert(traceException { input: NodeResolutionParams ->
+                findTheoryBuilderWithWorkingRandomnessSeed { seed -> forNonRedundantViaNodeInputs(seed) }
+                    .checkAssert { input: NodeResolutionParams ->
 
                         val expectedViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(
                             input.viaNodeResolvers.map { it.getInfrastructureNodeId() }
@@ -416,14 +417,14 @@ class NodeSequenceAlternativesCreatorTest {
                             .extracting { it.viaNodeIds.list }
                             .asList()
                             .isEqualTo(expectedViaNodeIds)
-                    })
+                    }
             }
 
             @Test
             @DisplayName("Verify that each alternative node ID sequence contains via node IDs in the middle")
             fun verifyEachNodeIdSequenceContainsViaNodeIdsInTheMiddle() {
-                forNonRedundantViaNodeInputs()
-                    .checkAssert(traceException { input: NodeResolutionParams ->
+                findTheoryBuilderWithWorkingRandomnessSeed { seed -> forNonRedundantViaNodeInputs(seed) }
+                    .checkAssert { input: NodeResolutionParams ->
 
                         val output: NodeSequenceAlternatives = createOutput(input)
 
@@ -441,12 +442,14 @@ class NodeSequenceAlternativesCreatorTest {
                                     }
                                     .any { it == viaNodeIds }
                             }
-                    })
+                    }
             }
         }
     }
 
     companion object {
+
+        private val LOGGER: Logger = LoggerFactory.getLogger(NodeSequenceAlternativesCreatorTest::class.java)
 
         private fun createOutput(input: NodeResolutionParams): NodeSequenceAlternatives =
             NodeSequenceAlternativesCreator.create(input.startLink,
@@ -454,9 +457,12 @@ class NodeSequenceAlternativesCreatorTest {
                                                    input.endLink)
 
         private fun forInputs(terminusLinkRelation: TerminusLinkRelation,
-                              viaNodeGenerationScheme: ViaNodeGenerationScheme): TheoryBuilder<NodeResolutionParams> {
+                              viaNodeGenerationScheme: ViaNodeGenerationScheme,
+                              randomnessSeed: Long = System.nanoTime())
+            : TheoryBuilder<NodeResolutionParams> {
 
             return qt()
+                .withFixedSeed(randomnessSeed)
                 .forAll(
                     NodeResolutionParamsGenerator
                         .builder()
@@ -494,6 +500,43 @@ class NodeSequenceAlternativesCreatorTest {
         private fun forAllKindOfInputs(): TheoryBuilder<NodeResolutionParams> =
             forInputs(TerminusLinkRelation.ANY, ViaNodeGenerationScheme.ANY)
 
-        private fun <T> traceException(consumer: Consumer<T>): Consumer<T> = ConsumerStackTracePrinter(consumer)
+        private fun <T> findTheoryBuilderWithWorkingRandomnessSeed(maxRetries: Int = 10,
+                                                                   getTheoryBuilder: (seed: Long) -> TheoryBuilder<T>)
+            : TheoryBuilder<T> {
+
+            if (maxRetries < 0) {
+                throw IllegalArgumentException("maxRetries must not be negative: $maxRetries")
+            }
+            if (maxRetries > 20) {
+                throw IllegalArgumentException("maxRetries must not be greater than 20: $maxRetries")
+            }
+
+            var theoryBuilder: TheoryBuilder<T>?
+
+            for (attempt in 1..(1 + maxRetries)) {
+                val retry = attempt - 1
+                val seed = retry.toLong()
+
+                if (retry > 0) {
+                    LOGGER.debug("Retry #$retry with randomnessSeed=$seed")
+                }
+
+                theoryBuilder = getTheoryBuilder(seed)
+
+                try {
+                    theoryBuilder.checkAssert {
+                        // Basically, it is just tested whether running TheoryBuilder throws IllegalArgumentException.
+                    }
+                    return theoryBuilder
+                } catch (ex: IllegalArgumentException) {
+                    LOGGER.warn("TheoryBuilder.checkAssert() failed with randomnessSeed=$seed")
+
+                    if (attempt <= maxRetries) continue else throw ex
+                }
+            }
+
+            // should never enter here, just to make compiler happy
+            throw IllegalStateException("Illegal state while finding working seed for TheoryBuilder")
+        }
     }
 }
