@@ -21,8 +21,12 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
  * route. This is a "cleaned" version of what user has originally provided e.g.
  * consecutive duplicates are removed.
  * @property nodeIdSequences list of infrastructure network node identifier
- * sequences from which the best needs to be resolved. Includes both endpoint
- * nodes for the start link and the end link
+ * sequences from which the best needs to be resolved. Each sequence starts with
+ * endpoint nodes of the start link and ends with the nodes associated with the
+ * end link. [viaNodeIds] are inserted in between. The list contains at most
+ * four sequences of node identifiers depending on whether the direction of
+ * traversal on terminus links can be determined based on the interim nodes
+ * ([viaNodeIds]).
  */
 data class NodeSequenceAlternatives(val startLinkId: InfrastructureLinkId,
                                     val endLinkId: InfrastructureLinkId,

@@ -432,7 +432,7 @@ class NodeSequenceAlternativesCreatorTest {
                         assertThat(output.nodeIdSequences)
                             .allMatch { nodeIdSeq: NodeIdSequence ->
 
-                                // try 2 x 2 = 4 different candidates
+                                // try 2 (links) X 2 (endpoint nodes) = 4 different candidates
                                 listOf(1, 2)
                                     .flatMap { dropFromStart ->
                                         listOf(1, 2).map { dropFromEnd ->

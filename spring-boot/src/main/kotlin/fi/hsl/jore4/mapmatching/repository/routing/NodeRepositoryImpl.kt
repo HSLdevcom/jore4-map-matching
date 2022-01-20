@@ -21,6 +21,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                      vehicleType: VehicleType)
         : NodeIdSequence? {
 
+        // There are at most four sequences of infrastructure network node identifiers that can be iterated over.
         val iter: Iterator<NodeIdSequence> = nodeIdSequences.iterator()
 
         if (!iter.hasNext()) {

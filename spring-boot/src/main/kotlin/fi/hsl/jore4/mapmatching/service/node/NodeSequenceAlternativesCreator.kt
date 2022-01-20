@@ -59,7 +59,7 @@ object NodeSequenceAlternativesCreator {
 
             // This very special corner case needs to be treated separately in order to have a well-behaving algorithm.
             if (startLink.infrastructureLinkId == endLink.infrastructureLinkId) {
-                return createResponseForSingleLinkNoViaNodes(startLink)
+                return createResponseForSingleLinkWithNoViaNodes(startLink)
             }
         } else {
             nonOverlappingViaNodeIdSequence = NodeIdSequence(mergedNodeIdsOnStartLink.drop(1)
@@ -67,11 +67,11 @@ object NodeSequenceAlternativesCreator {
                                                                  + mergedNodeIdsOnEndLink.dropLast(1))
         }
 
-        val nodeIdSequencesOnStartLink: List<NodeIdSequence> = getNodeIdSequencesOnStartLink(startLink,
-                                                                                             mergedNodeIdsOnStartLink)
+        val nodeIdSequencesOnStartLink: List<NodeIdSequence> =
+            getNodeIdSequencesOnTerminusLink(startLink, mergedNodeIdsOnStartLink)
 
-        val nodeIdSequencesOnEndLink: List<NodeIdSequence> = getNodeIdSequencesOnEndLink(endLink,
-                                                                                         mergedNodeIdsOnEndLink)
+        val nodeIdSequencesOnEndLink: List<NodeIdSequence> =
+            getNodeIdSequencesOnTerminusLink(endLink, mergedNodeIdsOnEndLink)
 
         val nodeIdSequenceCombos: List<NodeIdSequence> = nodeIdSequencesOnStartLink
             .flatMap { startNodeIdSeq ->
@@ -95,7 +95,7 @@ object NodeSequenceAlternativesCreator {
         val endLinkId: InfrastructureLinkId = endLink.infrastructureLinkId
 
         if (startLinkId == endLinkId) {
-            return createResponseForSingleLinkNoViaNodes(startLink)
+            return createResponseForSingleLinkWithNoViaNodes(startLink)
         }
 
         val startLinkNodeIdSequences: List<NodeIdSequence> = startLink.getNodeIdSequenceCombinations()
@@ -140,27 +140,17 @@ object NodeSequenceAlternativesCreator {
             precedingViaNodeIdsBelongingToEndLink + endLink.closerNodeId
     }
 
-    private fun getNodeIdSequencesOnStartLink(startLink: SnappedLinkState,
-                                              nodeIdsOnStartLink: List<InfrastructureNodeId>): List<NodeIdSequence> {
+    private fun getNodeIdSequencesOnTerminusLink(link: SnappedLinkState,
+                                                 nodeIdsOnLink: List<InfrastructureNodeId>): List<NodeIdSequence> {
 
-        return when (nodeIdsOnStartLink.size) {
-            0 -> throw IllegalStateException("Cannot have zero node snaps on start link")
-            1 -> startLink.getNodeIdSequenceCombinations()
-            else -> listOf(NodeIdSequence(nodeIdsOnStartLink))
+        return when (nodeIdsOnLink.size) {
+            0 -> throw IllegalStateException("Cannot have zero node snaps on terminus link")
+            1 -> link.getNodeIdSequenceCombinations()
+            else -> listOf(NodeIdSequence(nodeIdsOnLink))
         }
     }
 
-    private fun getNodeIdSequencesOnEndLink(endLink: SnappedLinkState,
-                                            nodeIdsOnEndLink: List<InfrastructureNodeId>): List<NodeIdSequence> {
-
-        return when (nodeIdsOnEndLink.size) {
-            0 -> throw IllegalStateException("Cannot have zero node snaps on end link")
-            1 -> endLink.getNodeIdSequenceCombinations()
-            else -> listOf(NodeIdSequence(nodeIdsOnEndLink))
-        }
-    }
-
-    private fun createResponseForSingleLinkNoViaNodes(link: SnappedLinkState): NodeSequenceAlternatives {
+    private fun createResponseForSingleLinkWithNoViaNodes(link: SnappedLinkState): NodeSequenceAlternatives {
         return NodeSequenceAlternatives(link.infrastructureLinkId,
                                         link.infrastructureLinkId,
                                         NodeIdSequence.empty(),
