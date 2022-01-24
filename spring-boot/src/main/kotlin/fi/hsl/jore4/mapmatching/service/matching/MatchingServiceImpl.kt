@@ -72,6 +72,10 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                             matchingParameters.terminusLinkQueryDistance,
                                             matchingParameters.roadJunctionMatching)
 
+        if (!nodeSequenceAlternatives.isRoutePossible()) {
+            return RoutingResponse.noSegment("Cannot produce route based on single infrastructure node")
+        }
+
         val bufferAreaRestriction = BufferAreaRestriction(routeGeometry,
                                                           matchingParameters.bufferRadiusInMeters,
                                                           nodeSequenceAlternatives.startLinkId,

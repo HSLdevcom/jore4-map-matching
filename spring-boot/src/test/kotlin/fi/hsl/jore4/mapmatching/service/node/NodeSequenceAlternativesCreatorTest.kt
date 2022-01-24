@@ -2,11 +2,14 @@ package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkEndpointDiscreteness
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkEndpointDiscreteness.DISCRETE_ENDPOINT_NODES
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkEndpointDiscreteness.NON_DISCRETE_ENDPOINT_NODES
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.CONNECTED
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISCRETE
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISCRETE_LINKS
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISCRETE_LINKS_CONNECTED
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISCRETE_LINKS_UNCONNECTED
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.UNCONNECTED
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.EMPTY
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.FULLY_REDUNDANT_WITH_TERMINUS_LINKS
@@ -19,8 +22,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.quicktheories.QuickTheory.qt
 import org.quicktheories.dsl.TheoryBuilder
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 @DisplayName("Test NodeSequenceAlternativesCreator class")
 class NodeSequenceAlternativesCreatorTest {
@@ -64,21 +65,21 @@ class NodeSequenceAlternativesCreatorTest {
     }
 
     @Test
-    @DisplayName("Verify that each alternative node ID sequence contains at least two items")
-    fun eachNodeIdSequenceShouldContainAtLeastTwoItems() {
+    @DisplayName("Verify that each alternative node ID sequence contains at least one item")
+    fun eachNodeIdSequenceShouldContainAtLeastOneItem() {
         forAllInputs()
             .checkAssert { input: NodeResolutionParams ->
 
                 val output: NodeSequenceAlternatives = createOutput(input)
 
                 assertThat(output.nodeIdSequences)
-                    .allMatch { it.size >= 2 }
+                    .allMatch { it.size >= 1 }
             }
     }
 
     @Test
-    @DisplayName("Verify that each alternative node ID sequence starts with node IDs of start link")
-    fun eachNodeIdSequenceShouldStartWithNodeIdsOfStartLink() {
+    @DisplayName("Verify that each alternative node ID sequence starts with either node ID of start link")
+    fun eachNodeIdSequenceShouldStartWithEitherNodeIdOfStartLink() {
         forAllInputs()
             .checkAssert { input: NodeResolutionParams ->
 
@@ -86,18 +87,14 @@ class NodeSequenceAlternativesCreatorTest {
 
                 assertThat(output.nodeIdSequences)
                     .allMatch { nodeIdSeq ->
-                        val firstTwoItems: List<InfrastructureNodeId> = nodeIdSeq.list.take(2)
-
-                        val startLinkAsNodeIdList: List<InfrastructureNodeId> = input.startLink.toNodeIdList()
-
-                        firstTwoItems == startLinkAsNodeIdList || firstTwoItems == startLinkAsNodeIdList.reversed()
+                        input.startLink.hasNode(nodeIdSeq.firstNodeOrThrow())
                     }
             }
     }
 
     @Test
-    @DisplayName("Verify that each alternative node ID sequence ends with node IDs of end link")
-    fun eachNodeIdSequenceShouldEndWithNodeIdsOfEndLink() {
+    @DisplayName("Verify that each alternative node ID sequence ends with either node ID of end link")
+    fun eachNodeIdSequenceShouldEndWithEitherNodeIdOfEndLink() {
         forAllInputs()
             .checkAssert { input: NodeResolutionParams ->
 
@@ -105,13 +102,257 @@ class NodeSequenceAlternativesCreatorTest {
 
                 assertThat(output.nodeIdSequences)
                     .allMatch { nodeIdSeq ->
-                        val lastTwoItems: List<InfrastructureNodeId> = nodeIdSeq.list.takeLast(2)
-
-                        val endLinkAsNodeIdList: List<InfrastructureNodeId> = input.endLink.toNodeIdList()
-
-                        lastTwoItems == endLinkAsNodeIdList || lastTwoItems == endLinkAsNodeIdList.reversed()
+                        input.endLink.hasNode(nodeIdSeq.lastNodeOrThrow())
                     }
             }
+    }
+
+    @Nested
+    @DisplayName("When terminus links have non-discrete endpoint nodes i.e. they start from and end at same node")
+    inner class WhenBothTerminusLinksStartFromAndEndAtSameNode {
+
+        private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(TerminusLinkRelation.ANY,
+                                                                                 NON_DISCRETE_ENDPOINT_NODES,
+                                                                                 ViaNodeGenerationScheme.ANY)
+
+        @Test
+        @DisplayName("Verify that there is only one node ID sequence")
+        fun thereShouldBeExactlyOneNodeIdSequence() {
+            forInputs()
+                .checkAssert { input: NodeResolutionParams ->
+
+                    assertThat(createOutput(input))
+                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
+                        .asList()
+                        .hasSize(1)
+                }
+        }
+    }
+
+    @Nested
+    @DisplayName("When terminus links have discrete endpoint nodes")
+    inner class WhenTerminusLinksHaveDiscreteEndpoints {
+
+        private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(TerminusLinkRelation.ANY,
+                                                                                 DISCRETE_ENDPOINT_NODES,
+                                                                                 ViaNodeGenerationScheme.ANY)
+
+        @Test
+        @DisplayName("Verify that each alternative node ID sequence contains at least two items")
+        fun eachNodeIdSequenceShouldContainAtLeastTwoItems() {
+            forInputs()
+                .checkAssert { input: NodeResolutionParams ->
+
+                    val output: NodeSequenceAlternatives = createOutput(input)
+
+                    assertThat(output.nodeIdSequences)
+                        .allMatch { it.size >= 2 }
+                }
+        }
+
+        @Test
+        @DisplayName("Verify that each alternative node ID sequence starts with two node IDs from start link")
+        fun eachNodeIdSequenceShouldStartWithNodeIdsOfStartLink() {
+            forInputs()
+                .checkAssert { input: NodeResolutionParams ->
+
+                    val output: NodeSequenceAlternatives = createOutput(input)
+
+                    assertThat(output.nodeIdSequences)
+                        .allMatch { nodeIdSeq ->
+                            val firstTwoItems: Set<InfrastructureNodeId> = nodeIdSeq.list.take(2).toSet()
+                            val startLinkAsNodeIdSet: Set<InfrastructureNodeId> = input.startLink.toNodeIdList().toSet()
+
+                            firstTwoItems == startLinkAsNodeIdSet
+                        }
+                }
+        }
+
+        @Test
+        @DisplayName("Verify that each alternative node ID sequence ends with two node IDs from end link")
+        fun eachNodeIdSequenceShouldEndWithNodeIdsOfEndLink() {
+            forInputs()
+                .checkAssert { input: NodeResolutionParams ->
+
+                    val output: NodeSequenceAlternatives = createOutput(input)
+
+                    assertThat(output.nodeIdSequences)
+                        .allMatch { nodeIdSeq ->
+                            val lastTwoItems: Set<InfrastructureNodeId> = nodeIdSeq.list.takeLast(2).toSet()
+                            val endLinkAsNodeIdSet: Set<InfrastructureNodeId> = input.endLink.toNodeIdList().toSet()
+
+                            lastTwoItems == endLinkAsNodeIdSet
+                        }
+                }
+        }
+
+        @Nested
+        @DisplayName("When list of given via nodes is empty")
+        inner class WhenListOfGivenViaNodesIsEmpty {
+
+            @Nested
+            @DisplayName("When given two discrete infrastructure links")
+            inner class WhenGivenTwoDiscreteLinks {
+
+                private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(DISCRETE_LINKS,
+                                                                                         DISCRETE_ENDPOINT_NODES,
+                                                                                         EMPTY)
+
+                @Test
+                @DisplayName("List of alternative node ID sequences should consist of four unique sequences")
+                fun thereShouldBeFourUniqueNodeIdSequences() {
+                    forInputs()
+                        .checkAssert { input: NodeResolutionParams ->
+
+                            assertThat(createOutput(input))
+                                .extracting(NodeSequenceAlternatives::nodeIdSequences)
+                                .asList()
+                                .hasSize(4)
+                                .doesNotHaveDuplicates()
+                        }
+                }
+
+                @Test
+                @DisplayName("Verify 1st sequence of node IDs")
+                fun verifyFirstSequenceOfNodeIds() {
+                    forInputs()
+                        .checkAssert { input: NodeResolutionParams ->
+
+                            assertThat(createOutput(input))
+                                .extracting(NodeSequenceAlternatives::nodeIdSequences)
+                                .asList()
+                                .hasSizeGreaterThanOrEqualTo(1)
+                                .element(0)
+                                .isEqualTo(NodeIdSequence(
+                                    filterOutConsecutiveDuplicates(
+                                        listOf(input.startLink.closerNodeId,
+                                               input.startLink.furtherNodeId,
+                                               input.endLink.closerNodeId,
+                                               input.endLink.furtherNodeId))))
+                        }
+                }
+
+                @Test
+                @DisplayName("Verify 2nd sequence of node IDs")
+                fun verifySecondSequenceOfNodeIds() {
+                    forInputs()
+                        .checkAssert { input: NodeResolutionParams ->
+
+                            assertThat(createOutput(input))
+                                .extracting(NodeSequenceAlternatives::nodeIdSequences)
+                                .asList()
+                                .hasSizeGreaterThanOrEqualTo(2)
+                                .element(1)
+                                .isEqualTo(NodeIdSequence(
+                                    filterOutConsecutiveDuplicates(
+                                        listOf(input.startLink.closerNodeId,
+                                               input.startLink.furtherNodeId,
+                                               input.endLink.furtherNodeId,
+                                               input.endLink.closerNodeId))))
+                        }
+                }
+
+                @Test
+                @DisplayName("Verify 3rd sequence of node IDs")
+                fun verifyThirdSequenceOfNodeIds() {
+                    forInputs()
+                        .checkAssert { input: NodeResolutionParams ->
+
+                            assertThat(createOutput(input))
+                                .extracting(NodeSequenceAlternatives::nodeIdSequences)
+                                .asList()
+                                .hasSizeGreaterThanOrEqualTo(3)
+                                .element(2)
+                                .isEqualTo(NodeIdSequence(
+                                    filterOutConsecutiveDuplicates(
+                                        listOf(input.startLink.furtherNodeId,
+                                               input.startLink.closerNodeId,
+                                               input.endLink.closerNodeId,
+                                               input.endLink.furtherNodeId))))
+                        }
+                }
+
+                @Test
+                @DisplayName("Verify 4th sequence of node IDs")
+                fun verifyFourthSequenceOfNodeIds() {
+                    forInputs()
+                        .checkAssert { input: NodeResolutionParams ->
+
+                            assertThat(createOutput(input))
+                                .extracting(NodeSequenceAlternatives::nodeIdSequences)
+                                .asList()
+                                .hasSizeGreaterThanOrEqualTo(4)
+                                .element(3)
+                                .isEqualTo(NodeIdSequence(
+                                    filterOutConsecutiveDuplicates(
+                                        listOf(input.startLink.furtherNodeId,
+                                               input.startLink.closerNodeId,
+                                               input.endLink.furtherNodeId,
+                                               input.endLink.closerNodeId))))
+                        }
+                }
+
+                @Nested
+                @DisplayName("When two infrastructure links have common node")
+                inner class WhenTwoLinksHaveCommonNode {
+
+                    private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(DISCRETE_LINKS_CONNECTED,
+                                                                                             DISCRETE_ENDPOINT_NODES,
+                                                                                             EMPTY)
+
+                    @Test
+                    @DisplayName("There should be one node ID sequence containing three items")
+                    fun verifyCountOfNodeIdSequencesHavingThreeItems() {
+                        forInputs()
+                            .checkAssert { input: NodeResolutionParams ->
+
+                                val output: NodeSequenceAlternatives = createOutput(input)
+                                val numberOf3NodeIdSequences = output.nodeIdSequences.count { it.size == 3 }
+
+                                assertThat(numberOf3NodeIdSequences)
+                                    .isEqualTo(1)
+                            }
+                    }
+
+                    @Test
+                    @DisplayName("There should be three node ID sequences containing four items")
+                    fun verifyCountOfNodeIdSequencesHavingFourItems() {
+                        forInputs()
+                            .checkAssert { input: NodeResolutionParams ->
+
+                                val output: NodeSequenceAlternatives = createOutput(input)
+                                val numberOf4NodeIdSequences = output.nodeIdSequences.count { it.size == 4 }
+
+                                assertThat(numberOf4NodeIdSequences)
+                                    .isEqualTo(3)
+                            }
+                    }
+                }
+
+                @Nested
+                @DisplayName("When two infrastructure links do not have common node")
+                inner class WhenTwoLinksDoNotShareCommonNode {
+
+                    private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(DISCRETE_LINKS_UNCONNECTED,
+                                                                                             DISCRETE_ENDPOINT_NODES,
+                                                                                             EMPTY)
+
+                    @Test
+                    @DisplayName("There should be four node ID sequences containing four items")
+                    fun verifyCountOfNodeIdSequencesHavingFourItems() {
+                        forInputs()
+                            .checkAssert { input: NodeResolutionParams ->
+
+                                val output: NodeSequenceAlternatives = createOutput(input)
+                                val numberOf3NodeIdSequences = output.nodeIdSequences.count { it.size == 4 }
+
+                                assertThat(numberOf3NodeIdSequences)
+                                    .isEqualTo(4)
+                            }
+                    }
+                }
+            }
+        }
     }
 
     @Nested
@@ -119,6 +360,7 @@ class NodeSequenceAlternativesCreatorTest {
     inner class WhenListOfGivenViaNodesIsEmpty {
 
         private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(TerminusLinkRelation.ANY,
+                                                                                 TerminusLinkEndpointDiscreteness.ANY,
                                                                                  EMPTY)
 
         @Test
@@ -137,203 +379,78 @@ class NodeSequenceAlternativesCreatorTest {
         @DisplayName("When given only one infrastructure link")
         inner class WhenGivenOnlyOneLink {
 
-            private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(SAME, EMPTY)
-
-            @Test
-            @DisplayName("There should be only one node ID sequence in the list")
-            fun thereShouldBeOnlyOneNodeIdSequence() {
-                forInputs()
-                    .checkAssert { input: NodeResolutionParams ->
-
-                        assertThat(createOutput(input))
-                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
-                            .asList()
-                            .hasSize(1)
-                    }
-            }
-
-            @Test
-            @DisplayName("Verify that node ID sequence contains exactly two items")
-            fun nodeIdSequenceShouldContainExactlyTwoItems() {
-                forInputs()
-                    .checkAssert { input: NodeResolutionParams ->
-
-                        val output: NodeSequenceAlternatives = createOutput(input)
-
-                        assertThat(output.nodeIdSequences)
-                            .allMatch { it.size == 2 }
-                    }
-            }
-
-            @Test
-            @DisplayName("The one and only node ID sequence should contain endpoints of snapped link in order")
-            fun verifyNodeIdSequence() {
-                forInputs()
-                    .checkAssert { input: NodeResolutionParams ->
-
-                        val snappedLink = input.startLink
-
-                        assertThat(createOutput(input))
-                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
-                            .asList()
-                            .element(0)
-                            .isEqualTo(NodeIdSequence(listOf(snappedLink.closerNodeId, snappedLink.furtherNodeId)))
-                    }
-            }
-        }
-
-        @Nested
-        @DisplayName("When given two discrete infrastructure links")
-        inner class WhenGivenTwoDiscreteLinks {
-
-            private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(DISCRETE, EMPTY)
-
-            @Test
-            @DisplayName("List of alternative node ID sequences should consist of four unique sequences")
-            fun thereShouldBeFourUniqueNodeIdSequences() {
-                forInputs()
-                    .checkAssert { input: NodeResolutionParams ->
-
-                        assertThat(createOutput(input))
-                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
-                            .asList()
-                            .hasSize(4)
-                            .doesNotHaveDuplicates()
-                    }
-            }
-
-            @Test
-            @DisplayName("Verify 1st sequence of node IDs")
-            fun verifyFirstSequenceOfNodeIds() {
-                forInputs()
-                    .checkAssert { input: NodeResolutionParams ->
-
-                        assertThat(createOutput(input))
-                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
-                            .asList()
-                            .hasSizeGreaterThanOrEqualTo(1)
-                            .element(0)
-                            .isEqualTo(NodeIdSequence(
-                                filterOutConsecutiveDuplicates(
-                                    listOf(input.startLink.closerNodeId,
-                                           input.startLink.furtherNodeId,
-                                           input.endLink.closerNodeId,
-                                           input.endLink.furtherNodeId))))
-                    }
-            }
-
-            @Test
-            @DisplayName("Verify 2nd sequence of node IDs")
-            fun verifySecondSequenceOfNodeIds() {
-                forInputs()
-                    .checkAssert { input: NodeResolutionParams ->
-
-                        assertThat(createOutput(input))
-                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
-                            .asList()
-                            .hasSizeGreaterThanOrEqualTo(2)
-                            .element(1)
-                            .isEqualTo(NodeIdSequence(
-                                filterOutConsecutiveDuplicates(
-                                    listOf(input.startLink.closerNodeId,
-                                           input.startLink.furtherNodeId,
-                                           input.endLink.furtherNodeId,
-                                           input.endLink.closerNodeId))))
-                    }
-            }
-
-            @Test
-            @DisplayName("Verify 3rd sequence of node IDs")
-            fun verifyThirdSequenceOfNodeIds() {
-                forInputs()
-                    .checkAssert { input: NodeResolutionParams ->
-
-                        assertThat(createOutput(input))
-                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
-                            .asList()
-                            .hasSizeGreaterThanOrEqualTo(3)
-                            .element(2)
-                            .isEqualTo(NodeIdSequence(
-                                filterOutConsecutiveDuplicates(
-                                    listOf(input.startLink.furtherNodeId,
-                                           input.startLink.closerNodeId,
-                                           input.endLink.closerNodeId,
-                                           input.endLink.furtherNodeId))))
-                    }
-            }
-
-            @Test
-            @DisplayName("Verify 4th sequence of node IDs")
-            fun verifyFourthSequenceOfNodeIds() {
-                forInputs()
-                    .checkAssert { input: NodeResolutionParams ->
-
-                        assertThat(createOutput(input))
-                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
-                            .asList()
-                            .hasSizeGreaterThanOrEqualTo(4)
-                            .element(3)
-                            .isEqualTo(NodeIdSequence(
-                                filterOutConsecutiveDuplicates(
-                                    listOf(input.startLink.furtherNodeId,
-                                           input.startLink.closerNodeId,
-                                           input.endLink.furtherNodeId,
-                                           input.endLink.closerNodeId))))
-                    }
-            }
-
             @Nested
-            @DisplayName("When two infrastructure links have common node")
-            inner class WhenTwoLinksHaveCommonNode {
+            @DisplayName("When terminus links have non-discrete endpoint nodes (start from and end at same node)")
+            inner class WhenTerminusLinkStartsFromSameNodeAsItEndsAt {
 
-                private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(CONNECTED, EMPTY)
+                private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(SAME,
+                                                                                         NON_DISCRETE_ENDPOINT_NODES,
+                                                                                         EMPTY)
 
                 @Test
-                @DisplayName("There should be one node ID sequence containing three items")
-                fun verifyCountOfNodeIdSequencesHavingThreeItems() {
+                @DisplayName("Verify that node ID sequence contains exactly one item")
+                fun nodeIdSequenceShouldContainExactlyOneItem() {
                     forInputs()
                         .checkAssert { input: NodeResolutionParams ->
 
-                            val output: NodeSequenceAlternatives = createOutput(input)
-                            val numberOf3NodeIdSequences = output.nodeIdSequences.count { it.size == 3 }
-
-                            assertThat(numberOf3NodeIdSequences)
-                                .isEqualTo(1)
+                            assertThat(createOutput(input).nodeIdSequences)
+                                .element(0)
+                                .extracting(NodeIdSequence::list)
+                                .asList()
+                                .hasSize(1)
                         }
                 }
 
                 @Test
-                @DisplayName("There should be three node ID sequences containing four items")
-                fun verifyCountOfNodeIdSequencesHavingFourItems() {
+                @DisplayName("Verify that the only node ID sequence consists of the only node possible")
+                fun verifyNodeIdSequence() {
                     forInputs()
                         .checkAssert { input: NodeResolutionParams ->
 
-                            val output: NodeSequenceAlternatives = createOutput(input)
-                            val numberOf4NodeIdSequences = output.nodeIdSequences.count { it.size == 4 }
-
-                            assertThat(numberOf4NodeIdSequences)
-                                .isEqualTo(3)
+                            assertThat(createOutput(input).nodeIdSequences)
+                                .element(0)
+                                .extracting(NodeIdSequence::list)
+                                .asList()
+                                .containsExactly(input.startLink.startNode.id)
                         }
                 }
             }
 
             @Nested
-            @DisplayName("When two infrastructure links do not have common node")
-            inner class WhenTwoLinksDoNotShareCommonNode {
+            @DisplayName("When terminus links have non-discrete endpoint nodes (start from and end at same node)")
+            inner class WhenLinkEndpointsAreDiscrete {
 
-                private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(UNCONNECTED, EMPTY)
+                private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(SAME,
+                                                                                         DISCRETE_ENDPOINT_NODES,
+                                                                                         EMPTY)
 
                 @Test
-                @DisplayName("There should be four node ID sequences containing four items")
-                fun verifyCountOfNodeIdSequencesHavingFourItems() {
+                @DisplayName("Verify that node ID sequence contains exactly two items")
+                fun nodeIdSequenceShouldContainExactlyTwoItems() {
                     forInputs()
                         .checkAssert { input: NodeResolutionParams ->
 
-                            val output: NodeSequenceAlternatives = createOutput(input)
-                            val numberOf3NodeIdSequences = output.nodeIdSequences.count { it.size == 4 }
+                            assertThat(createOutput(input).nodeIdSequences)
+                                .element(0)
+                                .extracting(NodeIdSequence::list)
+                                .asList()
+                                .hasSize(2)
+                        }
+                }
 
-                            assertThat(numberOf3NodeIdSequences)
-                                .isEqualTo(4)
+                @Test
+                @DisplayName("The one and only node ID sequence should contain endpoints of snapped link in order")
+                fun verifyNodeIdSequence() {
+                    forInputs()
+                        .checkAssert { input: NodeResolutionParams ->
+
+                            val snappedLink = input.startLink
+
+                            assertThat(createOutput(input).nodeIdSequences)
+                                .element(0)
+                                .extracting(NodeIdSequence::list)
+                                .asList()
+                                .containsExactly(snappedLink.closerNodeId, snappedLink.furtherNodeId)
                         }
                 }
             }
@@ -349,6 +466,7 @@ class NodeSequenceAlternativesCreatorTest {
         inner class WhenViaNodesAreFullyRedundantWithTerminusLinks {
 
             private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(TerminusLinkRelation.ANY,
+                                                                                     TerminusLinkEndpointDiscreteness.ANY,
                                                                                      FULLY_REDUNDANT_WITH_TERMINUS_LINKS)
 
             @Test
@@ -370,6 +488,7 @@ class NodeSequenceAlternativesCreatorTest {
             inner class WhenGivenSingleTerminusLink {
 
                 private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(SAME,
+                                                                                         TerminusLinkEndpointDiscreteness.ANY,
                                                                                          FULLY_REDUNDANT_WITH_TERMINUS_LINKS)
 
                 @Test
@@ -391,15 +510,14 @@ class NodeSequenceAlternativesCreatorTest {
         @DisplayName("When sequence of via nodes is not redundant with regard to terminus links")
         inner class WhenViaNodesAreNonRedundantWithTerminusLinks {
 
-            private fun forInputs(randomnessSeed: Long): TheoryBuilder<NodeResolutionParams> =
-                forInputs(TerminusLinkRelation.ANY,
-                          NON_REDUNDANT_WITH_TERMINUS_LINKS,
-                          randomnessSeed)
+            private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forInputs(TerminusLinkRelation.ANY,
+                                                                                     TerminusLinkEndpointDiscreteness.ANY,
+                                                                                     NON_REDUNDANT_WITH_TERMINUS_LINKS)
 
             @Test
             @DisplayName("Sequence of via node IDs should not be empty")
             fun viaNodeIdsShouldNotBeEmpty() {
-                findTheoryBuilderWithWorkingRandomnessSeed { seed -> forInputs(seed) }
+                forInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
@@ -413,7 +531,7 @@ class NodeSequenceAlternativesCreatorTest {
             @Test
             @DisplayName("Check validity of via node ID sequence")
             fun verifyViaNodeIdSequence() {
-                findTheoryBuilderWithWorkingRandomnessSeed { seed -> forInputs(seed) }
+                forInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
                         val expectedViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(
@@ -431,7 +549,7 @@ class NodeSequenceAlternativesCreatorTest {
             @Test
             @DisplayName("Verify that each alternative node ID sequence contains via node IDs in the middle")
             fun verifyEachNodeIdSequenceContainsViaNodeIdsInTheMiddle() {
-                findTheoryBuilderWithWorkingRandomnessSeed { seed -> forInputs(seed) }
+                forInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
                         val output: NodeSequenceAlternatives = createOutput(input)
@@ -457,14 +575,13 @@ class NodeSequenceAlternativesCreatorTest {
 
     companion object {
 
-        private val LOGGER: Logger = LoggerFactory.getLogger(NodeSequenceAlternativesCreatorTest::class.java)
-
         private fun createOutput(input: NodeResolutionParams): NodeSequenceAlternatives =
             NodeSequenceAlternativesCreator.create(input.startLink,
                                                    input.viaNodeResolvers,
                                                    input.endLink)
 
         private fun forInputs(terminusLinkRelation: TerminusLinkRelation,
+                              terminusLinkEndpointDiscreteness: TerminusLinkEndpointDiscreteness,
                               viaNodeGenerationScheme: ViaNodeGenerationScheme,
                               randomnessSeed: Long = System.nanoTime())
             : TheoryBuilder<NodeResolutionParams> {
@@ -474,7 +591,8 @@ class NodeSequenceAlternativesCreatorTest {
                 .forAll(
                     NodeResolutionParamsGenerator
                         .builder()
-                        .withStartLinkRelatedToEndLink(terminusLinkRelation)
+                        .withTerminusLinkRelation(terminusLinkRelation)
+                        .withTerminusLinkEndpointDiscreteness(terminusLinkEndpointDiscreteness)
                         .withViaNodeGenerationScheme(viaNodeGenerationScheme)
                         .build()
                         .describedAs { params ->
@@ -505,46 +623,10 @@ class NodeSequenceAlternativesCreatorTest {
                 )
         }
 
-        private fun forAllInputs(): TheoryBuilder<NodeResolutionParams> =
-            forInputs(TerminusLinkRelation.ANY, ViaNodeGenerationScheme.ANY)
-
-        private fun <T> findTheoryBuilderWithWorkingRandomnessSeed(maxRetries: Int = 10,
-                                                                   getTheoryBuilder: (seed: Long) -> TheoryBuilder<T>)
-            : TheoryBuilder<T> {
-
-            if (maxRetries < 0) {
-                throw IllegalArgumentException("maxRetries must not be negative: $maxRetries")
-            }
-            if (maxRetries > 20) {
-                throw IllegalArgumentException("maxRetries must not be greater than 20: $maxRetries")
-            }
-
-            var theoryBuilder: TheoryBuilder<T>?
-
-            for (attempt in 1..(1 + maxRetries)) {
-                val retry = attempt - 1
-                val seed = retry.toLong()
-
-                if (retry > 0) {
-                    LOGGER.debug("Retry #$retry with randomnessSeed=$seed")
-                }
-
-                theoryBuilder = getTheoryBuilder(seed)
-
-                try {
-                    theoryBuilder.checkAssert {
-                        // Basically, it is just tested whether running TheoryBuilder throws IllegalArgumentException.
-                    }
-                    return theoryBuilder
-                } catch (ex: IllegalArgumentException) {
-                    LOGGER.warn("TheoryBuilder.checkAssert() failed with randomnessSeed=$seed")
-
-                    if (attempt <= maxRetries) continue else throw ex
-                }
-            }
-
-            // should never enter here, just to make compiler happy
-            throw IllegalStateException("Illegal state while finding working seed for TheoryBuilder")
+        private fun forAllInputs(): TheoryBuilder<NodeResolutionParams> {
+            return forInputs(TerminusLinkRelation.ANY,
+                             TerminusLinkEndpointDiscreteness.ANY,
+                             ViaNodeGenerationScheme.ANY)
         }
     }
 }

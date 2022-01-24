@@ -40,7 +40,26 @@ data class NodeSequenceAlternatives(val startLinkId: InfrastructureLinkId,
         if (nodeIdSequences.size > 4) {
             throw IllegalArgumentException("At most four node ID sequence may be provided: ${nodeIdSequences.size}")
         }
+
+        nodeIdSequences.forEach { nodeIdSeq ->
+            if (nodeIdSeq.isEmpty()) {
+                throw IllegalArgumentException("Empty NodeIdSequence not allowed")
+            }
+
+            if (nodeIdSeq.size == 1 && nodeIdSequences.size > 1) {
+                throw IllegalArgumentException(
+                    """Only one NodeIdSequence should have been provided when there exists a sequence containing only
+                        |one node identifier
+                    """.trimMargin())
+            }
+        }
     }
+
+    /**
+     * Indicates whether a route can be created based on the alternatives. If there is only single infrastructure
+     * node present, a route cannot be formed.
+     */
+    fun isRoutePossible(): Boolean = nodeIdSequences.size > 1 || nodeIdSequences.first().size > 1
 
     fun toCompactString() = "{startLinkId=$startLinkId, endLinkId=$endLinkId, viaNodeIds=$viaNodeIds}"
 }
