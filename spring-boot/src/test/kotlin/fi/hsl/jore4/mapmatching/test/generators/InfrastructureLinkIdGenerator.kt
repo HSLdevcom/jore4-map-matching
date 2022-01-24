@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.test.generators
 
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
-import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.distinctPair
+import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.discretePair
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate.longRange
 
@@ -11,7 +11,7 @@ object InfrastructureLinkIdGenerator {
 
     fun infrastructureLinkId(): Gen<InfrastructureLinkId> = ID_VALUE.map { id: Long -> InfrastructureLinkId(id) }
 
-    // Generate pairs of distinct link IDs.
+    // Generate pairs of discrete link IDs.
     fun infrastructureLinkIdPair(): Gen<Pair<InfrastructureLinkId, InfrastructureLinkId>> =
-        distinctPair(infrastructureLinkId())
+        discretePair(infrastructureLinkId())
 }

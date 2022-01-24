@@ -17,7 +17,7 @@ object NodeProximityGenerator {
     fun node(): Gen<NodeProximity> =
         infrastructureNodeId().zip(nonNegativeDistance()) { id, distanceToNode -> NodeProximity(id, distanceToNode) }
 
-    fun distinctNodePair(): Gen<Pair<NodeProximity, NodeProximity>> {
+    fun discreteNodePair(): Gen<Pair<NodeProximity, NodeProximity>> {
         return infrastructureNodeIdPair().zip(nodeDistancePair()) { (node1Id, node2Id),
                                                                     (distance1, distance2) ->
 
@@ -38,7 +38,7 @@ object NodeProximityGenerator {
             }
     }
 
-    fun distinctNodeTriple(): Gen<Triple<NodeProximity, NodeProximity, NodeProximity>> {
+    fun discreteNodeTriple(): Gen<Triple<NodeProximity, NodeProximity, NodeProximity>> {
         return infrastructureNodeIdTriple()
             .zip(nodeDistanceTriple()) { (node1Id, node2Id, node3Id),
                                          (distance1, distance2, distance3) ->
@@ -49,7 +49,7 @@ object NodeProximityGenerator {
             }
     }
 
-    fun distinctNodeQuadruple(): Gen<Quadruple<NodeProximity, NodeProximity, NodeProximity, NodeProximity>> {
+    fun discreteNodeQuadruple(): Gen<Quadruple<NodeProximity, NodeProximity, NodeProximity, NodeProximity>> {
         return infrastructureNodeIdQuadruple()
             .zip(nodeDistanceQuadruple()) { (node1Id, node2Id, node3Id, node4Id),
                                             (distance1, distance2, distance3, distance4) ->

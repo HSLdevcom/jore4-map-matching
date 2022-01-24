@@ -8,8 +8,8 @@ object CommonGenerators {
 
     val ZERO_DOUBLE: Gen<Double> = constant(0.0)
 
-    // pair values are distinct (not equal)
-    fun <T> distinctPair(source: Gen<T>): Gen<Pair<T, T>> {
+    // pair values are discrete (not equal)
+    fun <T> discretePair(source: Gen<T>): Gen<Pair<T, T>> {
         return source.flatMap { value1 ->
             val getAnotherUniqueValue = Retry(source) { it != value1 }
 
@@ -17,9 +17,9 @@ object CommonGenerators {
         }
     }
 
-    // triple consists of three distinct values (unique within single generated tuple)
-    fun <T> distinctTriple(source: Gen<T>): Gen<Triple<T, T, T>> {
-        return distinctPair(source)
+    // triple consists of three discrete values (unique within single generated tuple)
+    fun <T> discreteTriple(source: Gen<T>): Gen<Triple<T, T, T>> {
+        return discretePair(source)
             .flatMap { (value1, value2) ->
                 val getAnotherUniqueValue = Retry(source) { it != value1 && it != value2 }
 
@@ -27,9 +27,9 @@ object CommonGenerators {
             }
     }
 
-    // quadruple consists of four distinct values (unique within single generated tuple)
-    fun <T> distinctQuadruple(source: Gen<T>): Gen<Quadruple<T, T, T, T>> {
-        return distinctTriple(source)
+    // quadruple consists of four discrete values (unique within single generated tuple)
+    fun <T> discreteQuadruple(source: Gen<T>): Gen<Quadruple<T, T, T, T>> {
+        return discreteTriple(source)
             .flatMap { (value1, value2, value3) ->
                 val getAnotherUniqueValue = Retry(source) { it != value1 && it != value2 && it != value3 }
 
