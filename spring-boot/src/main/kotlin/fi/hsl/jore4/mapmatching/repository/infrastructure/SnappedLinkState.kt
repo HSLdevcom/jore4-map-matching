@@ -15,8 +15,8 @@ import java.lang.IllegalArgumentException
  * which the point is snapped
  * @property closestDistance the closest distance from the point being snapped
  * to the infrastructure link
- * @property startNode the node at the start point of the infrastructure link
- * @property endNode the node at the end point of the infrastructure link
+ * @property startNode the node at start point of the infrastructure link
+ * @property endNode the node at end point of the infrastructure link
  */
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
@@ -27,11 +27,6 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
 
     init {
         // check validity
-
-        if (startNode.id == endNode.id) {
-            throw IllegalArgumentException(
-                "infrastructureLink=$infrastructureLinkId: endpoint nodes must have different identifiers")
-        }
 
         if (closestDistance < 0.0) {
             throw IllegalArgumentException("closestDistance must be greater than or equal to 0.0: $closestDistance")
@@ -80,4 +75,8 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
     fun hasNode(nodeId: InfrastructureNodeId) = startNode.id == nodeId || endNode.id == nodeId
 
     fun hasSharedNode(that: SnappedLinkState) = hasNode(that.startNode.id) || hasNode(that.endNode.id)
+
+    fun hasDiscreteNodes(): Boolean = startNode.id != endNode.id
+
+    fun isOnSameLinkAs(other: SnappedLinkState): Boolean = infrastructureLinkId == other.infrastructureLinkId
 }

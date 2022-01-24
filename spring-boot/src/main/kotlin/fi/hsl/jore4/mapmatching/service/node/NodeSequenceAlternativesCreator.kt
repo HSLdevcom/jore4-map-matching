@@ -1,7 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
-import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
@@ -58,7 +57,7 @@ object NodeSequenceAlternativesCreator {
             nonOverlappingViaNodeIdSequence = NodeIdSequence.empty()
 
             // This very special corner case needs to be treated separately in order to have a well-behaving algorithm.
-            if (startLink.infrastructureLinkId == endLink.infrastructureLinkId) {
+            if (startLink.isOnSameLinkAs(endLink)) {
                 return createResponseForSingleLinkWithNoViaNodes(startLink)
             }
         } else {
@@ -91,10 +90,7 @@ object NodeSequenceAlternativesCreator {
     private fun createWithoutViaNodes(startLink: SnappedLinkState, endLink: SnappedLinkState)
         : NodeSequenceAlternatives {
 
-        val startLinkId: InfrastructureLinkId = startLink.infrastructureLinkId
-        val endLinkId: InfrastructureLinkId = endLink.infrastructureLinkId
-
-        if (startLinkId == endLinkId) {
+        if (startLink.isOnSameLinkAs(endLink)) {
             return createResponseForSingleLinkWithNoViaNodes(startLink)
         }
 
@@ -113,7 +109,10 @@ object NodeSequenceAlternativesCreator {
             false -> nodeIdSequenceCombos
         }
 
-        return NodeSequenceAlternatives(startLinkId, endLinkId, NodeIdSequence.empty(), filteredNodeIdSequences)
+        return NodeSequenceAlternatives(startLink.infrastructureLinkId,
+                                        endLink.infrastructureLinkId,
+                                        NodeIdSequence.empty(),
+                                        filteredNodeIdSequences)
     }
 
     private fun mergeNodeIdsOnStartLink(startLink: SnappedLinkState,

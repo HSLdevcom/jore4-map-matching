@@ -12,13 +12,17 @@ import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.END
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.NODES_AT_EQUAL_DISTANCE
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.START_NODE_CLOSER
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.START_NODE_CLOSER_OR_EQUAL_DISTANCE
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.discreteEndpointNodesForInfrastructureLink
 import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.discreteNodePair
-import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.discreteNodeQuadruple
-import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.discreteNodeTriple
-import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.endpointNodesOfInfrastructureLink
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.nodeQuadruple
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.nodeTriple
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.oneNodeAsBothEndpointsForInfrastructureLink
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.singleNodeAtTwoDistances
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate.booleans
+import org.quicktheories.generators.Generate.enumValues
 import org.quicktheories.generators.SourceDSL.doubles
+import org.quicktheories.generators.SourceDSL.integers
 import kotlin.math.min
 
 object SnappedLinkStateGenerator {
@@ -31,39 +35,53 @@ object SnappedLinkStateGenerator {
 
     private val DISTANCE_PAIR: Gen<Pair<Double, Double>> = distancePair(NON_NEGATIVE_DISTANCE, POSITIVE_DISTANCE)
 
-    private val SNAPPED_LINK_HAVING_START_NODE_CLOSER: Gen<SnappedLinkState> =
-        generateSnappedLinkState(START_NODE_CLOSER)
-    private val SNAPPED_LINK_HAVING_END_NODE_CLOSER: Gen<SnappedLinkState> = generateSnappedLinkState(END_NODE_CLOSER)
-    private val SNAPPED_LINK_HAVING_BOTH_NODES_AT_EQUAL_DISTANCE: Gen<SnappedLinkState> =
-        generateSnappedLinkState(NODES_AT_EQUAL_DISTANCE)
+    fun snapLink(): Gen<SnappedLinkState> = booleans().flatMap(this::snapLink)
 
-    fun snapLink(): Gen<SnappedLinkState> =
-        SNAPPED_LINK_HAVING_START_NODE_CLOSER
-            .mix(SNAPPED_LINK_HAVING_END_NODE_CLOSER, 50)
-            .mix(SNAPPED_LINK_HAVING_BOTH_NODES_AT_EQUAL_DISTANCE, 5)
+    fun snapLink(withDiscreteEndpoints: Boolean): Gen<SnappedLinkState> {
+        return enumValues(LinkEndpointsProximityFilter::class.java)
+            .flatMap { proximityFilter ->
+                snapLink(proximityFilter, withDiscreteEndpoints)
+            }
+    }
 
-    fun snapLink(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> {
+    fun snapLink(nodeProximityFilter: LinkEndpointsProximityFilter,
+                 withDiscreteEndpoints: Boolean = true)
+        : Gen<SnappedLinkState> {
+
+        val getSnappedLinkState: (LinkEndpointsProximityFilter) -> Gen<SnappedLinkState> =
+            if (withDiscreteEndpoints)
+                this::generateSnappedLinkStateFromTwoNodes
+            else
+                this::generateSnappedLinkStateFromOneNode
+
         return when (nodeProximityFilter) {
-            START_NODE_CLOSER -> SNAPPED_LINK_HAVING_START_NODE_CLOSER
-            END_NODE_CLOSER -> SNAPPED_LINK_HAVING_END_NODE_CLOSER
-            NODES_AT_EQUAL_DISTANCE -> SNAPPED_LINK_HAVING_BOTH_NODES_AT_EQUAL_DISTANCE
+            START_NODE_CLOSER -> getSnappedLinkState(START_NODE_CLOSER)
+            END_NODE_CLOSER -> getSnappedLinkState(END_NODE_CLOSER)
+            NODES_AT_EQUAL_DISTANCE -> getSnappedLinkState(NODES_AT_EQUAL_DISTANCE)
             START_NODE_CLOSER_OR_EQUAL_DISTANCE -> {
-                SNAPPED_LINK_HAVING_START_NODE_CLOSER.mix(SNAPPED_LINK_HAVING_BOTH_NODES_AT_EQUAL_DISTANCE, 50)
+                getSnappedLinkState(START_NODE_CLOSER)
+                    .mix(getSnappedLinkState(NODES_AT_EQUAL_DISTANCE), 50)
             }
             END_NODE_CLOSER_OR_EQUAL_DISTANCE -> {
-                SNAPPED_LINK_HAVING_END_NODE_CLOSER.mix(SNAPPED_LINK_HAVING_BOTH_NODES_AT_EQUAL_DISTANCE, 50)
+                getSnappedLinkState(END_NODE_CLOSER)
+                    .mix(getSnappedLinkState(NODES_AT_EQUAL_DISTANCE), 50)
             }
         }
     }
 
-    fun snapSingleLinkTwice(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+    fun snapSingleLinkTwice(withDiscreteEndpoints: Boolean? = null): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+        val nodePair: Gen<Pair<NodeProximity, NodeProximity>> = when (withDiscreteEndpoints) {
+            true -> discreteNodePair()
+            false -> singleNodeAtTwoDistances()
+            null -> discreteNodePair().mix(singleNodeAtTwoDistances(), 50)
+        }
+
         return infrastructureLinkId().zip(DISTANCE_PAIR,
-                                          discreteNodePair(),
+                                          nodePair,
                                           booleans()) { linkId,
-                                                        (distance1, distance2),
+                                                        (distanceToLink1, distanceToLink2),
                                                         (node1, node2),
                                                         flipOrder ->
-
             val nodesOfFirstLink = Pair(node1, node2)
 
             val nodesOfSecondLink: Pair<NodeProximity, NodeProximity> = when (flipOrder) {
@@ -71,18 +89,27 @@ object SnappedLinkStateGenerator {
                 else -> Pair(node2, node1)
             }
 
-            Pair(createSnappedLinkState(linkId, distance1, nodesOfFirstLink),
-                 createSnappedLinkState(linkId, distance2, nodesOfSecondLink))
+            Pair(createSnappedLinkState(linkId, distanceToLink1, nodesOfFirstLink),
+                 createSnappedLinkState(linkId, distanceToLink2, nodesOfSecondLink))
         }
     }
 
-    // Generate pairs of links having common node.
+    // Generate pairs of links having a common node.
     fun snapTwoConnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+        return integers().between(1, 3).flatMap(this::snapTwoConnectedLinks)
+    }
+
+    // Generate pairs of links having a common node.
+    fun snapTwoConnectedLinks(numberOfDiscreteNodes: Int): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+        if (numberOfDiscreteNodes !in 1..3) {
+            throw IllegalArgumentException("numberOfDiscreteNodes should be in range 1..3, but was: $numberOfDiscreteNodes")
+        }
+
         return infrastructureLinkIdPair()
             .zip(DISTANCE_PAIR,
-                 discreteNodeTriple()) { (firstLinkId, secondLinkId),
-                                         (distanceToFirstLink, distanceToSecondLink),
-                                         (node1, node2, node3) ->
+                 nodeTriple(numberOfDiscreteNodes)) { (firstLinkId, secondLinkId),
+                                                      (distanceToFirstLink, distanceToSecondLink),
+                                                      (node1, node2, node3) ->
 
                 Pair(createSnappedLinkState(firstLinkId, distanceToFirstLink, node1, node2),
                      createSnappedLinkState(secondLinkId, distanceToSecondLink, node2, node3))
@@ -91,23 +118,43 @@ object SnappedLinkStateGenerator {
 
     // Generate pairs of links that do not have a common node.
     fun snapTwoUnconnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+        return integers().between(2, 4).flatMap(this::snapTwoUnconnectedLinks)
+    }
+
+    // Generate pairs of links that do not have a common node.
+    fun snapTwoUnconnectedLinks(numberOfDiscreteNodes: Int): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+        if (numberOfDiscreteNodes !in 2..4) {
+            throw IllegalArgumentException("numberOfDiscreteNodes should be in range 2..4, but was: $numberOfDiscreteNodes")
+        }
+
         return infrastructureLinkIdPair()
             .zip(DISTANCE_PAIR,
-                 discreteNodeQuadruple()) { (firstLinkId, secondLinkId),
-                                            (distanceToFirstLink, distanceToSecondLink),
-                                            (node1, node2, node3, node4) ->
+                 nodeQuadruple(numberOfDiscreteNodes)) { (firstLinkId, secondLinkId),
+                                                         (distanceToFirstLink, distanceToSecondLink),
+                                                         (node1, node2, node3, node4) ->
 
                 Pair(createSnappedLinkState(firstLinkId, distanceToFirstLink, node1, node2),
                      createSnappedLinkState(secondLinkId, distanceToSecondLink, node3, node4))
             }
     }
 
-    private fun generateSnappedLinkState(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> {
+    private fun generateSnappedLinkStateFromOneNode(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> {
         return infrastructureLinkId()
             .zip(NON_NEGATIVE_DISTANCE,
-                 endpointNodesOfInfrastructureLink(nodeProximityFilter)) { infrastructureLinkId,
-                                                                           distanceToLink,
-                                                                           (startNode, endNode) ->
+                 oneNodeAsBothEndpointsForInfrastructureLink(nodeProximityFilter)) { infrastructureLinkId,
+                                                                                     distanceToLink,
+                                                                                     (startNode, endNode) ->
+
+                createSnappedLinkState(infrastructureLinkId, distanceToLink, startNode, endNode)
+            }
+    }
+
+    private fun generateSnappedLinkStateFromTwoNodes(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> {
+        return infrastructureLinkId()
+            .zip(NON_NEGATIVE_DISTANCE,
+                 discreteEndpointNodesForInfrastructureLink(nodeProximityFilter)) { infrastructureLinkId,
+                                                                                    distanceToLink,
+                                                                                    (startNode, endNode) ->
 
                 createSnappedLinkState(infrastructureLinkId, distanceToLink, startNode, endNode)
             }

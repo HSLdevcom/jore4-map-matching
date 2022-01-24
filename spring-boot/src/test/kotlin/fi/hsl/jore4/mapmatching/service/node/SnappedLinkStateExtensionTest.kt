@@ -1,6 +1,5 @@
 package fi.hsl.jore4.mapmatching.service.node
 
-import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.getNodeIdSequenceCombinations
@@ -19,35 +18,58 @@ import org.quicktheories.dsl.TheoryBuilder
 @DisplayName("Test SnappedLinkStateExtension class")
 class SnappedLinkStateExtensionTest {
 
-    private fun withSnappedLink(nodeProximityFilter: LinkEndpointsProximityFilter): TheoryBuilder<SnappedLinkState> =
-        qt().forAll(SnappedLinkStateGenerator.snapLink(nodeProximityFilter))
+    private fun forAllSnappedLinksWithDiscreteEndpoints(nodeProximityFilter: LinkEndpointsProximityFilter)
+        : TheoryBuilder<SnappedLinkState> {
+
+        return qt().forAll(SnappedLinkStateGenerator.snapLink(nodeProximityFilter, true))
+    }
 
     @Nested
     @DisplayName("toNodeList")
     inner class ToNodeIdList {
 
-        @Test
-        @DisplayName("When distance to start node is less than or equal to distance to end node")
-        fun whenDistanceToStartNodeIsLessThanOrEqualToDistanceToEndNode() {
-            return withSnappedLink(START_NODE_CLOSER_OR_EQUAL_DISTANCE)
-                .checkAssert { snappedLink ->
-                    val nodeIds: List<InfrastructureNodeId> = snappedLink.toNodeIdList()
+        @Nested
+        @DisplayName("When endpoint nodes of infrastructure link are discrete")
+        inner class WhenEndpointNodesAreDiscrete {
 
-                    assertThat(nodeIds)
-                        .isEqualTo(listOf(snappedLink.startNode.id, snappedLink.endNode.id))
-                }
+            @Test
+            @DisplayName("When distance to start node is less than or equal to distance to end node")
+            fun whenDistanceToStartNodeIsLessThanOrEqualToDistanceToEndNode() {
+                return forAllSnappedLinksWithDiscreteEndpoints(START_NODE_CLOSER_OR_EQUAL_DISTANCE)
+                    .checkAssert { snappedLink ->
+
+                        assertThat(snappedLink.toNodeIdList())
+                            .isEqualTo(listOf(snappedLink.startNode.id, snappedLink.endNode.id))
+                    }
+            }
+
+            @Test
+            @DisplayName("When distance to start node is greater than distance to end node")
+            fun whenDistanceToStartNodeIsGreaterThanDistanceToEndNode() {
+                return forAllSnappedLinksWithDiscreteEndpoints(END_NODE_CLOSER)
+                    .checkAssert { snappedLink ->
+
+                        assertThat(snappedLink.toNodeIdList())
+                            .isEqualTo(listOf(snappedLink.endNode.id, snappedLink.startNode.id))
+                    }
+            }
         }
 
-        @Test
-        @DisplayName("When distance to start node is greater than distance to end node")
-        fun whenDistanceToStartNodeIsGreaterThanDistanceToEndNode() {
-            return withSnappedLink(END_NODE_CLOSER)
-                .checkAssert { snappedLink ->
-                    val nodeIds: List<InfrastructureNodeId> = snappedLink.toNodeIdList()
+        @Nested
+        @DisplayName("When single node appears at both endpoints of infrastructure link")
+        inner class WhenSingleNodeAppearsAtBothEndpoints {
 
-                    assertThat(nodeIds)
-                        .isEqualTo(listOf(snappedLink.endNode.id, snappedLink.startNode.id))
-                }
+            @Test
+            @DisplayName("Should return single node ID independent of node distances")
+            fun independentOfNodeDistances() {
+                return qt()
+                    .forAll(SnappedLinkStateGenerator.snapLink(withDiscreteEndpoints = false))
+                    .checkAssert { snappedLink ->
+
+                        assertThat(snappedLink.toNodeIdList())
+                            .isEqualTo(listOf(snappedLink.startNode.id))
+                    }
+            }
         }
     }
 
@@ -55,32 +77,55 @@ class SnappedLinkStateExtensionTest {
     @DisplayName("Get node ID sequence combinations")
     inner class GetNodeIdSequenceCombinations {
 
-        @Test
-        @DisplayName("When distance to start node is less than or equal to distance to end node")
-        fun whenDistanceToStartNodeIsLessThanOrEqualToDistanceToEndNode() {
-            return withSnappedLink(START_NODE_CLOSER_OR_EQUAL_DISTANCE)
-                .checkAssert { snappedLink ->
-                    val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
+        @Nested
+        @DisplayName("When endpoint nodes of infrastructure link are discrete")
+        inner class WhenEndpointNodesAreDiscrete {
 
-                    assertThat(nodeIdSequences)
-                        .isEqualTo(listOf(
-                            NodeIdSequence(listOf(snappedLink.startNode.id, snappedLink.endNode.id)),
-                            NodeIdSequence(listOf(snappedLink.endNode.id, snappedLink.startNode.id))))
-                }
+            @Test
+            @DisplayName("When distance to start node is less than or equal to distance to end node")
+            fun whenDistanceToStartNodeIsLessThanOrEqualToDistanceToEndNode() {
+                return forAllSnappedLinksWithDiscreteEndpoints(START_NODE_CLOSER_OR_EQUAL_DISTANCE)
+                    .checkAssert { snappedLink ->
+                        val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
+
+                        assertThat(nodeIdSequences)
+                            .isEqualTo(listOf(
+                                NodeIdSequence(listOf(snappedLink.startNode.id, snappedLink.endNode.id)),
+                                NodeIdSequence(listOf(snappedLink.endNode.id, snappedLink.startNode.id))))
+                    }
+            }
+
+            @Test
+            @DisplayName("When distance to start node is greater than distance to end node")
+            fun whenDistanceToStartNodeIsGreaterThanDistanceToEndNode() {
+                return forAllSnappedLinksWithDiscreteEndpoints(END_NODE_CLOSER)
+                    .checkAssert { snappedLink ->
+                        val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
+
+                        assertThat(nodeIdSequences)
+                            .isEqualTo(listOf(
+                                NodeIdSequence(listOf(snappedLink.endNode.id, snappedLink.startNode.id)),
+                                NodeIdSequence(listOf(snappedLink.startNode.id, snappedLink.endNode.id))))
+                    }
+            }
         }
 
-        @Test
-        @DisplayName("When distance to start node is greater than distance to end node")
-        fun whenDistanceToStartNodeIsGreaterThanDistanceToEndNode() {
-            return withSnappedLink(END_NODE_CLOSER)
-                .checkAssert { snappedLink ->
-                    val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
+        @Nested
+        @DisplayName("When single node appears at both endpoints")
+        inner class WhenSingleNodeAppearsAtBothEndpoints {
 
-                    assertThat(nodeIdSequences)
-                        .isEqualTo(listOf(
-                            NodeIdSequence(listOf(snappedLink.endNode.id, snappedLink.startNode.id)),
-                            NodeIdSequence(listOf(snappedLink.startNode.id, snappedLink.endNode.id))))
-                }
+            @Test
+            @DisplayName("Should return NodeIdSequence consisting of single node ID independent of node distances")
+            fun independentOfNodeDistances() {
+                return qt()
+                    .forAll(SnappedLinkStateGenerator.snapLink(withDiscreteEndpoints = false))
+                    .checkAssert { snappedLink ->
+                        val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
+
+                        assertThat(nodeIdSequences)
+                            .isEqualTo(listOf(NodeIdSequence(listOf(snappedLink.startNode.id))))
+                    }
+            }
         }
     }
 }

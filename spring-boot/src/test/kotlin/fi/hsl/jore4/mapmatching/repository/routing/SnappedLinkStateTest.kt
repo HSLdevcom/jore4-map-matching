@@ -75,4 +75,31 @@ class SnappedLinkStateTest {
                 }
         }
     }
+
+    @Nested
+    @DisplayName("hasDiscreteNodes")
+    inner class HasDiscreteNodes {
+
+        @Test
+        @DisplayName("When endpoint nodes of infrastructure links are discrete")
+        fun whenEndpointNodesAreDiscrete() {
+            qt().forAll(SnappedLinkStateGenerator.snapLink(withDiscreteEndpoints = true))
+                .checkAssert { link: SnappedLinkState ->
+
+                    assertThat(link.hasDiscreteNodes())
+                        .isEqualTo(true)
+                }
+        }
+
+        @Test
+        @DisplayName("When infrastructure link has one node at both endpoints")
+        fun whenSingleNodeAppearsAtBothEndpoints() {
+            qt().forAll(SnappedLinkStateGenerator.snapLink(withDiscreteEndpoints = false))
+                .checkAssert { link: SnappedLinkState ->
+
+                    assertThat(link.hasDiscreteNodes())
+                        .isEqualTo(false)
+                }
+        }
+    }
 }

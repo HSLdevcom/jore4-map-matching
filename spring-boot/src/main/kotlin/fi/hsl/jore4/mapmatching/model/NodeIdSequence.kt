@@ -20,6 +20,10 @@ data class NodeIdSequence(val list: List<InfrastructureNodeId>) {
 
     fun duplicatesRemoved() = NodeIdSequence(filterOutConsecutiveDuplicates(list))
 
+    fun firstNodeOrThrow(): InfrastructureNodeId = list.first()
+
+    fun lastNodeOrThrow(): InfrastructureNodeId = list.last()
+
     override fun toString(): String {
         return list.joinToString(prefix = "NodeIdSequence(", postfix = ")", transform = { it.value.toString() })
     }
