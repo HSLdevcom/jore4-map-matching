@@ -57,10 +57,13 @@ object SnappedLinkStateGenerator {
     }
 
     fun snapSingleLinkTwice(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
-        return infrastructureLinkId().zip(DISTANCE_PAIR, discreteNodePair(), booleans()) { linkId,
-                                                                                           (distance1, distance2),
-                                                                                           (node1, node2),
-                                                                                           flipOrder ->
+        return infrastructureLinkId().zip(DISTANCE_PAIR,
+                                          discreteNodePair(),
+                                          booleans()) { linkId,
+                                                        (distance1, distance2),
+                                                        (node1, node2),
+                                                        flipOrder ->
+
             val nodesOfFirstLink = Pair(node1, node2)
 
             val nodesOfSecondLink: Pair<NodeProximity, NodeProximity> = when (flipOrder) {
@@ -76,9 +79,10 @@ object SnappedLinkStateGenerator {
     // Generate pairs of links having common node.
     fun snapTwoConnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
         return infrastructureLinkIdPair()
-            .zip(DISTANCE_PAIR, discreteNodeTriple()) { (firstLinkId, secondLinkId),
-                                                        (distanceToFirstLink, distanceToSecondLink),
-                                                        (node1, node2, node3) ->
+            .zip(DISTANCE_PAIR,
+                 discreteNodeTriple()) { (firstLinkId, secondLinkId),
+                                         (distanceToFirstLink, distanceToSecondLink),
+                                         (node1, node2, node3) ->
 
                 Pair(createSnappedLinkState(firstLinkId, distanceToFirstLink, node1, node2),
                      createSnappedLinkState(secondLinkId, distanceToSecondLink, node2, node3))
@@ -88,9 +92,10 @@ object SnappedLinkStateGenerator {
     // Generate pairs of links that do not have a common node.
     fun snapTwoUnconnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
         return infrastructureLinkIdPair()
-            .zip(DISTANCE_PAIR, discreteNodeQuadruple()) { (firstLinkId, secondLinkId),
-                                                           (distanceToFirstLink, distanceToSecondLink),
-                                                           (node1, node2, node3, node4) ->
+            .zip(DISTANCE_PAIR,
+                 discreteNodeQuadruple()) { (firstLinkId, secondLinkId),
+                                            (distanceToFirstLink, distanceToSecondLink),
+                                            (node1, node2, node3, node4) ->
 
                 Pair(createSnappedLinkState(firstLinkId, distanceToFirstLink, node1, node2),
                      createSnappedLinkState(secondLinkId, distanceToSecondLink, node3, node4))
@@ -99,9 +104,10 @@ object SnappedLinkStateGenerator {
 
     private fun generateSnappedLinkState(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> {
         return infrastructureLinkId()
-            .zip(
-                NON_NEGATIVE_DISTANCE, endpointNodesOfInfrastructureLink(nodeProximityFilter),
-            ) { infrastructureLinkId, distanceToLink, (startNode, endNode) ->
+            .zip(NON_NEGATIVE_DISTANCE,
+                 endpointNodesOfInfrastructureLink(nodeProximityFilter)) { infrastructureLinkId,
+                                                                           distanceToLink,
+                                                                           (startNode, endNode) ->
 
                 createSnappedLinkState(infrastructureLinkId, distanceToLink, startNode, endNode)
             }
