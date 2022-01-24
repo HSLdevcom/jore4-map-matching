@@ -177,16 +177,16 @@ class NodeSequenceAlternativesCreatorTest {
         }
 
         @Nested
-        @DisplayName("When given two distinct infrastructure links")
-        inner class WhenGivenTwoDistinctLinks {
+        @DisplayName("When given two discrete infrastructure links")
+        inner class WhenGivenTwoDiscreteLinks {
 
-            private fun forDistinctLinkInputs(): TheoryBuilder<NodeResolutionParams> =
-                forEmptyViaNodeInputs(TerminusLinkRelation.DISTINCT)
+            private fun forDiscreteLinkInputs(): TheoryBuilder<NodeResolutionParams> =
+                forEmptyViaNodeInputs(TerminusLinkRelation.DISCRETE)
 
             @Test
             @DisplayName("List of alternative node ID sequences should consist of four unique sequences")
             fun thereShouldBeFourUniqueNodeIdSequences() {
-                forDistinctLinkInputs()
+                forDiscreteLinkInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
@@ -200,7 +200,7 @@ class NodeSequenceAlternativesCreatorTest {
             @Test
             @DisplayName("Verify 1st sequence of node IDs")
             fun verifyFirstSequenceOfNodeIds() {
-                forDistinctLinkInputs()
+                forDiscreteLinkInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
@@ -220,7 +220,7 @@ class NodeSequenceAlternativesCreatorTest {
             @Test
             @DisplayName("Verify 2nd sequence of node IDs")
             fun verifySecondSequenceOfNodeIds() {
-                forDistinctLinkInputs()
+                forDiscreteLinkInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
@@ -240,7 +240,7 @@ class NodeSequenceAlternativesCreatorTest {
             @Test
             @DisplayName("Verify 3rd sequence of node IDs")
             fun verifyThirdSequenceOfNodeIds() {
-                forDistinctLinkInputs()
+                forDiscreteLinkInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
@@ -260,7 +260,7 @@ class NodeSequenceAlternativesCreatorTest {
             @Test
             @DisplayName("Verify 4th sequence of node IDs")
             fun verifyFourthSequenceOfNodeIds() {
-                forDistinctLinkInputs()
+                forDiscreteLinkInputs()
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))

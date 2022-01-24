@@ -3,7 +3,7 @@ package fi.hsl.jore4.mapmatching.service.node
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.CONNECTED
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISTINCT
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISCRETE
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.UNCONNECTED
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.EMPTY
@@ -31,8 +31,8 @@ object NodeResolutionParamsGenerator {
         // startLinkId == endLinkId
         SAME,
 
-        // startLinkId != endLinkId; links may be connected to each other or not
-        DISTINCT,
+        // startLinkId != endLinkId; links may or may not be connected to each other
+        DISCRETE,
 
         // start and end link share a common node i.e. they are connected to each other
         CONNECTED,
@@ -140,7 +140,7 @@ object NodeResolutionParamsGenerator {
         fun build(): Gen<NodeResolutionParams> {
             val terminusLinkGen: Gen<Pair<SnappedLinkState, SnappedLinkState>> = when (terminusLinkRelation) {
                 SAME -> snapSingleLinkTwice()
-                DISTINCT -> oneOf(snapTwoConnectedLinks(), snapTwoUnconnectedLinks())
+                DISCRETE -> oneOf(snapTwoConnectedLinks(), snapTwoUnconnectedLinks())
                 CONNECTED -> snapTwoConnectedLinks()
                 UNCONNECTED -> snapTwoUnconnectedLinks()
                 TerminusLinkRelation.ANY -> oneOf(snapSingleLinkTwice(),
