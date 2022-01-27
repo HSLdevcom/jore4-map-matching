@@ -25,7 +25,7 @@ class NodeSequenceAlternativesCreatorTest {
             .checkAssert { input: NodeResolutionParams ->
 
                 assertThat(createOutput(input))
-                    .extracting { it.startLinkId }
+                    .extracting(NodeSequenceAlternatives::startLinkId)
                     .isEqualTo(input.startLink.infrastructureLinkId)
             }
     }
@@ -37,7 +37,7 @@ class NodeSequenceAlternativesCreatorTest {
             .checkAssert { input: NodeResolutionParams ->
 
                 assertThat(createOutput(input))
-                    .extracting { it.endLinkId }
+                    .extracting(NodeSequenceAlternatives::endLinkId)
                     .isEqualTo(input.endLink.infrastructureLinkId)
             }
     }
@@ -49,7 +49,7 @@ class NodeSequenceAlternativesCreatorTest {
             .checkAssert { input: NodeResolutionParams ->
 
                 assertThat(createOutput(input))
-                    .extracting { it.nodeIdSequences }
+                    .extracting(NodeSequenceAlternatives::nodeIdSequences)
                     .asList()
                     .hasSizeGreaterThanOrEqualTo(1)
                     .hasSizeLessThanOrEqualTo(4)
@@ -121,7 +121,7 @@ class NodeSequenceAlternativesCreatorTest {
                 .checkAssert { input: NodeResolutionParams ->
 
                     assertThat(createOutput(input))
-                        .extracting { it.viaNodeIds }
+                        .extracting(NodeSequenceAlternatives::viaNodeIds)
                         .isEqualTo(NodeIdSequence.empty())
                 }
         }
@@ -140,7 +140,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.nodeIdSequences }
+                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
                             .asList()
                             .hasSize(1)
                     }
@@ -168,7 +168,7 @@ class NodeSequenceAlternativesCreatorTest {
                         val snappedLink = input.startLink
 
                         assertThat(createOutput(input))
-                            .extracting { it.nodeIdSequences }
+                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
                             .asList()
                             .element(0)
                             .isEqualTo(NodeIdSequence(listOf(snappedLink.closerNodeId, snappedLink.furtherNodeId)))
@@ -190,7 +190,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.nodeIdSequences }
+                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
                             .asList()
                             .hasSize(4)
                             .doesNotHaveDuplicates()
@@ -204,7 +204,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.nodeIdSequences }
+                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
                             .asList()
                             .hasSizeGreaterThanOrEqualTo(1)
                             .element(0)
@@ -224,7 +224,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.nodeIdSequences }
+                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
                             .asList()
                             .hasSizeGreaterThanOrEqualTo(2)
                             .element(1)
@@ -244,7 +244,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.nodeIdSequences }
+                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
                             .asList()
                             .hasSizeGreaterThanOrEqualTo(3)
                             .element(2)
@@ -264,7 +264,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.nodeIdSequences }
+                            .extracting(NodeSequenceAlternatives::nodeIdSequences)
                             .asList()
                             .hasSizeGreaterThanOrEqualTo(4)
                             .element(3)
@@ -356,7 +356,8 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.viaNodeIds.list }
+                            .extracting(NodeSequenceAlternatives::viaNodeIds)
+                            .extracting(NodeIdSequence::list)
                             .asList()
                             .isEmpty()
                     }
@@ -373,7 +374,7 @@ class NodeSequenceAlternativesCreatorTest {
                         .checkAssert { input: NodeResolutionParams ->
 
                             assertThat(createOutput(input))
-                                .extracting { it.nodeIdSequences }
+                                .extracting(NodeSequenceAlternatives::nodeIdSequences)
                                 .asList()
                                 .hasSize(1)
                         }
@@ -397,7 +398,8 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         assertThat(createOutput(input))
-                            .extracting { it.viaNodeIds.list }
+                            .extracting(NodeSequenceAlternatives::viaNodeIds)
+                            .extracting(NodeIdSequence::list)
                             .asList()
                             .isNotEmpty()
                     }
@@ -414,7 +416,8 @@ class NodeSequenceAlternativesCreatorTest {
                         )
 
                         assertThat(createOutput(input))
-                            .extracting { it.viaNodeIds.list }
+                            .extracting(NodeSequenceAlternatives::viaNodeIds)
+                            .extracting(NodeIdSequence::list)
                             .asList()
                             .isEqualTo(expectedViaNodeIds)
                     }
