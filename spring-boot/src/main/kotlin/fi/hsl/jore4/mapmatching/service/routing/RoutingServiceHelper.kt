@@ -15,7 +15,7 @@ object RoutingServiceHelper {
 
         val snappedPoints = snaps.map { it.point }.toSet()
 
-        return allPoints.filter { !snappedPoints.contains(it) }
+        return allPoints.filter { it !in snappedPoints }
     }
 
     /**

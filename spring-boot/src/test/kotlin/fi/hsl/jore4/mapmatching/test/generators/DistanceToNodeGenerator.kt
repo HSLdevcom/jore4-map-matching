@@ -6,7 +6,6 @@ import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.NOD
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.START_NODE_CLOSER
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.START_NODE_CLOSER_OR_EQUAL_DISTANCE
 import fi.hsl.jore4.mapmatching.test.util.Quadruple
-import fi.hsl.jore4.mapmatching.util.MathUtils
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.SourceDSL.doubles
 
@@ -32,13 +31,13 @@ object DistanceToNodeGenerator {
                 .assuming { (firstDistance: Double, secondDistance: Double) ->
                     when (nodeProximityFilter) {
                         // filter out pairs of equal value
-                        START_NODE_CLOSER, END_NODE_CLOSER -> MathUtils.compare(firstDistance, secondDistance) != 0
+                        START_NODE_CLOSER, END_NODE_CLOSER -> firstDistance != secondDistance
                         else -> true
                     }
                 }
                 .map { (distance1: Double, distance2: Double) ->
 
-                    val firstDistanceLessOrEqual: Boolean = when (MathUtils.compare(distance1, distance2)) {
+                    val firstDistanceLessOrEqual: Boolean = when (distance1.compareTo(distance2)) {
                         1 -> false
                         else -> true
                     }

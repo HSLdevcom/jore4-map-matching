@@ -4,8 +4,6 @@ import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeProximity
-import fi.hsl.jore4.mapmatching.util.MathUtils
-import java.lang.IllegalArgumentException
 
 /**
  * Contains information about a snap from an arbitrary point to an
@@ -40,10 +38,10 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
     }
 
     val isStartNodeCloser: Boolean
-        get() = MathUtils.compare(startNode.distanceToNode, endNode.distanceToNode) < 0
+        get() = startNode.distanceToNode < endNode.distanceToNode
 
     val isEndNodeCloser: Boolean
-        get() = MathUtils.compare(startNode.distanceToNode, endNode.distanceToNode) > 0
+        get() = startNode.distanceToNode > endNode.distanceToNode
 
     /**
      * Returns the node that is closer to the point being snapped.
