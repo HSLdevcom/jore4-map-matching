@@ -15,7 +15,7 @@ interface INodeServiceInternal {
      * @param vehicleType vehicle type constraint to be applied while resolving
      * optimal node sequence. Only those infrastructure links should be
      * considered that are safely traversable by the given vehicle type.
-     * @param bufferAreaRestriction contains data that with which geometrical
+     * @param bufferAreaRestriction contains data with which geometrical
      * restriction for the target set of infrastructure links can be defined
      * while resolving optimal node sequence.
      *

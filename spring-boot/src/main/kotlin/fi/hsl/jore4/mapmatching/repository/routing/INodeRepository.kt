@@ -61,7 +61,7 @@ interface INodeRepository {
      * best sequence of node identifiers. Resulting sequence must refer to only
      * those network nodes that appear as endpoints of such infrastructure links
      * that are safely traversable by the given vehicle type.
-     * @param bufferAreaRestriction contains data that with which geometrical
+     * @param bufferAreaRestriction contains data with which geometrical
      * restriction for the target set of infrastructure links can be defined
      * while resolving optimal nodes on a route through infrastructure network.
      *
