@@ -48,7 +48,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             }
 
         return resultItems
-            .groupBy(keySelector = { it.first }, valueTransform = { it.second })
+            .groupBy(Pair<Int, *>::first, Pair<*, NodeProximity>::second)
             .mapValues { entry ->
                 val pointSeqNum: Int = entry.key
                 val nodeList: List<NodeProximity> = entry.value

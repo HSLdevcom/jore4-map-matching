@@ -83,7 +83,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                   distanceToEndNode)
             }
 
-        return resultItems.associateBy(keySelector = { it.pointSeqNum }, valueTransform = {
+        return resultItems.associateBy(ClosestLinkResult::pointSeqNum, valueTransform = {
             val pointIndex = it.pointSeqNum - 1
             val point = points[pointIndex]
 

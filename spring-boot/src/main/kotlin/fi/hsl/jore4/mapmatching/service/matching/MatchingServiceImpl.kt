@@ -164,7 +164,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val snappedLinks: List<SnapStopToLinkDTO> = findInfrastructureLinksAssociatedWithStops(foundStops)
 
         val fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState> =
-            snappedLinks.associateBy(keySelector = { it.stopNationalId }, valueTransform = { it.link })
+            snappedLinks.associateBy(SnapStopToLinkDTO::stopNationalId, SnapStopToLinkDTO::link)
 
         val fromRoutePointIndexToMatchedStopNationalId: Map<Int, Int> = fromRoutePointIndexToStopNationalId
             .filterValues { fromStopNationalIdToInfrastructureLink[it] != null }
@@ -202,14 +202,13 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         val linkRecords: List<InfrastructureLinkRecord> = linkRepository.findByIds(linkIds)
 
-        val linkDataById: Map<Long, Pair<InfrastructureLinkRecord, Double>> = linkRecords.associateBy(
-            keySelector = { it.infrastructureLinkId },
-            valueTransform = { linkRecord ->
+        val linkDataById: Map<Long, Pair<InfrastructureLinkRecord, Double>> =
+            linkRecords.associateBy(InfrastructureLinkRecord::getInfrastructureLinkId) { linkRecord ->
                 val linkShape: LineString<C2D> = linkRecord.geom
 
                 Pair(linkRecord,
                      ProjectedGeometryOperations.Default.length(linkShape))
-            })
+            }
 
         return stops.mapNotNull { stop ->
             val linkId: Long = stop.locatedOnInfrastructureLinkId
