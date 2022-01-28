@@ -600,25 +600,27 @@ class NodeSequenceAlternativesCreatorTest {
                                 params.viaNodeResolvers.map { it.getInfrastructureNodeId().value }
 
                             // Make assertion failures more readable.
-                            "{\n" +
-                                "    startLink: {\n" +
-                                "        id: ${params.startLink.infrastructureLinkId.value},\n" +
-                                "        closestDistance: ${params.startLink.closestDistance},\n" +
-                                "        startNodeId: ${params.startLink.startNode.id.value},\n" +
-                                "        startNodeDistance: ${params.startLink.startNode.distanceToNode},\n" +
-                                "        endNodeId: ${params.startLink.endNode.id.value},\n" +
-                                "        endNodeDistance: ${params.startLink.endNode.distanceToNode}\n" +
-                                "    },\n" +
-                                "    viaNodeIds: $viaNodeIds,\n" +
-                                "    endLink: {\n" +
-                                "        id: ${params.endLink.infrastructureLinkId.value},\n" +
-                                "        closestDistance: ${params.endLink.closestDistance},\n" +
-                                "        startNodeId: ${params.endLink.startNode.id.value},\n" +
-                                "        startNodeDistance: ${params.endLink.startNode.distanceToNode},\n" +
-                                "        endNodeId: ${params.endLink.endNode.id.value},\n" +
-                                "        endNodeDistance: ${params.endLink.endNode.distanceToNode}\n" +
-                                "    }\n" +
-                                "}"
+                            """
+                                {
+                                    startLink: {
+                                        id: ${params.startLink.infrastructureLinkId.value},
+                                        closestDistance: ${params.startLink.closestDistance},
+                                        startNodeId: ${params.startLink.startNode.id.value},
+                                        startNodeDistance: ${params.startLink.startNode.distanceToNode},
+                                        endNodeId: ${params.startLink.endNode.id.value},
+                                        endNodeDistance: ${params.startLink.endNode.distanceToNode}
+                                    },
+                                    viaNodeIds: $viaNodeIds,
+                                    endLink: {
+                                        id: ${params.endLink.infrastructureLinkId.value},
+                                        closestDistance: ${params.endLink.closestDistance},
+                                        startNodeId: ${params.endLink.startNode.id.value},
+                                        startNodeDistance: ${params.endLink.startNode.distanceToNode},
+                                        endNodeId: ${params.endLink.endNode.id.value},
+                                        endNodeDistance: ${params.endLink.endNode.distanceToNode}
+                                    }
+                                }
+                                """.trimIndent()
                         }
                 )
         }

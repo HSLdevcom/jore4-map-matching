@@ -99,36 +99,37 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     companion object {
         private val LINK = InfrastructureLink.INFRASTRUCTURE_LINK
 
-        private const val FIND_CLOSEST_LINKS_SQL =
-            "SELECT \n" +
-                "    path[1] AS seq, \n" +
-                "    closest_link.infrastructure_link_id, \n" +
-                "    closest_link.distance AS closest_distance, \n" +
-                "    closest_link.start_node_id, \n" +
-                "    closest_link.end_node_id, \n" +
-                "    point.geom <-> start_node.the_geom AS start_node_distance, \n" +
-                "    point.geom <-> end_node.the_geom AS end_node_distance \n" +
-                "FROM ( \n" +
-                "    SELECT (g.gdump).path AS path, (g.gdump).geom AS geom \n" +
-                "    FROM ( \n" +
-                "        SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump \n" +
-                "    ) AS g \n" +
-                ") AS point, LATERAL ( \n" +
-                "    SELECT \n" +
-                "        link.infrastructure_link_id, \n" +
-                "        link.start_node_id, \n" +
-                "        link.end_node_id, \n" +
-                "        point.geom <-> link.geom AS distance \n" +
-                "    FROM routing.infrastructure_link link \n" +
-                "    INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe \n" +
-                "        ON safe.infrastructure_link_id = link.infrastructure_link_id \n" +
-                "    WHERE ST_DWithin(point.geom, link.geom, :distance) \n" +
-                "        AND safe.vehicle_type = :vehicleType \n" +
-                "    ORDER BY distance \n" +
-                "    LIMIT 1 \n" +
-                ") AS closest_link \n" +
-                "INNER JOIN routing.infrastructure_link_vertices_pgr start_node ON start_node.id = closest_link.start_node_id \n" +
-                "INNER JOIN routing.infrastructure_link_vertices_pgr end_node ON end_node.id = closest_link.end_node_id \n" +
-                "ORDER BY seq ASC; \n"
+        private val FIND_CLOSEST_LINKS_SQL = """
+            SELECT
+                path[1] AS seq,
+                closest_link.infrastructure_link_id,
+                closest_link.distance AS closest_distance,
+                closest_link.start_node_id,
+                closest_link.end_node_id,
+                point.geom <-> start_node.the_geom AS start_node_distance,
+                point.geom <-> end_node.the_geom AS end_node_distance
+            FROM (
+                SELECT (g.gdump).path AS path, (g.gdump).geom AS geom
+                FROM (
+                    SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump
+                ) AS g
+            ) AS point, LATERAL (
+               SELECT
+                    link.infrastructure_link_id,
+                    link.start_node_id,
+                    link.end_node_id,
+                    point.geom <-> link.geom AS distance
+                FROM routing.infrastructure_link link
+                INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe
+                    ON safe.infrastructure_link_id = link.infrastructure_link_id
+                WHERE ST_DWithin(point.geom, link.geom, :distance)
+                    AND safe.vehicle_type = :vehicleType
+                ORDER BY distance
+                LIMIT 1
+            ) AS closest_link
+            INNER JOIN routing.infrastructure_link_vertices_pgr start_node ON start_node.id = closest_link.start_node_id
+            INNER JOIN routing.infrastructure_link_vertices_pgr end_node ON end_node.id = closest_link.end_node_id
+            ORDER BY seq ASC;
+            """.trimIndent()
     }
 }

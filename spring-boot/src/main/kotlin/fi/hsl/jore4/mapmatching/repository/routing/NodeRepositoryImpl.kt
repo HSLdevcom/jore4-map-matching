@@ -121,32 +121,33 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     }
 
     companion object {
-        private const val FIND_N_CLOSEST_NODES_SQL =
-            "SELECT \n" +
-                "    path[1] AS point_seq, \n" +
-                "    close_node.id AS node_id, \n" +
-                "    close_node.distance AS node_distance \n" +
-                "FROM ( \n" +
-                "    SELECT (g.gdump).path AS path, (g.gdump).geom AS geom \n" +
-                "    FROM ( \n" +
-                "        SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump \n" +
-                "    ) AS g \n" +
-                ") AS point, LATERAL ( \n" +
-                "    SELECT \n" +
-                "        node.id, \n" +
-                "        point.geom <-> node.the_geom AS distance \n" +
-                "    FROM routing.infrastructure_link_vertices_pgr node \n" +
-                "    WHERE ST_DWithin(point.geom, node.the_geom, :distance) \n" +
-                "        AND EXISTS ( \n" +
-                "            SELECT 1 \n" +
-                "            FROM routing.infrastructure_link link \n" +
-                "            INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe \n" +
-                "                ON safe.infrastructure_link_id = link.infrastructure_link_id \n" +
-                "            WHERE safe.vehicle_type = :vehicleType \n" +
-                "                AND (link.start_node_id = node.id OR link.end_node_id = node.id) \n" +
-                "        ) \n" +
-                ") AS close_node \n" +
-                "ORDER BY point_seq ASC, distance ASC; \n"
+        private val FIND_N_CLOSEST_NODES_SQL = """
+            SELECT
+                path[1] AS point_seq,
+                close_node.id AS node_id,
+                close_node.distance AS node_distance
+            FROM (
+                SELECT (g.gdump).path AS path, (g.gdump).geom AS geom
+                FROM (
+                    SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump
+                ) AS g
+            ) AS point, LATERAL (
+                SELECT
+                    node.id,
+                    point.geom <-> node.the_geom AS distance
+                FROM routing.infrastructure_link_vertices_pgr node
+                WHERE ST_DWithin(point.geom, node.the_geom, :distance)
+                    AND EXISTS (
+                        SELECT 1
+                        FROM routing.infrastructure_link link
+                        INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe
+                            ON safe.infrastructure_link_id = link.infrastructure_link_id
+                        WHERE safe.vehicle_type = :vehicleType
+                            AND (link.start_node_id = node.id OR link.end_node_id = node.id)
+                    )
+            ) AS close_node
+            ORDER BY point_seq ASC, distance ASC
+            """.trimIndent()
 
         /**
          * The generated query uses '?' placeholder for bind variables since
@@ -164,33 +165,35 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 else
                     QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
-            return "SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id \n" +
-                "FROM ( \n" +
-                "    SELECT _node_seq.* \n" +
-                "    FROM ( \n" +
-                "        SELECT 1 AS node_seq_id, ?::bigint[] AS node_arr \n" +
-                "        UNION SELECT 2, ?::bigint[] \n" +
-                "        UNION SELECT 3, ?::bigint[] \n" +
-                "        UNION SELECT 4, ?::bigint[] \n" +
-                "    ) _node_seq \n" +
-                "    WHERE cardinality(_node_seq.node_arr) > 0 \n" +
-                ") AS node_seq \n" +
-                "CROSS JOIN ( \n" +
-                "    SELECT ? AS start_link_id, ? AS end_link_id \n" +
-                ") AS terminus_links \n" +
-                "CROSS JOIN LATERAL ( \n" +
-                "    SELECT max(pgr.route_agg_cost) AS route_agg_cost \n" +
-                "    FROM pgr_dijkstraVia( \n" +
-                "        $linkSelectionQueryForPgrDijkstra, \n" +
-                "        node_seq.node_arr, \n" +
-                "        directed := true, \n" +
-                "        strict := true, \n" +
-                "        U_turn_on_edge := true \n" +
-                "    ) AS pgr \n" +
-                "    GROUP BY node_seq_id \n" +
-                "    HAVING array_agg(edge) @> ARRAY[start_link_id, end_link_id] \n" +
-                ") route_overview \n" +
-                "ORDER BY start_link_id, route_agg_cost; \n"
+            return """
+                SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id
+                FROM (
+                    SELECT _node_seq.*
+                    FROM (
+                        SELECT 1 AS node_seq_id, ?::bigint[] AS node_arr
+                        UNION SELECT 2, ?::bigint[]
+                        UNION SELECT 3, ?::bigint[]
+                        UNION SELECT 4, ?::bigint[]
+                    ) _node_seq
+                    WHERE cardinality(_node_seq.node_arr) > 0
+                ) AS node_seq
+                CROSS JOIN (
+                    SELECT ? AS start_link_id, ? AS end_link_id
+                ) AS terminus_links
+                CROSS JOIN LATERAL (
+                    SELECT max(pgr.route_agg_cost) AS route_agg_cost
+                    FROM pgr_dijkstraVia(
+                        $linkSelectionQueryForPgrDijkstra,
+                        node_seq.node_arr,
+                        directed := true,
+                        strict := true,
+                        U_turn_on_edge := true
+                    ) AS pgr
+                    GROUP BY node_seq_id
+                    HAVING array_agg(edge) @> ARRAY[start_link_id, end_link_id]
+                ) route_overview
+                ORDER BY start_link_id, route_agg_cost;
+                """.trimIndent()
         }
 
         private fun toSqlArray(nodeIdSequence: NodeIdSequence?, conn: Connection): java.sql.Array {

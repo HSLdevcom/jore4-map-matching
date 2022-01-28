@@ -16,16 +16,16 @@ class QueryHelperTest {
         fun withDefaultParameter() {
             val query: String = QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
-            assertThat(query).isEqualTo(
-                "'SELECT l.infrastructure_link_id AS id, " +
-                    "l.start_node_id AS source, " +
-                    "l.end_node_id AS target, " +
-                    "l.cost, " +
-                    "l.reverse_cost " +
-                    "FROM routing.infrastructure_link l " +
-                    "INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s " +
-                    "ON s.infrastructure_link_id = l.infrastructure_link_id " +
-                    "WHERE s.vehicle_type = ''' || ? || ''''")
+            assertThat(query).isEqualTo("""
+                'SELECT l.infrastructure_link_id AS id,
+                  l.start_node_id AS source,
+                  l.end_node_id AS target,
+                  l.cost,
+                  l.reverse_cost
+                FROM routing.infrastructure_link l
+                INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
+                ON s.infrastructure_link_id = l.infrastructure_link_id
+                WHERE s.vehicle_type = ''' || ? || ''''""".trimIndent())
         }
 
         @Test
@@ -33,16 +33,16 @@ class QueryHelperTest {
         fun whenVehicleTypeParameterGivenExplicitly() {
             val query: String = QueryHelper.getVehicleTypeConstrainedLinksQuery(":vehicleType")
 
-            assertThat(query).isEqualTo(
-                "'SELECT l.infrastructure_link_id AS id, " +
-                    "l.start_node_id AS source, " +
-                    "l.end_node_id AS target, " +
-                    "l.cost, " +
-                    "l.reverse_cost " +
-                    "FROM routing.infrastructure_link l " +
-                    "INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s " +
-                    "ON s.infrastructure_link_id = l.infrastructure_link_id " +
-                    "WHERE s.vehicle_type = ''' || :vehicleType || ''''")
+            assertThat(query).isEqualTo("""
+                'SELECT l.infrastructure_link_id AS id,
+                  l.start_node_id AS source,
+                  l.end_node_id AS target,
+                  l.cost,
+                  l.reverse_cost
+                FROM routing.infrastructure_link l
+                INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
+                ON s.infrastructure_link_id = l.infrastructure_link_id
+                WHERE s.vehicle_type = ''' || :vehicleType || ''''""".trimIndent())
         }
     }
 
@@ -55,20 +55,20 @@ class QueryHelperTest {
         fun withDefaultParameters() {
             val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery()
 
-            assertThat(query).isEqualTo(
-                "'SELECT l.infrastructure_link_id AS id, " +
-                    "l.start_node_id AS source, " +
-                    "l.end_node_id AS target, " +
-                    "l.cost, " +
-                    "l.reverse_cost " +
-                    "FROM routing.infrastructure_link l " +
-                    "INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s " +
-                    "ON s.infrastructure_link_id = l.infrastructure_link_id " +
-                    "WHERE s.vehicle_type = ''' || ? || '''" +
-                    "AND (" +
-                    "  l.infrastructure_link_id IN (''' || ? || ''', ''' || ? || ''')" +
-                    "  OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || ? || '''), 3067), ''' || ? || '''), l.geom)" +
-                    ")'")
+            assertThat(query).isEqualTo("""
+                'SELECT l.infrastructure_link_id AS id,
+                  l.start_node_id AS source,
+                  l.end_node_id AS target,
+                  l.cost,
+                  l.reverse_cost
+                FROM routing.infrastructure_link l
+                INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
+                ON s.infrastructure_link_id = l.infrastructure_link_id
+                WHERE s.vehicle_type = ''' || ? || '''
+                AND (
+                  l.infrastructure_link_id IN (''' || ? || ''', ''' || ? || ''')
+                  OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || ? || '''), 3067), ''' || ? || '''), l.geom)
+                )'""".trimIndent())
         }
 
         @Test
@@ -79,21 +79,20 @@ class QueryHelperTest {
                                                                                              ":endLinkId",
                                                                                              ":lineStringEwkb",
                                                                                              ":bufferRadius")
-
-            assertThat(query).isEqualTo(
-                "'SELECT l.infrastructure_link_id AS id, " +
-                    "l.start_node_id AS source, " +
-                    "l.end_node_id AS target, " +
-                    "l.cost, " +
-                    "l.reverse_cost " +
-                    "FROM routing.infrastructure_link l " +
-                    "INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s " +
-                    "ON s.infrastructure_link_id = l.infrastructure_link_id " +
-                    "WHERE s.vehicle_type = ''' || :vehicleType || '''" +
-                    "AND (" +
-                    "  l.infrastructure_link_id IN (''' || :startLinkId || ''', ''' || :endLinkId || ''')" +
-                    "  OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || :lineStringEwkb || '''), 3067), ''' || :bufferRadius || '''), l.geom)" +
-                    ")'")
+            assertThat(query).isEqualTo("""
+                'SELECT l.infrastructure_link_id AS id,
+                  l.start_node_id AS source,
+                  l.end_node_id AS target,
+                  l.cost,
+                  l.reverse_cost
+                FROM routing.infrastructure_link l
+                INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
+                ON s.infrastructure_link_id = l.infrastructure_link_id
+                WHERE s.vehicle_type = ''' || :vehicleType || '''
+                AND (
+                  l.infrastructure_link_id IN (''' || :startLinkId || ''', ''' || :endLinkId || ''')
+                  OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || :lineStringEwkb || '''), 3067), ''' || :bufferRadius || '''), l.geom)
+                )'""".trimIndent())
         }
     }
 }

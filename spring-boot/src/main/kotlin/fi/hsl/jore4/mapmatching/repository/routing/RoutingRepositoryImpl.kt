@@ -107,32 +107,34 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 else
                     QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
-            return "SELECT \n" +
-                "    pt.seq, \n" +
-                "    pt.path_seq, \n" +
-                "    pt.node AS start_node_id, \n" +
-                "    link.infrastructure_link_id, \n" +
-                "    src.infrastructure_source_name, \n" +
-                "    link.external_link_id, \n" +
-                "    (pt.node = link.start_node_id) AS is_traversal_forwards, \n" +
-                "    pt.cost, \n" +
-                "    link.name, \n" +
-                "    ST_AsEWKB(CASE \n" +
-                "        WHEN pt.node = link.start_node_id THEN ST_Transform(link.geom, 4326) \n" +
-                "        ELSE ST_Transform(ST_Reverse(link.geom), 4326) \n" +
-                "    END) AS geom \n" +
-                "FROM ( \n" +
-                "    SELECT seq, path_seq, node, edge, pgr.cost \n" +
-                "    FROM pgr_dijkstraVia( \n" +
-                "        $linkSelectionQueryForPgrDijkstra, \n" +
-                "        ?::bigint[], \n" +
-                "        directed := true, \n" +
-                "        strict := true, \n" +
-                "        U_turn_on_edge := true \n" +
-                "    ) AS pgr \n" +
-                ") AS pt \n" +
-                "INNER JOIN routing.infrastructure_link link ON pt.edge = link.infrastructure_link_id \n" +
-                "INNER JOIN routing.infrastructure_source src ON src.infrastructure_source_id = link.infrastructure_source_id; \n"
+            return """
+                SELECT
+                    pt.seq,
+                    pt.path_seq,
+                    pt.node AS start_node_id,
+                    link.infrastructure_link_id,
+                    src.infrastructure_source_name,
+                    link.external_link_id,
+                    (pt.node = link.start_node_id) AS is_traversal_forwards,
+                    pt.cost,
+                    link.name,
+                    ST_AsEWKB(CASE
+                        WHEN pt.node = link.start_node_id THEN ST_Transform(link.geom, 4326)
+                        ELSE ST_Transform(ST_Reverse(link.geom), 4326)
+                    END) AS geom
+                FROM (
+                    SELECT seq, path_seq, node, edge, pgr.cost
+                    FROM pgr_dijkstraVia(
+                        $linkSelectionQueryForPgrDijkstra,
+                        ?::bigint[],
+                        directed := true,
+                        strict := true,
+                        U_turn_on_edge := true
+                    ) AS pgr
+                ) AS pt
+                INNER JOIN routing.infrastructure_link link ON pt.edge = link.infrastructure_link_id
+                INNER JOIN routing.infrastructure_source src ON src.infrastructure_source_id = link.infrastructure_source_id;
+                """.trimIndent()
         }
     }
 }
