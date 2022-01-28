@@ -20,7 +20,7 @@ The application is started with:
 ./development.sh start
 ```
 
-The application will be available through http://localhost:3200. The application uses a pre-populated database and is ready for use.
+The application will be available through http://localhost:3005. The application uses a pre-populated database and is ready for use.
 
 ## Running app within development
 
