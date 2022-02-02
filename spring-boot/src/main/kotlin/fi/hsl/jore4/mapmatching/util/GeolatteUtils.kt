@@ -2,6 +2,7 @@ package fi.hsl.jore4.mapmatching.util
 
 import fi.hsl.jore4.mapmatching.model.LatLng
 import org.geolatte.geom.ByteBuffer
+import org.geolatte.geom.C2D
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Geometries.mkLineString
 import org.geolatte.geom.Geometries.mkPoint
@@ -10,13 +11,22 @@ import org.geolatte.geom.GeometryType
 import org.geolatte.geom.LineString
 import org.geolatte.geom.Point
 import org.geolatte.geom.PositionSequenceBuilders
+import org.geolatte.geom.ProjectedGeometryOperations
 import org.geolatte.geom.codec.Wkb
 import org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84
+import org.geolatte.geom.crs.CrsRegistry
+import org.geolatte.geom.crs.Geographic2DCoordinateReferenceSystem
+import org.geolatte.geom.crs.ProjectedCoordinateReferenceSystem
+import org.geolatte.geom.jts.JTS
 import java.math.BigDecimal
 import java.math.RoundingMode.HALF_UP
 import kotlin.math.max
 
+@Suppress("MemberVisibilityCanBePrivate")
 object GeolatteUtils {
+
+    val EPSG_3067: ProjectedCoordinateReferenceSystem =
+        CrsRegistry.getProjectedCoordinateReferenceSystemForEPSG(3067)
 
     fun toPoint(position: G2D): Point<G2D> = mkPoint(position, WGS84)
 
@@ -78,5 +88,23 @@ object GeolatteUtils {
         }
 
         return mkLineString(positionSequenceBuilder.toPositionSequence(), WGS84)
+    }
+
+    fun transformFromGeographicToProjected(geom: Geometry<G2D>,
+                                           sourceCRS: Geographic2DCoordinateReferenceSystem,
+                                           targetCRS: ProjectedCoordinateReferenceSystem): Geometry<C2D> {
+
+        val jtsPoint: org.locationtech.jts.geom.Geometry = JTS.to(geom)
+        val jtsGeom: org.locationtech.jts.geom.Geometry =
+            GeoToolsUtils.transformCRS(jtsPoint, sourceCRS.crsId.code, targetCRS.crsId.code)
+
+        return JTS.from(jtsGeom, targetCRS)
+    }
+
+    fun length(geographicLineString: LineString<G2D>): Double {
+        val lineString3067: LineString<C2D> =
+            transformFromGeographicToProjected(geographicLineString, WGS84, EPSG_3067) as LineString<C2D>
+
+        return ProjectedGeometryOperations.Default.length(lineString3067)
     }
 }
