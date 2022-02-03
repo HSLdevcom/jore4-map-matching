@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.routing
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
-import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
@@ -58,9 +58,9 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(errMessage)
         }
 
-        val traversedPaths: List<PathTraversal> = routingServiceInternal.findRoute(nodeIdSeq, vehicleType)
+        val traversedLinks: List<InfrastructureLinkTraversal> = routingServiceInternal.findRoute(nodeIdSeq, vehicleType)
 
-        return RoutingResponseCreator.create(traversedPaths)
+        return RoutingResponseCreator.create(traversedLinks)
     }
 
     private fun findClosestInfrastructureLinks(points: List<Point<G2D>>,

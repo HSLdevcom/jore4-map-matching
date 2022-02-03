@@ -2,10 +2,10 @@ package fi.hsl.jore4.mapmatching.service.matching
 
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.NodeProximity
-import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePointType.PUBLIC_TRANSPORT_STOP
@@ -91,10 +91,10 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             return RoutingResponse.noSegment(errMessage)
         }
 
-        val traversedPaths: List<PathTraversal> =
+        val traversedLinks: List<InfrastructureLinkTraversal> =
             routingService.findRoute(nodeIdSeq, vehicleType, bufferAreaRestriction)
 
-        return RoutingResponseCreator.create(traversedPaths)
+        return RoutingResponseCreator.create(traversedLinks)
     }
 
     /**

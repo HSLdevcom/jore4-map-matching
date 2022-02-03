@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.common
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
-import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 
@@ -28,5 +28,5 @@ interface IRoutingServiceInternal {
     fun findRoute(nodeIdSequence: NodeIdSequence,
                   vehicleType: VehicleType,
                   bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<PathTraversal>
+        : List<InfrastructureLinkTraversal>
 }

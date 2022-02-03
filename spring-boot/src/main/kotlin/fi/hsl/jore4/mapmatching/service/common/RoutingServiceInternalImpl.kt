@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.common
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
-import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
@@ -21,7 +21,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
     override fun findRoute(nodeIdSequence: NodeIdSequence,
                            vehicleType: VehicleType,
                            bufferAreaRestriction: BufferAreaRestriction?)
-        : List<PathTraversal> {
+        : List<InfrastructureLinkTraversal> {
 
         val routeLinks: List<RouteLinkDTO> =
             routingRepository.findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
@@ -30,7 +30,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
             LOGGER.debug("Got route links for $nodeIdSequence: {}", joinToLogString(routeLinks))
         }
 
-        return routeLinks.map(RouteLinkDTO::path)
+        return routeLinks.map(RouteLinkDTO::linkTraversal)
     }
 
     companion object {

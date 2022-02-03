@@ -1,6 +1,7 @@
 package fi.hsl.jore4.mapmatching.util
 
 import fi.hsl.jore4.mapmatching.model.LatLng
+import fi.hsl.jore4.mapmatching.model.PathTraversal
 import org.geolatte.geom.ByteBuffer
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Geometries.mkLineString
@@ -28,28 +29,29 @@ object GeolatteUtils {
         return geometry.`as`(G2D::class.java) as LineString<G2D>
     }
 
-    fun mergeContinuousLines(lines: List<LineString<G2D>>): LineString<G2D> {
-        if (lines.isEmpty()) {
-            throw IllegalArgumentException("Parameter list must contain at least one LineString")
+    fun mergeContinuousPaths(paths: List<PathTraversal>): LineString<G2D> {
+        if (paths.isEmpty()) {
+            throw IllegalArgumentException("Parameter list must contain at least one PathTraversal")
         }
+
+        val linesToMerge: List<LineString<G2D>> = paths.map(PathTraversal::geometry)
 
         val positionSequenceBuilder = PositionSequenceBuilders.variableSized(G2D::class.java)
 
         // Add all positions of the first line.
-        lines.first().positions.forEach(positionSequenceBuilder::add)
+        linesToMerge.first().positions.forEach(positionSequenceBuilder::add)
 
-        var prevLineLastPosition: G2D = lines.first().endPosition
+        var prevLineLastPosition: G2D = linesToMerge.first().endPosition
 
-        // Drop 1 because the first line was already added.
-        lines.drop(1).forEach { line ->
+        // Do not include the first line because it was already added.
+        linesToMerge.drop(1).forEach { line ->
 
-            // New line must have same position as the first element than what was the last
-            // position of the previous line.
+            // New line must start from the same position as the previous line ended at.
             if (line.startPosition != prevLineLastPosition) {
-                throw IllegalStateException("Not continuos line sequence")
+                throw IllegalStateException("Not continuous line sequence")
             }
 
-            // Add all positions except the first one (which was already added within previous line).
+            // Add all positions except the first one (which was already added within processing of previous line).
             line.positions.drop(1).forEach(positionSequenceBuilder::add)
 
             prevLineLastPosition = line.endPosition

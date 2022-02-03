@@ -1,29 +1,31 @@
 package fi.hsl.jore4.mapmatching.service.common.response
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.PathTraversal
-import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousLines
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousPaths
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
 object RoutingResponseCreator {
 
-    fun create(paths: List<PathTraversal>): RoutingResponse {
-        if (paths.isEmpty()) {
+    fun create(linkTraversals: List<InfrastructureLinkTraversal>): RoutingResponse {
+        if (linkTraversals.isEmpty()) {
             return RoutingResponse.noSegment("Could not find a matching route")
         }
 
-        val pathGeometries: List<LineString<G2D>> = paths.map(PathTraversal::geom)
+        val pathTraversals: List<PathTraversal> = linkTraversals.map(InfrastructureLinkTraversal::pathTraversal)
 
         val mergedLine: LineString<G2D>
         try {
-            mergedLine = mergeContinuousLines(pathGeometries)
+            mergedLine = mergeContinuousPaths(pathTraversals)
         } catch (ex: Exception) {
-            return RoutingResponse.noSegment(ex.message ?: "Merging compound LineString from multiple parts failed")
+            return RoutingResponse.noSegment(
+                ex.message ?: "Merging compound LineString from multiple infrastructure link geometries failed")
         }
 
-        val totalCost = paths.fold(0.0) { accumulatedCost, path -> accumulatedCost + path.cost }
+        val totalCost = linkTraversals.fold(0.0) { accumulatedCost, path -> accumulatedCost + path.cost }
 
-        val linkResults = paths.map(LinkTraversalDTO::from)
+        val linkResults = linkTraversals.map(LinkTraversalDTO::from)
 
         val route = RouteResultDTO(mergedLine, totalCost, totalCost, linkResults)
 

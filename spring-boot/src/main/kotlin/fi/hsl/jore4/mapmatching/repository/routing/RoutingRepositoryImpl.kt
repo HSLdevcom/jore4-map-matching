@@ -1,6 +1,7 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
 import fi.hsl.jore4.mapmatching.model.ExternalLinkReference
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.PathTraversal
@@ -69,7 +70,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             val externalLinkId = rs.getString("external_link_id")
             val infrastructureSource = rs.getString("infrastructure_source_name")
 
-            val alongLinkDirection = rs.getBoolean("is_traversal_forwards")
+            val forwardTraversal = rs.getBoolean("is_traversal_forwards")
             val cost = rs.getDouble("cost")
 
             val nameJson = JSONB.jsonb(rs.getString("name"))
@@ -81,13 +82,14 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             RouteLinkDTO(routeSeqNum,
                          routeLegSeqNum,
                          startNodeId,
-                         PathTraversal(
+                         InfrastructureLinkTraversal(
                              infrastructureLinkId,
-                             ExternalLinkReference(infrastructureSource, externalLinkId),
-                             alongLinkDirection,
+                             ExternalLinkReference(infrastructureSource,
+                                                   externalLinkId),
+                             PathTraversal(geom,
+                                           forwardTraversal),
                              cost,
-                             name,
-                             geom))
+                             name))
         }
     }
 

@@ -1,12 +1,9 @@
 package fi.hsl.jore4.mapmatching.model
 
-import fi.hsl.jore4.mapmatching.util.MultilingualString
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
-data class PathTraversal(val infrastructureLinkId: Long,
-                         val externalLinkRef: ExternalLinkReference,
-                         val alongLinkDirection: Boolean, // along or against the direction of link geometry
-                         val cost: Double,  // cost is currently the same as the 3D length of the link geometry
-                         val infrastructureLinkName: MultilingualString,
-                         val geom: LineString<G2D>)
+data class PathTraversal(
+    val geometry: LineString<G2D>,
+    val forwardTraversal: Boolean // along (true) or against (false) the digitised direction of the geometry
+)
