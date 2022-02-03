@@ -121,10 +121,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     (pt.node = link.start_node_id) AS is_traversal_forwards,
                     pt.cost,
                     link.name,
-                    ST_AsEWKB(CASE
-                        WHEN pt.node = link.start_node_id THEN ST_Transform(link.geom, 4326)
-                        ELSE ST_Transform(ST_Reverse(link.geom), 4326)
-                    END) AS geom
+                    ST_AsEWKB(ST_Transform(link.geom, 4326)) as geom
                 FROM (
                     SELECT seq, path_seq, node, edge, pgr.cost
                     FROM pgr_dijkstraVia(

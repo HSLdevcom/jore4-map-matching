@@ -31,24 +31,26 @@ object GeolatteUtils {
 
     fun mergeContinuousPaths(paths: List<PathTraversal>): LineString<G2D> {
         if (paths.isEmpty()) {
-            throw IllegalArgumentException("Parameter list must contain at least one PathTraversal")
+            throw IllegalArgumentException("Must have at least one PathTraversal")
         }
 
-        val linesToMerge: List<LineString<G2D>> = paths.map(PathTraversal::geometry)
+        val linesToMerge: List<LineString<G2D>> = paths.map(PathTraversal::getGeometryAccordingToDirectionOfTraversal)
 
         val positionSequenceBuilder = PositionSequenceBuilders.variableSized(G2D::class.java)
 
-        // Add all positions of the first line.
-        linesToMerge.first().positions.forEach(positionSequenceBuilder::add)
+        val firstLine: LineString<G2D> = linesToMerge.first()
 
-        var prevLineLastPosition: G2D = linesToMerge.first().endPosition
+        // Add all positions of the first line.
+        firstLine.positions.forEach(positionSequenceBuilder::add)
+
+        var prevLineLastPosition: G2D = firstLine.endPosition
 
         // Do not include the first line because it was already added.
         linesToMerge.drop(1).forEach { line ->
 
             // New line must start from the same position as the previous line ended at.
             if (line.startPosition != prevLineLastPosition) {
-                throw IllegalStateException("Not continuous line sequence")
+                throw IllegalStateException("Not topologically continuous sequence of lines")
             }
 
             // Add all positions except the first one (which was already added within processing of previous line).
