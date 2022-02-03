@@ -196,7 +196,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         : List<SnapStopToLinkDTO> {
 
         val linkIds: List<InfrastructureLinkId> = stops
-            .map { it.locatedOnInfrastructureLinkId }
+            .map(PublicTransportStopRecord::getLocatedOnInfrastructureLinkId)
             .toSet() // remove duplicates
             .map { InfrastructureLinkId(it) }
 
@@ -296,7 +296,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             .filter { it.value.type == ROAD_JUNCTION }
 
         val fromJunctionPointOneBasedIndexToRoutePointIndex: Map<Int, Int> = junctionPointsWithRoutePointOrdering
-            .map { it.index }
+            .map(IndexedValue<*>::index)
             .withIndex()
             .associateBy(keySelector = { it.index + 1 }, valueTransform = { it.value })
 

@@ -24,7 +24,7 @@ object MatchingServiceHelper {
         if (!hasAtLeastTwoDistinctRoutePointLocations(routePoints))
             return "At least 2 distinct locations within route points must be given"
 
-        val allRoutePointsValid = routePoints.all { it.isStopPointInfoPresentOnlyIfTypeIsPublicTransportStop() }
+        val allRoutePointsValid = routePoints.all(RoutePoint::isStopPointInfoPresentOnlyIfTypeIsPublicTransportStop)
 
         if (!allRoutePointsValid)
             return "Found invalid route point having stopPointInfo present but type not ${PUBLIC_TRANSPORT_STOP.name}"
@@ -33,7 +33,7 @@ object MatchingServiceHelper {
     }
 
     private fun hasAtLeastTwoDistinctRoutePointLocations(routePoints: List<RoutePoint>): Boolean {
-        val routePointLocations = routePoints.map { it.location }
+        val routePointLocations: List<Point<G2D>> = routePoints.map(RoutePoint::location)
 
         return filterOutConsecutiveDuplicates(routePointLocations).size >= 2
     }

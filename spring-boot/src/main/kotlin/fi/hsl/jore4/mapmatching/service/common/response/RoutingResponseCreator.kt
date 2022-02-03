@@ -12,7 +12,7 @@ object RoutingResponseCreator {
             return RoutingResponse.noSegment("Could not find a matching route")
         }
 
-        val pathGeometries: List<LineString<G2D>> = paths.map { it.geom }
+        val pathGeometries: List<LineString<G2D>> = paths.map(PathTraversal::geom)
 
         val mergedLine: LineString<G2D>
         try {
@@ -23,7 +23,7 @@ object RoutingResponseCreator {
 
         val totalCost = paths.fold(0.0) { accumulatedCost, path -> accumulatedCost + path.cost }
 
-        val linkResults = paths.map { LinkTraversalDTO.from(it) }
+        val linkResults = paths.map(LinkTraversalDTO::from)
 
         val route = RouteResultDTO(mergedLine, totalCost, totalCost, linkResults)
 

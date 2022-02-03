@@ -14,7 +14,7 @@ import org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84
 
 object GeolatteUtils {
 
-    fun toPoints(coords: List<LatLng>): List<Point<G2D>> = coords.map { it.toGeolattePoint() }
+    fun toPoints(coords: List<LatLng>): List<Point<G2D>> = coords.map(LatLng::toGeolattePoint)
 
     fun toEwkb(geometry: Geometry<*>): ByteArray = Wkb.toWkb(geometry).toByteArray()
 
@@ -36,7 +36,7 @@ object GeolatteUtils {
         val positionSequenceBuilder = PositionSequenceBuilders.variableSized(G2D::class.java)
 
         // Add all positions of the first line.
-        lines.first().positions.forEach { positionSequenceBuilder.add(it) }
+        lines.first().positions.forEach(positionSequenceBuilder::add)
 
         var prevLineLastPosition: G2D = lines.first().endPosition
 
@@ -50,7 +50,7 @@ object GeolatteUtils {
             }
 
             // Add all positions except the first one (which was already added within previous line).
-            line.positions.drop(1).forEach { positionSequenceBuilder.add(it) }
+            line.positions.drop(1).forEach(positionSequenceBuilder::add)
 
             prevLineLastPosition = line.endPosition
         }

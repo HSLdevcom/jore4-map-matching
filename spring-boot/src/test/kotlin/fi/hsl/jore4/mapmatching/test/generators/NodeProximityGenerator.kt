@@ -17,8 +17,7 @@ import kotlin.math.min
 
 object NodeProximityGenerator {
 
-    fun node(): Gen<NodeProximity> =
-        infrastructureNodeId().zip(nonNegativeDistance()) { id, distanceToNode -> NodeProximity(id, distanceToNode) }
+    fun node(): Gen<NodeProximity> = infrastructureNodeId().zip(nonNegativeDistance(), ::NodeProximity)
 
     fun discreteNodePair(): Gen<Pair<NodeProximity, NodeProximity>> {
         return infrastructureNodeIdPair().zip(nodeDistancePair()) { (node1Id, node2Id),

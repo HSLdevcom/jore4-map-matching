@@ -23,7 +23,8 @@ object NodeSequenceAlternativesCreator {
             return createWithoutViaNodes(startLink, endLink)
         }
 
-        val viaNodeIds: List<InfrastructureNodeId> = viaNodeResolvers.map { it.getInfrastructureNodeId() }
+        val viaNodeIds: List<InfrastructureNodeId> =
+            viaNodeResolvers.map(HasInfrastructureNodeId::getInfrastructureNodeId)
 
         val filteredViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(viaNodeIds)
 
@@ -105,7 +106,7 @@ object NodeSequenceAlternativesCreator {
             }
 
         val filteredNodeIdSequences: List<NodeIdSequence> = when (startLink.hasSharedNode(endLink)) {
-            true -> nodeIdSequenceCombos.map { it.duplicatesRemoved() }
+            true -> nodeIdSequenceCombos.map(NodeIdSequence::duplicatesRemoved)
             false -> nodeIdSequenceCombos
         }
 

@@ -1,6 +1,7 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
 import fi.hsl.jore4.mapmatching.model.ExternalLinkReference
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
@@ -49,7 +50,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 false -> 2
             }
 
-            val nodeIdArray: Array<Long> = nodeIdSequence.list.map { it.value }.toTypedArray()
+            val nodeIdArray: Array<Long> = nodeIdSequence.list.map(InfrastructureNodeId::value).toTypedArray()
 
             // Setting array parameters can only be done through a java.sql.Connection object.
             pstmt.setArray(nodeIdsParamIndex, conn.createArrayOf("bigint", nodeIdArray))

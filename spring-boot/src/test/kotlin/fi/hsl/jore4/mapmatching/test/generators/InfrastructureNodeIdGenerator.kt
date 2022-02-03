@@ -12,7 +12,7 @@ object InfrastructureNodeIdGenerator {
 
     private val ID_VALUE: Gen<Long> = longRange(10_000L, 99_999L)
 
-    fun infrastructureNodeId(): Gen<InfrastructureNodeId> = ID_VALUE.map { id: Long -> InfrastructureNodeId(id) }
+    fun infrastructureNodeId(): Gen<InfrastructureNodeId> = ID_VALUE.map(::InfrastructureNodeId)
 
     // Generate pairs of discrete node IDs e.g. for endpoints of single infrastructure link.
     fun infrastructureNodeIdPair(): Gen<Pair<InfrastructureNodeId, InfrastructureNodeId>> =

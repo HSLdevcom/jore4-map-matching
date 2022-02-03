@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.node
 
+import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkEndpointDiscreteness
@@ -535,7 +536,7 @@ class NodeSequenceAlternativesCreatorTest {
                     .checkAssert { input: NodeResolutionParams ->
 
                         val expectedViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(
-                            input.viaNodeResolvers.map { it.getInfrastructureNodeId() }
+                            input.viaNodeResolvers.map(HasInfrastructureNodeId::getInfrastructureNodeId)
                         )
 
                         assertThat(createOutput(input))

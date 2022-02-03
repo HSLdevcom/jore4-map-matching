@@ -197,8 +197,10 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
         }
 
         private fun toSqlArray(nodeIdSequence: NodeIdSequence?, conn: Connection): java.sql.Array {
-            val nodeIdArr: Array<Long> =
-                nodeIdSequence?.list?.let { nodeIds -> nodeIds.map { it.value }.toTypedArray() } ?: emptyArray()
+            val nodeIdArr: Array<Long> = nodeIdSequence?.list
+                ?.let { nodeIds ->
+                    nodeIds.map(InfrastructureNodeId::value).toTypedArray()
+                } ?: emptyArray()
 
             return conn.createArrayOf("bigint", nodeIdArr)
         }

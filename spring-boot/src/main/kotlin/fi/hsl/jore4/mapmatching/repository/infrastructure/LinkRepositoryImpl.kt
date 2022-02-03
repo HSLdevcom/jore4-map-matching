@@ -29,7 +29,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             return emptyList()
         }
 
-        val idValues: List<Long> = ids.map { it.value }
+        val idValues: List<Long> = ids.map(InfrastructureLinkId::value)
 
         return dslContext
             .select()

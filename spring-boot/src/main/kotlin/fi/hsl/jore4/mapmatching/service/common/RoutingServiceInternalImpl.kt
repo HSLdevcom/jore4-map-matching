@@ -30,7 +30,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
             LOGGER.debug("Got route links for $nodeIdSequence: {}", joinToLogString(routeLinks))
         }
 
-        return routeLinks.map { it.path }
+        return routeLinks.map(RouteLinkDTO::path)
     }
 
     companion object {

@@ -10,19 +10,19 @@ import org.geolatte.geom.Point
 object RoutingServiceHelper {
 
     internal fun findUnmatchedPoints(snaps: Collection<SnapPointToLinkDTO>,
-                                     allPoints: List<Point<G2D>>)
+                                     pointsToBeFiltered: List<Point<G2D>>)
         : List<Point<G2D>> {
 
-        val snappedPoints = snaps.map { it.point }.toSet()
+        val snappedPoints: Set<Point<G2D>> = snaps.map(SnapPointToLinkDTO::point).toSet()
 
-        return allPoints.filter { it !in snappedPoints }
+        return pointsToBeFiltered.filter { it !in snappedPoints }
     }
 
     /**
      * @throws [IllegalArgumentException]
      */
     internal fun createNodeSequenceAlternatives(snaps: Collection<SnapPointToLinkDTO>): NodeSequenceAlternatives {
-        val links: List<SnappedLinkState> = snaps.map { it.link }
+        val links: List<SnappedLinkState> = snaps.map(SnapPointToLinkDTO::link)
 
         if (links.isEmpty()) {
             throw IllegalArgumentException("Must have at least one infrastructure link")
