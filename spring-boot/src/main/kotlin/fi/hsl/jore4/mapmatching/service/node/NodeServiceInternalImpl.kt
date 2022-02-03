@@ -5,11 +5,12 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+
+private val LOGGER = KotlinLogging.logger {}
 
 @Component
 class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRepository) : INodeServiceInternal {
@@ -26,9 +27,8 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
             return nodeIdSequences.first()
         }
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Resolving best node identifier sequence among alternatives: {}",
-                         joinToLogString(nodeIdSequences))
+        LOGGER.debug {
+            "Resolving best node identifier sequence among alternatives: ${joinToLogString(nodeIdSequences)}"
         }
 
         return nodeRepository.resolveNodeSequence(nodeSequenceAlternatives.startLinkId,
@@ -36,11 +36,8 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
                                                   nodeIdSequences,
                                                   vehicleType,
                                                   bufferAreaRestriction)
-            ?: throw IllegalStateException(
-                "Could not resolve node identifier sequence from ${nodeSequenceAlternatives.toCompactString()}")
-    }
-
-    companion object {
-        private val LOGGER: Logger = LoggerFactory.getLogger(NodeServiceInternalImpl::class.java)
+            ?: throw IllegalStateException("Could not resolve node identifier sequence from ${
+                nodeSequenceAlternatives.toCompactString()
+            }")
     }
 }

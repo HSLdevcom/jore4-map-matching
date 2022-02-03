@@ -11,5 +11,5 @@ value class InfrastructureNodeId(val value: Long) {
         }
     }
 
-    override fun toString() = "NodeId($value)"
+    override fun toString() = value.toString()
 }

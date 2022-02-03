@@ -14,14 +14,15 @@ import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeS
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
+import mu.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.SortedMap
+
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkRepository,
@@ -72,11 +73,12 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             .findClosestLinks(points, vehicleType, linkQueryDistance.toDouble())
             .toSortedMap()
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Found closest links within $linkQueryDistance m radius: {}",
-                         joinToLogString(closestLinksResult.entries) {
-                             "Point #${it.key}: ${it.value}"
-                         })
+        LOGGER.debug {
+            "Found closest links within $linkQueryDistance m radius: ${
+                joinToLogString(closestLinksResult.entries) {
+                    "Point #${it.key}: ${it.value}"
+                }
+            }"
         }
 
         return closestLinksResult.values
@@ -97,14 +99,10 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
 
         val nodeIdSeq: NodeIdSequence = nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Resolved params ${nodeSequenceAlternatives.toCompactString()} to $nodeIdSeq")
+        LOGGER.debug {
+            "Resolved node resolution params ${nodeSequenceAlternatives.toCompactString()} to nodes $nodeIdSeq"
         }
 
         return nodeIdSeq
-    }
-
-    companion object {
-        private val LOGGER: Logger = LoggerFactory.getLogger(RoutingServiceImpl::class.java)
     }
 }

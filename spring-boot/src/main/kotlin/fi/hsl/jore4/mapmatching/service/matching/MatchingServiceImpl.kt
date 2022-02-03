@@ -32,16 +32,17 @@ import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
+import mu.KotlinLogging
 import org.geolatte.geom.C2D
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 import org.geolatte.geom.Point
 import org.geolatte.geom.ProjectedGeometryOperations
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopRepository,
@@ -169,11 +170,12 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val fromRoutePointIndexToMatchedStopNationalId: Map<Int, Int> = fromRoutePointIndexToStopNationalId
             .filterValues { fromStopNationalIdToInfrastructureLink[it] != null }
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Matched following stop points from route points: {}",
-                         joinToLogString(fromRoutePointIndexToMatchedStopNationalId.toSortedMap().entries) {
-                             "Route point #${it.key + 1}: nationalId=${it.value}"
-                         })
+        LOGGER.debug {
+            "Matched following stop points from route points: ${
+                joinToLogString(fromRoutePointIndexToMatchedStopNationalId.toSortedMap().entries) {
+                    "Route point #${it.key + 1}: nationalId=${it.value}"
+                }
+            }"
         }
 
         val fromRoutePointIndexToInfrastructureLink: Map<Int, SnappedLinkState> =
@@ -326,11 +328,12 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             }
             .toMap()
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Matched following road junction points from route points: {}",
-                         joinToLogString(junctionNodesByRoutePointIndex.toSortedMap().entries) {
-                             "Route point #${it.key + 1}: ${it.value}"
-                         })
+        LOGGER.debug {
+            "Matched following road junction points from route points: ${
+                joinToLogString(junctionNodesByRoutePointIndex.toSortedMap().entries) {
+                    "Route point #${it.key + 1}: ${it.value}"
+                }
+            }"
         }
 
         return junctionNodesByRoutePointIndex
@@ -347,14 +350,10 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val nodeIdSeq: NodeIdSequence =
             nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType, bufferAreaRestriction)
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Resolved params ${nodeSequenceAlternatives.toCompactString()} to $nodeIdSeq")
+        LOGGER.debug {
+            "Resolved node resolution params ${nodeSequenceAlternatives.toCompactString()} to nodes $nodeIdSeq"
         }
 
         return nodeIdSeq
-    }
-
-    companion object {
-        private val LOGGER: Logger = LoggerFactory.getLogger(MatchingServiceImpl::class.java)
     }
 }

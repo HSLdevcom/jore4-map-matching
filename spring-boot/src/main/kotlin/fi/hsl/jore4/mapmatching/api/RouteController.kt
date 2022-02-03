@@ -7,8 +7,7 @@ import fi.hsl.jore4.mapmatching.service.routing.IRoutingService
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toPoints
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.validation.annotation.Validated
@@ -18,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import javax.validation.constraints.Pattern
+
+private val LOGGER = KotlinLogging.logger {}
 
 @RestController
 @Validated
@@ -31,10 +32,8 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
                   @RequestParam(required = false) linkSearchRadius: Int?
     ): RoutingResponse {
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Given transportation mode: $transportationMode")
-            LOGGER.debug("Given coordinate sequence: $coords")
-        }
+        LOGGER.debug { "Given transportation mode: $transportationMode" }
+        LOGGER.debug { "Given coordinate sequence: $coords" }
 
         val vehicleType: VehicleType = findVehicleType(transportationMode, null)
             ?: return RoutingResponse.invalidTransportationMode(transportationMode)
@@ -50,10 +49,8 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
                   @RequestParam(required = false) linkSearchRadius: Int?)
         : RoutingResponse {
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Given profile: $transportationMode/$vehicleTypeParam")
-            LOGGER.debug("Given coordinate sequence: $coords")
-        }
+        LOGGER.debug { "Given profile: $transportationMode/$vehicleTypeParam" }
+        LOGGER.debug { "Given coordinate sequence: $coords" }
 
         val vehicleType: VehicleType = findVehicleType(transportationMode, vehicleTypeParam)
             ?: return RoutingResponse.invalidTransportationProfile(transportationMode, vehicleTypeParam)
@@ -82,7 +79,5 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         private const val VEHICLE_TYPE_PARAM = "{vehicleTypeParam:[a-zA-Z-_]+}"
 
         private const val DEFAULT_LINK_SEARCH_RADIUS = 150
-
-        private val LOGGER: Logger = LoggerFactory.getLogger(RouteController::class.java)
     }
 }

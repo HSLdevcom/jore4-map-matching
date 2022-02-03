@@ -7,8 +7,8 @@ import fi.hsl.jore4.mapmatching.service.matching.IMatchingService
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PathVariable
@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import javax.validation.Valid
+
+private val LOGGER = KotlinLogging.logger {}
 
 @RestController
 @RequestMapping(value = [MapMatchingController.URL_PREFIX], produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -28,9 +30,7 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
                                          @Valid @RequestBody request: PublicTransportRouteMatchRequestDTO)
         : RoutingResponse {
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Given transportation mode: $transportationMode")
-        }
+        LOGGER.debug { "Given transportation mode: $transportationMode" }
 
         val vehicleType: VehicleType = findVehicleType(transportationMode, null)
             ?: return RoutingResponse.invalidTransportationMode(transportationMode)
@@ -45,9 +45,7 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
                                          @Valid @RequestBody request: PublicTransportRouteMatchRequestDTO)
         : RoutingResponse {
 
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Given profile: $transportationMode/$vehicleTypeParam")
-        }
+        LOGGER.debug { "Given profile: $transportationMode/$vehicleTypeParam" }
 
         val vehicleType: VehicleType = findVehicleType(transportationMode, vehicleTypeParam)
             ?: return RoutingResponse.invalidTransportationProfile(transportationMode, vehicleTypeParam)
@@ -56,9 +54,13 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
     }
 
     private fun findMatch(request: PublicTransportRouteMatchRequestDTO, vehicleType: VehicleType): RoutingResponse {
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Given route geometry: ${request.routeGeometry}")
-            LOGGER.debug("Given route points: ${request.routePoints}")
+        LOGGER.debug { "Given route geometry: ${request.routeGeometry}" }
+        LOGGER.debug {
+            "Given route points: ${
+                joinToLogString(request.routePoints.withIndex()) { (index, rp) ->
+                    "#${index + 1}: $rp"
+                }
+            }"
         }
 
         return try {
@@ -82,8 +84,6 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
         private const val DEFAULT_ROAD_JUNCTION_MATCHING_ENABLED: Boolean = true
         private const val DEFAULT_JUNCTION_NODE_MATCH_DISTANCE: Double = 5.0
         private const val DEFAULT_JUNCTION_NODE_CLEARING_DISTANCE: Double = 30.0
-
-        private val LOGGER: Logger = LoggerFactory.getLogger(MapMatchingController::class.java)
 
         fun getMatchingParameters(request: PublicTransportRouteMatchRequestDTO)
             : PublicTransportRouteMatchingParameters {

@@ -25,9 +25,7 @@ value class NodeIdSequence(val list: List<InfrastructureNodeId>) {
 
     fun lastNodeOrThrow(): InfrastructureNodeId = list.last()
 
-    override fun toString(): String {
-        return list.joinToString(prefix = "NodeIdSequence(", postfix = ")", transform = { it.value.toString() })
-    }
+    override fun toString() = list.toString()
 
     companion object {
         private val EMPTY = NodeIdSequence(emptyList())
