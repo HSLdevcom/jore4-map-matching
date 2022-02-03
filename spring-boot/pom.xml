@@ -28,6 +28,7 @@
         <!-- Library versions -->
         <geolatte.version>1.8.2</geolatte.version>
         <jooq-meta.version>3.14.15</jooq-meta.version>
+        <kotlin-logging-jvm.version>2.1.21</kotlin-logging-jvm.version>
         <postgresql.version>42.3.1</postgresql.version>
         <quicktheories.version>0.26</quicktheories.version>
         <spring-boot.version>2.6.3</spring-boot.version>
@@ -509,6 +510,12 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.microutils</groupId>
+            <artifactId>kotlin-logging-jvm</artifactId>
+            <version>${kotlin-logging-jvm.version}</version>
         </dependency>
 
         <!-- Geolatte for handling geometry types in Java -->

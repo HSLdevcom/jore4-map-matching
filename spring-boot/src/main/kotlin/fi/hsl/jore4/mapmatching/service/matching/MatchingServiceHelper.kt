@@ -8,14 +8,13 @@ import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
+import mu.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+
+private val LOGGER = KotlinLogging.logger {}
 
 object MatchingServiceHelper {
-
-    private val LOGGER: Logger = LoggerFactory.getLogger(MatchingServiceHelper::class.java)
 
     fun validateInputForRouteMatching(routePoints: List<RoutePoint>, vehicleType: VehicleType): String? {
         if (vehicleType.vehicleMode != VehicleMode.BUS)
@@ -49,26 +48,23 @@ object MatchingServiceHelper {
 
                 fromStopNationalIdToInfrastructureLink[nationalId]
                     ?.let { link ->
-                        if (LOGGER.isDebugEnabled) {
-                            LOGGER.debug("Resolved infrastructureLinkId=${link.infrastructureLinkId} as route "
-                                             + "$terminusType link from public transport stop matched with "
-                                             + "nationalId=$nationalId")
+                        LOGGER.debug {
+                            "Resolved infrastructureLinkId=${link.infrastructureLinkId} as route $terminusType " +
+                                "link from public transport stop matched with nationalId=$nationalId"
                         }
 
                         link
                     }
                     ?: run {
-                        if (LOGGER.isDebugEnabled) {
-                            LOGGER.debug("Could not resolve public transport stop for route $terminusType point by "
-                                             + "national ID: $nationalId")
+                        LOGGER.debug {
+                            "Could not resolve public transport stop for route $terminusType point by " +
+                                "national ID: $nationalId"
                         }
                         null
                     }
             }
             false -> {
-                if (LOGGER.isDebugEnabled) {
-                    LOGGER.debug("Route $terminusType point is not stop point")
-                }
+                LOGGER.debug { "Route $terminusType point is not stop point" }
                 null
             }
         }
@@ -88,9 +84,9 @@ object MatchingServiceHelper {
             ?.let {
                 val link: SnappedLinkState = it.link
 
-                if (LOGGER.isDebugEnabled) {
-                    LOGGER.debug("Resolved infrastructureLinkId=${link.infrastructureLinkId} as route $terminusType "
-                                     + "link by finding the closest link to point=$routePointLocation")
+                LOGGER.debug {
+                    "Resolved infrastructureLinkId=${link.infrastructureLinkId} as route $terminusType link by " +
+                        "finding the closest link to point=$routePointLocation"
                 }
 
                 link

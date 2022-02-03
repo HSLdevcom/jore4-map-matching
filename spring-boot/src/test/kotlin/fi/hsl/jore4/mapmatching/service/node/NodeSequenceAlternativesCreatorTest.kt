@@ -597,27 +597,27 @@ class NodeSequenceAlternativesCreatorTest {
                         .withViaNodeGenerationScheme(viaNodeGenerationScheme)
                         .build()
                         .describedAs { params ->
-                            val viaNodeIds: List<Long> =
-                                params.viaNodeResolvers.map { it.getInfrastructureNodeId().value }
+                            val viaNodeIds: List<InfrastructureNodeId> =
+                                params.viaNodeResolvers.map(HasInfrastructureNodeId::getInfrastructureNodeId)
 
                             // Make assertion failures more readable.
                             """
                                 {
                                     startLink: {
-                                        id: ${params.startLink.infrastructureLinkId.value},
+                                        id: ${params.startLink.infrastructureLinkId},
                                         closestDistance: ${params.startLink.closestDistance},
-                                        startNodeId: ${params.startLink.startNode.id.value},
+                                        startNodeId: ${params.startLink.startNode.id},
                                         startNodeDistance: ${params.startLink.startNode.distanceToNode},
-                                        endNodeId: ${params.startLink.endNode.id.value},
+                                        endNodeId: ${params.startLink.endNode.id},
                                         endNodeDistance: ${params.startLink.endNode.distanceToNode}
                                     },
                                     viaNodeIds: $viaNodeIds,
                                     endLink: {
-                                        id: ${params.endLink.infrastructureLinkId.value},
+                                        id: ${params.endLink.infrastructureLinkId},
                                         closestDistance: ${params.endLink.closestDistance},
-                                        startNodeId: ${params.endLink.startNode.id.value},
+                                        startNodeId: ${params.endLink.startNode.id},
                                         startNodeDistance: ${params.endLink.startNode.distanceToNode},
-                                        endNodeId: ${params.endLink.endNode.id.value},
+                                        endNodeId: ${params.endLink.endNode.id},
                                         endNodeDistance: ${params.endLink.endNode.distanceToNode}
                                     }
                                 }
