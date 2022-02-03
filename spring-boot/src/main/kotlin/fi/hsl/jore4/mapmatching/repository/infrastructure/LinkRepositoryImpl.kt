@@ -7,6 +7,8 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkRecord
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
+import fi.hsl.jore4.mapmatching.util.MathUtils.clampToZero
+import fi.hsl.jore4.mapmatching.util.MathUtils.isZeroOrNegative
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Geometries.mkMultiPoint
 import org.geolatte.geom.Point
@@ -71,16 +73,30 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 val closestDistance = rs.getDouble("closest_distance")
                 val startNodeId = rs.getLong("start_node_id")
                 val endNodeId = rs.getLong("end_node_id")
+
                 val distanceToStartNode = rs.getDouble("start_node_distance")
                 val distanceToEndNode = rs.getDouble("end_node_distance")
+
+                val zeroClampedDistanceToStartNode: Double
+                val zeroClampedDistanceToEndNode: Double
+
+                if (startNodeId == endNodeId
+                    && (isZeroOrNegative(distanceToStartNode) || isZeroOrNegative(distanceToEndNode))
+                ) {
+                    zeroClampedDistanceToStartNode = 0.0
+                    zeroClampedDistanceToEndNode = 0.0
+                } else {
+                    zeroClampedDistanceToStartNode = clampToZero(distanceToStartNode)
+                    zeroClampedDistanceToEndNode = clampToZero(distanceToEndNode)
+                }
 
                 ClosestLinkResult(pointSeqNum,
                                   InfrastructureLinkId(infrastructureLinkId),
                                   closestDistance,
                                   InfrastructureNodeId(startNodeId),
                                   InfrastructureNodeId(endNodeId),
-                                  distanceToStartNode,
-                                  distanceToEndNode)
+                                  zeroClampedDistanceToStartNode,
+                                  zeroClampedDistanceToEndNode)
             }
 
         return resultItems.associateBy(ClosestLinkResult::pointSeqNum, valueTransform = {

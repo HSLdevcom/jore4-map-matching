@@ -33,6 +33,8 @@ import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import org.geolatte.geom.C2D
+import fi.hsl.jore4.mapmatching.util.MathUtils.clampToZero
+import fi.hsl.jore4.mapmatching.util.MathUtils.isZeroOrNegative
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 import org.geolatte.geom.Point
@@ -215,8 +217,19 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
             linkDataById[linkId]?.let { (link: InfrastructureLinkRecord, linkLength: Double) ->
 
-                val distanceToStartNode: Double = stop.distanceFromLinkStartInMeters
-                val distanceToEndNode: Double = linkLength - distanceToStartNode
+                val distanceToStartNode: Double
+                val distanceToEndNode: Double
+
+                if (isZeroOrNegative(stop.distanceFromLinkStartInMeters)) {
+                    distanceToStartNode = 0.0
+                    distanceToEndNode = if (link.startNodeId == link.endNodeId)
+                        0.0
+                    else
+                        linkLength
+                } else {
+                    distanceToStartNode = stop.distanceFromLinkStartInMeters
+                    distanceToEndNode = clampToZero(linkLength - distanceToStartNode)
+                }
 
                 SnapStopToLinkDTO(stop.publicTransportStopNationalId,
                                   SnappedLinkState(
