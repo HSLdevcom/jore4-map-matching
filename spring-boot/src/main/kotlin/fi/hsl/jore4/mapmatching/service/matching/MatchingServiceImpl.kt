@@ -68,11 +68,16 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             return RoutingResponse.invalidValue(validationError)
         }
 
-        val nodeSequenceAlternatives: NodeSequenceAlternatives =
+        val nodeSequenceAlternatives: NodeSequenceAlternatives = try {
             resolveNodeSequenceAlternatives(routePoints,
                                             vehicleType,
                                             matchingParameters.terminusLinkQueryDistance,
                                             matchingParameters.roadJunctionMatching)
+        } catch (ex: RuntimeException) {
+            val errMessage: String = ex.message ?: "Could not resolve node sequence alternatives"
+            LOGGER.warn(errMessage)
+            return RoutingResponse.noSegment(errMessage)
+        }
 
         if (!nodeSequenceAlternatives.isRoutePossible()) {
             return RoutingResponse.noSegment("Cannot produce route based on single infrastructure node")
@@ -83,10 +88,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                           nodeSequenceAlternatives.startLinkId,
                                                           nodeSequenceAlternatives.endLinkId)
 
-        val nodeIdSeq: NodeIdSequence
-
-        try {
-            nodeIdSeq = resolveNetworkNodeIds(nodeSequenceAlternatives, vehicleType, bufferAreaRestriction)
+        val nodeIdSeq: NodeIdSequence = try {
+            resolveNetworkNodeIds(nodeSequenceAlternatives, vehicleType, bufferAreaRestriction)
         } catch (ex: RuntimeException) {
             val errMessage: String = ex.message ?: "Failure while resolving infrastructure network nodes"
             LOGGER.warn(errMessage)
