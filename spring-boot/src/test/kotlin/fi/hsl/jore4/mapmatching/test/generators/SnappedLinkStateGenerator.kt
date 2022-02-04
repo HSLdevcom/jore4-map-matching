@@ -85,7 +85,7 @@ object SnappedLinkStateGenerator {
             val nodesOfFirstLink = Pair(node1, node2)
 
             val nodesOfSecondLink: Pair<NodeProximity, NodeProximity> = when (flipOrder) {
-                true -> nodesOfFirstLink
+                false -> nodesOfFirstLink
                 else -> Pair(node2, node1)
             }
 

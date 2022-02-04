@@ -213,9 +213,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         return stops.mapNotNull { stop ->
             val linkId: Long = stop.locatedOnInfrastructureLinkId
 
-            linkDataById[linkId]?.let { pair ->
-
-                val (link: InfrastructureLinkRecord, linkLength: Double) = pair
+            linkDataById[linkId]?.let { (link: InfrastructureLinkRecord, linkLength: Double) ->
 
                 val distanceToStartNode: Double = stop.distanceFromLinkStartInMeters
                 val distanceToEndNode: Double = linkLength - distanceToStartNode
