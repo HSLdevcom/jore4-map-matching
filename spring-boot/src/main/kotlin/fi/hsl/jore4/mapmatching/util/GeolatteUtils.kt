@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.util
 
+import fi.hsl.jore4.mapmatching.model.GeomTraversal
 import fi.hsl.jore4.mapmatching.model.LatLng
-import fi.hsl.jore4.mapmatching.model.PathTraversal
 import org.geolatte.geom.ByteBuffer
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Geometries.mkLineString
@@ -29,12 +29,13 @@ object GeolatteUtils {
         return geometry.`as`(G2D::class.java) as LineString<G2D>
     }
 
-    fun mergeContinuousPaths(paths: List<PathTraversal>): LineString<G2D> {
-        if (paths.isEmpty()) {
-            throw IllegalArgumentException("Must have at least one PathTraversal")
+    fun mergeContinuousTraversals(traversals: List<GeomTraversal>): LineString<G2D> {
+        if (traversals.isEmpty()) {
+            throw IllegalArgumentException("Must have at least one GeomTraversal")
         }
 
-        val linesToMerge: List<LineString<G2D>> = paths.map(PathTraversal::getGeometryAccordingToDirectionOfTraversal)
+        val linesToMerge: List<LineString<G2D>> =
+            traversals.map(GeomTraversal::getGeometryAccordingToDirectionOfTraversal)
 
         val positionSequenceBuilder = PositionSequenceBuilders.variableSized(G2D::class.java)
 

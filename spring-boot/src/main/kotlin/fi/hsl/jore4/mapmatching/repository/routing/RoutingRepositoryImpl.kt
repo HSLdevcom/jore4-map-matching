@@ -1,10 +1,10 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
 import fi.hsl.jore4.mapmatching.model.ExternalLinkReference
+import fi.hsl.jore4.mapmatching.model.GeomTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
-import fi.hsl.jore4.mapmatching.model.PathTraversal
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.extractLineStringG2D
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.fromEwkb
@@ -86,7 +86,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                              infrastructureLinkId,
                              ExternalLinkReference(infrastructureSource,
                                                    externalLinkId),
-                             PathTraversal(geom,
+                             GeomTraversal(geom,
                                            forwardTraversal),
                              cost,
                              name))

@@ -17,8 +17,8 @@ data class LinkTraversalDTO(val infrastructureLinkId: Long,
     companion object {
         fun from(link: InfrastructureLinkTraversal) = LinkTraversalDTO(link.infrastructureLinkId,
                                                                        link.externalLinkRef,
-                                                                       link.pathTraversal.forwardTraversal,
-                                                                       link.pathTraversal.geometry,
+                                                                       link.geomTraversal.forwardTraversal,
+                                                                       link.geomTraversal.geometry,
                                                                        link.cost,
                                                                        link.cost,
                                                                        link.infrastructureLinkName)

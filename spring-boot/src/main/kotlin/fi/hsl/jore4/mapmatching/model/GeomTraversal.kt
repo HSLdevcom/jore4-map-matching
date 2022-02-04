@@ -5,7 +5,7 @@ import org.geolatte.geom.LineString
 import org.geolatte.geom.Geometries.mkLineString
 import org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84
 
-data class PathTraversal(
+data class GeomTraversal(
     val geometry: LineString<G2D>,
     val forwardTraversal: Boolean // along (true) or against (false) the digitised direction of the geometry
 ) {

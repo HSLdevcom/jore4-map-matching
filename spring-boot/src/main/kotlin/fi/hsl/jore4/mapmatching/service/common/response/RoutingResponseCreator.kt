@@ -1,8 +1,8 @@
 package fi.hsl.jore4.mapmatching.service.common.response
 
+import fi.hsl.jore4.mapmatching.model.GeomTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
-import fi.hsl.jore4.mapmatching.model.PathTraversal
-import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousPaths
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousTraversals
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
@@ -13,11 +13,11 @@ object RoutingResponseCreator {
             return RoutingResponse.noSegment("Could not find a matching route")
         }
 
-        val pathTraversals: List<PathTraversal> = linkTraversals.map(InfrastructureLinkTraversal::pathTraversal)
+        val geomTraversals: List<GeomTraversal> = linkTraversals.map(InfrastructureLinkTraversal::geomTraversal)
 
         val mergedLine: LineString<G2D>
         try {
-            mergedLine = mergeContinuousPaths(pathTraversals)
+            mergedLine = mergeContinuousTraversals(geomTraversals)
         } catch (ex: Exception) {
             return RoutingResponse.noSegment(
                 ex.message ?: "Merging compound LineString from multiple infrastructure link geometries failed")
