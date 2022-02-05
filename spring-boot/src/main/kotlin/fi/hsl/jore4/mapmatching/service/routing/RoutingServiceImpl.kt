@@ -93,8 +93,8 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
 
         val nodeSequenceAlternatives: NodeSequenceAlternatives = createNodeSequenceAlternatives(closestLinks)
 
-        if (!nodeSequenceAlternatives.isRoutePossible()) {
-            throw IllegalStateException("Cannot produce route based on single infrastructure node")
+        require(nodeSequenceAlternatives.isRoutePossible()) {
+            "Cannot produce route based on single infrastructure node"
         }
 
         val nodeIdSeq: NodeIdSequence = nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)

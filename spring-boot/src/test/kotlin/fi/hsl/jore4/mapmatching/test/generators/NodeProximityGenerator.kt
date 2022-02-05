@@ -100,7 +100,7 @@ object NodeProximityGenerator {
                            NodeProximity(node2Id, distance3))
                 }
             3 -> discreteNodeTriple()
-            else -> throw IllegalArgumentException("numberOfDiscreteNodes should be in range 1..3, but was: $numberOfDiscreteNodes")
+            else -> throw IllegalArgumentException("numberOfDiscreteNodes must be in range 1..3, but was: $numberOfDiscreteNodes")
         }
     }
 
@@ -165,7 +165,7 @@ object NodeProximityGenerator {
                               NodeProximity(node3Id, if (useZeroDistance2ndHalf) 0.0 else distance4))
                 }
             4 -> discreteNodeQuadruple()
-            else -> throw IllegalArgumentException("numberOfDiscreteNodes should be in range 1..4, but was: $numberOfDiscreteNodes")
+            else -> throw IllegalArgumentException("numberOfDiscreteNodes must be in range 1..4, but was: $numberOfDiscreteNodes")
         }
     }
 }

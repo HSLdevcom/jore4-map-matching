@@ -26,14 +26,14 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
     init {
         // check validity
 
-        if (closestDistance < 0.0) {
-            throw IllegalArgumentException("closestDistance must be greater than or equal to 0.0: $closestDistance")
+        require(closestDistance >= 0.0) {
+            "closestDistance must be greater than or equal to 0.0: $closestDistance"
         }
-        if (closestDistance > startNode.distanceToNode) {
-            throw IllegalArgumentException("closestDistance cannot be greater than the distance to start node")
+        require(closestDistance <= startNode.distanceToNode) {
+            "closestDistance cannot be greater than the distance to start node"
         }
-        if (closestDistance > endNode.distanceToNode) {
-            throw IllegalArgumentException("closestDistance cannot be greater than the distance to end node")
+        require(closestDistance <= endNode.distanceToNode) {
+            "closestDistance cannot be greater than the distance to end node"
         }
     }
 

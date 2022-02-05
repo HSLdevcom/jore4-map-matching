@@ -24,9 +24,7 @@ object RoutingServiceHelper {
     internal fun createNodeSequenceAlternatives(snaps: Collection<SnapPointToLinkDTO>): NodeSequenceAlternatives {
         val links: List<SnappedLinkState> = snaps.map(SnapPointToLinkDTO::link)
 
-        if (links.isEmpty()) {
-            throw IllegalArgumentException("Must have at least one infrastructure link")
-        }
+        require(links.isNotEmpty()) { "Must have at least one infrastructure link" }
 
         val viaLinks: List<SnappedLinkState> = when (links.size) {
             1, 2 -> emptyList()

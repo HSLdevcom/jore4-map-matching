@@ -34,23 +34,16 @@ data class NodeSequenceAlternatives(val startLinkId: InfrastructureLinkId,
                                     val nodeIdSequences: List<NodeIdSequence>) {
 
     init {
-        if (nodeIdSequences.isEmpty()) {
-            throw IllegalArgumentException("At least one node ID sequence needs to be provided")
-        }
-        if (nodeIdSequences.size > 4) {
-            throw IllegalArgumentException("At most four node ID sequence may be provided: ${nodeIdSequences.size}")
+        require(nodeIdSequences.isNotEmpty()) { "At least one node ID sequence needs to be provided" }
+        require(nodeIdSequences.size <= 4) {
+            "At most four node ID sequence may be provided: ${nodeIdSequences.size}"
         }
 
         nodeIdSequences.forEach { nodeIdSeq ->
-            if (nodeIdSeq.isEmpty()) {
-                throw IllegalArgumentException("Empty NodeIdSequence not allowed")
-            }
+            require(!nodeIdSeq.isEmpty()) { "Empty NodeIdSequence not allowed" }
 
-            if (nodeIdSeq.size == 1 && nodeIdSequences.size > 1) {
-                throw IllegalArgumentException(
-                    """Only one NodeIdSequence should have been provided when there exists a sequence containing only
-                        |one node identifier
-                    """.trimMargin())
+            require(nodeIdSeq.size > 1 || nodeIdSequences.size == 1) {
+                "Only one NodeIdSequence should have been provided when there exists a sequence containing only one node identifier"
             }
         }
     }

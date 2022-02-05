@@ -17,9 +17,7 @@ object ParameterUtils {
     fun parseCoordinates(coordinates: String): List<LatLng> {
         val matcher: Matcher = COORDINATE_PATTERN.matcher(coordinates)
 
-        if (!matcher.matches()) {
-            throw IllegalArgumentException("Invalid coordinate sequence: \"$coordinates\"")
-        }
+        require(matcher.matches()) { """Invalid coordinate sequence: "$coordinates"""" }
 
         return coordinates
             .split("~")
