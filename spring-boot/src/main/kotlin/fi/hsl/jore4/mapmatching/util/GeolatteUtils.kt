@@ -22,17 +22,15 @@ object GeolatteUtils {
     fun fromEwkb(wkb: ByteArray): Geometry<*> = Wkb.fromWkb(ByteBuffer.from(wkb))
 
     fun extractLineStringG2D(geometry: Geometry<*>): LineString<G2D> {
-        if (geometry.geometryType != GeometryType.LINESTRING && geometry.dimension != 2) {
-            throw IllegalArgumentException("Geometry does not represent a 2D LineString: $geometry")
+        require(geometry.geometryType == GeometryType.LINESTRING && geometry.dimension == 2) {
+            "Geometry does not represent a 2D LineString: $geometry"
         }
 
         return geometry.`as`(G2D::class.java) as LineString<G2D>
     }
 
     fun mergeContinuousTraversals(traversals: List<GeomTraversal>): LineString<G2D> {
-        if (traversals.isEmpty()) {
-            throw IllegalArgumentException("Must have at least one GeomTraversal")
-        }
+        require(traversals.isNotEmpty()) { "Must have at least one GeomTraversal" }
 
         val linesToMerge: List<LineString<G2D>> =
             traversals.map(GeomTraversal::getGeometryAccordingToDirectionOfTraversal)
@@ -50,8 +48,8 @@ object GeolatteUtils {
         linesToMerge.drop(1).forEach { line ->
 
             // New line must start from the same position as the previous line ended at.
-            if (line.startPosition != prevLineLastPosition) {
-                throw IllegalStateException("Not topologically continuous sequence of lines")
+            require(line.startPosition == prevLineLastPosition) {
+                "Not topologically continuous sequence of lines"
             }
 
             // Add all positions except the first one (which was already added within processing of previous line).

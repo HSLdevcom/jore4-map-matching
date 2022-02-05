@@ -79,9 +79,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
         val seq3: NodeIdSequence? = if (iter.hasNext()) iter.next() else null
         val seq4: NodeIdSequence? = if (iter.hasNext()) iter.next() else null
 
-        if (iter.hasNext()) {
-            throw IllegalArgumentException("Maximum of 4 node sequences exceeded")
-        }
+        require(!iter.hasNext()) { "Maximum of 4 node sequences exceeded" }
 
         val restrictWithBufferArea: Boolean = bufferAreaRestriction != null
         val query: String = getQueryForResolvingBestNodeSequenceOf4(restrictWithBufferArea)

@@ -46,9 +46,8 @@ data class PublicTransportRouteMatchingParameters(val bufferRadiusInMeters: Doub
                                           val junctionNodeClearingDistance: Double) {
 
         init {
-            if (junctionNodeMatchDistance > junctionNodeClearingDistance) {
-                throw IllegalArgumentException(
-                    "junctionNodeMatchDistance must not be greater than junctionNodeClearingDistance")
+            require(junctionNodeMatchDistance <= junctionNodeClearingDistance) {
+                "junctionNodeMatchDistance must not be greater than junctionNodeClearingDistance"
             }
         }
     }

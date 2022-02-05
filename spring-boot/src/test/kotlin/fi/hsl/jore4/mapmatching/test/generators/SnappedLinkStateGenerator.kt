@@ -101,8 +101,8 @@ object SnappedLinkStateGenerator {
 
     // Generate pairs of links having a common node.
     fun snapTwoConnectedLinks(numberOfDiscreteNodes: Int): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
-        if (numberOfDiscreteNodes !in 1..3) {
-            throw IllegalArgumentException("numberOfDiscreteNodes should be in range 1..3, but was: $numberOfDiscreteNodes")
+        require(numberOfDiscreteNodes in 1..3) {
+            "numberOfDiscreteNodes must be in range 1..3, but was: $numberOfDiscreteNodes"
         }
 
         return infrastructureLinkIdPair()
@@ -123,8 +123,8 @@ object SnappedLinkStateGenerator {
 
     // Generate pairs of links that do not have a common node.
     fun snapTwoUnconnectedLinks(numberOfDiscreteNodes: Int): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
-        if (numberOfDiscreteNodes !in 2..4) {
-            throw IllegalArgumentException("numberOfDiscreteNodes should be in range 2..4, but was: $numberOfDiscreteNodes")
+        require(numberOfDiscreteNodes in 2..4) {
+            "numberOfDiscreteNodes must be in range 2..4, but was: $numberOfDiscreteNodes"
         }
 
         return infrastructureLinkIdPair()
