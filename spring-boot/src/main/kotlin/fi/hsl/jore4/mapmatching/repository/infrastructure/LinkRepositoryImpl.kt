@@ -2,13 +2,10 @@ package fi.hsl.jore4.mapmatching.repository.infrastructure
 
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
-import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkRecord
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
-import fi.hsl.jore4.mapmatching.util.MathUtils.clampToZero
-import fi.hsl.jore4.mapmatching.util.MathUtils.isZeroOrNegative
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Geometries.mkMultiPoint
 import org.geolatte.geom.Point
@@ -44,10 +41,10 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     private data class ClosestLinkResult(val pointSeqNum: Int,
                                          val infrastructureLinkId: InfrastructureLinkId,
                                          val closestDistance: Double,
+                                         val closestPointFractionalMeasure: Double,
+                                         val linkLength: Double,
                                          val startNodeId: InfrastructureNodeId,
-                                         val endNodeId: InfrastructureNodeId,
-                                         val distanceToStartNode: Double,
-                                         val distanceToEndNode: Double)
+                                         val endNodeId: InfrastructureNodeId)
 
     @Transactional(readOnly = true)
     override fun findClosestLinks(points: List<Point<G2D>>,
@@ -69,34 +66,23 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
         val resultItems: List<ClosestLinkResult> =
             jdbcTemplate.query(FIND_CLOSEST_LINKS_SQL, params) { rs: ResultSet, _: Int ->
                 val pointSeqNum = rs.getInt("seq")
+
                 val infrastructureLinkId = rs.getLong("infrastructure_link_id")
-                val closestDistance = rs.getDouble("closest_distance")
                 val startNodeId = rs.getLong("start_node_id")
                 val endNodeId = rs.getLong("end_node_id")
 
-                val distanceToStartNode = rs.getDouble("start_node_distance")
-                val distanceToEndNode = rs.getDouble("end_node_distance")
+                val closestDistance = rs.getDouble("closest_distance")
+                val closestPointFractionalMeasure = rs.getDouble("fractional_measure")
 
-                val zeroClampedDistanceToStartNode: Double
-                val zeroClampedDistanceToEndNode: Double
-
-                if (startNodeId == endNodeId
-                    && (isZeroOrNegative(distanceToStartNode) || isZeroOrNegative(distanceToEndNode))
-                ) {
-                    zeroClampedDistanceToStartNode = 0.0
-                    zeroClampedDistanceToEndNode = 0.0
-                } else {
-                    zeroClampedDistanceToStartNode = clampToZero(distanceToStartNode)
-                    zeroClampedDistanceToEndNode = clampToZero(distanceToEndNode)
-                }
+                val linkLength = rs.getDouble("infrastructure_link_len2d")
 
                 ClosestLinkResult(pointSeqNum,
                                   InfrastructureLinkId(infrastructureLinkId),
                                   closestDistance,
+                                  closestPointFractionalMeasure,
+                                  linkLength,
                                   InfrastructureNodeId(startNodeId),
-                                  InfrastructureNodeId(endNodeId),
-                                  zeroClampedDistanceToStartNode,
-                                  zeroClampedDistanceToEndNode)
+                                  InfrastructureNodeId(endNodeId))
             }
 
         return resultItems.associateBy(ClosestLinkResult::pointSeqNum, valueTransform = {
@@ -107,8 +93,10 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                distanceInMeters,
                                SnappedLinkState(it.infrastructureLinkId,
                                                 it.closestDistance,
-                                                NodeProximity(it.startNodeId, it.distanceToStartNode),
-                                                NodeProximity(it.endNodeId, it.distanceToEndNode)))
+                                                it.closestPointFractionalMeasure,
+                                                it.linkLength,
+                                                it.startNodeId,
+                                                it.endNodeId))
         })
     }
 
@@ -118,22 +106,21 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
         private val FIND_CLOSEST_LINKS_SQL = """
             SELECT
                 path[1] AS seq,
-                closest_link.infrastructure_link_id,
+                link.infrastructure_link_id,
+                link.start_node_id,
+                link.end_node_id,
                 closest_link.distance AS closest_distance,
-                closest_link.start_node_id,
-                closest_link.end_node_id,
-                point.geom <-> start_node.the_geom AS start_node_distance,
-                point.geom <-> end_node.the_geom AS end_node_distance
+                closest_link_aux.fractional_measure,
+                closest_link_aux.infrastructure_link_len2d
             FROM (
                 SELECT (g.gdump).path AS path, (g.gdump).geom AS geom
                 FROM (
                     SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump
                 ) AS g
-            ) AS point, LATERAL (
+            ) AS point
+            CROSS JOIN LATERAL (
                SELECT
                     link.infrastructure_link_id,
-                    link.start_node_id,
-                    link.end_node_id,
                     point.geom <-> link.geom AS distance
                 FROM routing.infrastructure_link link
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe
@@ -143,8 +130,13 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 ORDER BY distance
                 LIMIT 1
             ) AS closest_link
-            INNER JOIN routing.infrastructure_link_vertices_pgr start_node ON start_node.id = closest_link.start_node_id
-            INNER JOIN routing.infrastructure_link_vertices_pgr end_node ON end_node.id = closest_link.end_node_id
+            INNER JOIN routing.infrastructure_link link
+                ON link.infrastructure_link_id = closest_link.infrastructure_link_id
+            CROSS JOIN LATERAL (
+                SELECT
+                    ST_LineLocatePoint(link.geom, point.geom) AS fractional_measure,
+                    ST_Length(link.geom) AS infrastructure_link_len2d
+            ) closest_link_aux
             ORDER BY seq ASC;
             """.trimIndent()
     }

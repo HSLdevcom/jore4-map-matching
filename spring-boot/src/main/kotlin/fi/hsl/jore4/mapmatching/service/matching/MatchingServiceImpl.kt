@@ -33,9 +33,6 @@ import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
-import org.geolatte.geom.C2D
-import fi.hsl.jore4.mapmatching.util.MathUtils.clampToZero
-import fi.hsl.jore4.mapmatching.util.MathUtils.isZeroOrNegative
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 import org.geolatte.geom.Point
@@ -54,9 +51,9 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                  val routingService: IRoutingServiceInternal)
     : IMatchingService {
 
-    data class InfrastructureLinksOnRoute(val startLink: SnappedLinkState,
-                                          val endLink: SnappedLinkState,
-                                          val linksIndexedByRoutePointOrdering: Map<Int, SnappedLinkState>)
+    internal data class InfrastructureLinksOnRoute(val startLink: SnappedLinkState,
+                                                   val endLink: SnappedLinkState,
+                                                   val linksIndexedByRoutePointOrdering: Map<Int, SnappedLinkState>)
 
     @Transactional(readOnly = true)
     override fun findMatchForPublicTransportRoute(routeGeometry: LineString<G2D>,
@@ -211,10 +208,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         val linkDataById: Map<Long, Pair<InfrastructureLinkRecord, Double>> =
             linkRecords.associateBy(InfrastructureLinkRecord::getInfrastructureLinkId) { linkRecord ->
-                val linkShape: LineString<C2D> = linkRecord.geom
-
-                Pair(linkRecord,
-                     ProjectedGeometryOperations.Default.length(linkShape))
+                linkRecord to ProjectedGeometryOperations.Default.length(linkRecord.geom)
             }
 
         return stops.mapNotNull { stop ->
@@ -222,31 +216,17 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
             linkDataById[linkId]?.let { (link: InfrastructureLinkRecord, linkLength: Double) ->
 
-                val distanceToStartNode: Double
-                val distanceToEndNode: Double
-
-                if (isZeroOrNegative(stop.distanceFromLinkStartInMeters)) {
-                    distanceToStartNode = 0.0
-                    distanceToEndNode = if (link.startNodeId == link.endNodeId)
-                        0.0
-                    else
-                        linkLength
-                } else {
-                    distanceToStartNode = stop.distanceFromLinkStartInMeters
-                    distanceToEndNode = clampToZero(linkLength - distanceToStartNode)
-                }
+                // Length of infrastructure link must never be zero in order to avoid division by zero.
+                val stopPointFractionalMeasureOnLink = stop.distanceFromLinkStartInMeters / linkLength
 
                 SnapStopToLinkDTO(stop.publicTransportStopNationalId,
                                   SnappedLinkState(
                                       InfrastructureLinkId(linkId),
                                       0.0, // closest distance from stop to link can be set to zero
-                                      NodeProximity(
-                                          InfrastructureNodeId(link.startNodeId),
-                                          distanceToStartNode),
-                                      NodeProximity(
-                                          InfrastructureNodeId(link.endNodeId),
-                                          distanceToEndNode)
-                                  ))
+                                      stopPointFractionalMeasureOnLink,
+                                      linkLength,
+                                      InfrastructureNodeId(link.startNodeId),
+                                      InfrastructureNodeId(link.endNodeId)))
             }
         }
     }
