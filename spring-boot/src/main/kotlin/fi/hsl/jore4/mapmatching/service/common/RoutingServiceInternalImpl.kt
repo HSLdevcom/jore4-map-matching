@@ -1,11 +1,10 @@
 package fi.hsl.jore4.mapmatching.service.common
 
-import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,14 +20,18 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
     @Transactional(readOnly = true)
     override fun findRoute(nodeIdSequence: NodeIdSequence,
                            vehicleType: VehicleType,
+                           fractionalStartLocationOnFirstLink: Double,
+                           fractionalEndLocationOnLastLink: Double,
                            bufferAreaRestriction: BufferAreaRestriction?)
-        : List<InfrastructureLinkTraversal> {
+        : RouteDTO {
 
-        return routingRepository
-            .findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
-            .also { routeLinks: List<RouteLinkDTO> ->
-                LOGGER.debug { "Got route links for nodes $nodeIdSequence: ${joinToLogString(routeLinks)}" }
+        return routingRepository.findRouteViaNetworkNodes(nodeIdSequence,
+                                                          vehicleType,
+                                                          fractionalStartLocationOnFirstLink,
+                                                          fractionalEndLocationOnLastLink,
+                                                          bufferAreaRestriction)
+            .also { route: RouteDTO ->
+                LOGGER.debug { "Got route links for nodes $nodeIdSequence: ${joinToLogString(route.routeLinks)}" }
             }
-            .map(RouteLinkDTO::linkTraversal)
     }
 }

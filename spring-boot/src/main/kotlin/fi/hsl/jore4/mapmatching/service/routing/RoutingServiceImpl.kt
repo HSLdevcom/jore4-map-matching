@@ -1,10 +1,10 @@
 package fi.hsl.jore4.mapmatching.service.routing
 
-import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
@@ -49,19 +49,23 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
         }
 
-        val nodeIdSeq: NodeIdSequence
-
-        try {
-            nodeIdSeq = resolveNetworkNodeIds(closestLinks, vehicleType)
+        val nodeIdSeq: NodeIdSequence = try {
+            resolveNetworkNodeIds(closestLinks, vehicleType)
         } catch (ex: Exception) {
             val errMessage: String = ex.message ?: "Failure while resolving infrastructure network nodes"
             LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
 
-        val traversedLinks: List<InfrastructureLinkTraversal> = routingServiceInternal.findRoute(nodeIdSeq, vehicleType)
+        val snapToStartLink: SnapPointToLinkDTO = closestLinks.first()
+        val snapToEndLink: SnapPointToLinkDTO = closestLinks.last()
 
-        return RoutingResponseCreator.create(traversedLinks)
+        val route: RouteDTO = routingServiceInternal.findRoute(nodeIdSeq,
+                                                               vehicleType,
+                                                               snapToStartLink.link.closestPointFractionalMeasure,
+                                                               snapToEndLink.link.closestPointFractionalMeasure)
+
+        return RoutingResponseCreator.create(route)
     }
 
     private fun findClosestInfrastructureLinks(points: List<Point<G2D>>,
