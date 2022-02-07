@@ -106,7 +106,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     internal fun resolveNodeSequenceAlternatives(routePoints: List<RoutePoint>,
                                                  vehicleType: VehicleType,
                                                  terminusLinkQueryDistance: Double,
-                                                 roadJunctionMatching: JunctionMatchingParameters?)
+                                                 junctionMatchingParams: JunctionMatchingParameters?)
         : NodeSequenceAlternatives {
 
         // Resolve infrastructure links to visit on route derived from the given route points.
@@ -119,10 +119,9 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                           terminusLinkQueryDistance)
 
         // Resolve infrastructure network nodes to visit on route derived from the given route points.
-        val fromRoutePointIndexToRoadJunctionNode: Map<Int, NodeProximity?> =
-            roadJunctionMatching?.let { matching ->
-                getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(routePoints, vehicleType, matching)
-            } ?: run { emptyMap() }
+        val fromRoutePointIndexToRoadJunctionNode: Map<Int, NodeProximity?> = junctionMatchingParams
+            ?.let { getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(routePoints, vehicleType, it) }
+            ?: emptyMap()
 
         val viaNodes: List<HasInfrastructureNodeId> = routePoints
             .withIndex()
@@ -155,7 +154,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             .withIndex()
             .mapNotNull { (index: Int, routePoint: RoutePoint) ->
                 if (routePoint.isStopPoint)
-                    routePoint.stopPointInfo?.nationalId?.let { Pair(index, it) }
+                    routePoint.stopPointInfo?.nationalId?.let { index to it }
                 else
                     null
             }
@@ -170,7 +169,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             snappedLinks.associateBy(SnapStopToLinkDTO::stopNationalId, SnapStopToLinkDTO::link)
 
         val fromRoutePointIndexToMatchedStopNationalId: Map<Int, Int> = fromRoutePointIndexToStopNationalId
-            .filterValues { fromStopNationalIdToInfrastructureLink[it] != null }
+            .filterValues(fromStopNationalIdToInfrastructureLink::containsKey)
 
         LOGGER.debug {
             "Matched following stop points from route points: ${
@@ -181,10 +180,9 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         }
 
         val fromRoutePointIndexToInfrastructureLink: Map<Int, SnappedLinkState> =
-            fromRoutePointIndexToMatchedStopNationalId
-                .mapValues { (_: Int, stopNationalId: Int) ->
-                    fromStopNationalIdToInfrastructureLink[stopNationalId]!!
-                }
+            fromRoutePointIndexToMatchedStopNationalId.mapValues { (_, stopNationalId: Int) ->
+                fromStopNationalIdToInfrastructureLink[stopNationalId]!!
+            }
 
         val (startLink: SnappedLinkState, endLink: SnappedLinkState) =
             resolveTerminusLinksOfRoute(routePoints.first(),
@@ -201,8 +199,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         val linkIds: List<InfrastructureLinkId> = stops
             .map(PublicTransportStopRecord::getLocatedOnInfrastructureLinkId)
-            .toSet() // remove duplicates
-            .map { InfrastructureLinkId(it) }
+            .distinct() // remove duplicates
+            .map(::InfrastructureLinkId)
 
         val linkRecords: List<InfrastructureLinkRecord> = linkRepository.findByIds(linkIds)
 
@@ -248,7 +246,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             resolveTerminusLinkIfStopPoint(routeEndPoint, END, fromStopNationalIdToInfrastructureLink)
 
         if (snappedLinkFromStartStop != null && snappedLinkFromEndStop != null) {
-            return Pair(snappedLinkFromStartStop, snappedLinkFromEndStop)
+            return snappedLinkFromStartStop to snappedLinkFromEndStop
         }
 
         val routeStartLocation: Point<G2D> = routeStartPoint.location
@@ -260,23 +258,21 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                             vehicleType,
                                             linkQueryDistance)
 
-        val startLink: SnappedLinkState = snappedLinkFromStartStop ?: run {
-            getTerminusLinkOrThrowException(linkSearchResults[1],
-                                            START,
-                                            routeStartLocation,
-                                            vehicleType,
-                                            linkQueryDistance)
-        }
+        val startLink: SnappedLinkState =
+            snappedLinkFromStartStop ?: getTerminusLinkOrThrowException(linkSearchResults[1],
+                                                                        START,
+                                                                        routeStartLocation,
+                                                                        vehicleType,
+                                                                        linkQueryDistance)
 
-        val endLink: SnappedLinkState = snappedLinkFromEndStop ?: run {
-            getTerminusLinkOrThrowException(linkSearchResults[2],
-                                            END,
-                                            routeEndLocation,
-                                            vehicleType,
-                                            linkQueryDistance)
-        }
+        val endLink: SnappedLinkState =
+            snappedLinkFromEndStop ?: getTerminusLinkOrThrowException(linkSearchResults[2],
+                                                                      END,
+                                                                      routeEndLocation,
+                                                                      vehicleType,
+                                                                      linkQueryDistance)
 
-        return Pair(startLink, endLink)
+        return startLink to endLink
     }
 
     internal fun getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(
@@ -294,7 +290,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val fromJunctionPointOneBasedIndexToRoutePointIndex: Map<Int, Int> = junctionPointsWithRoutePointOrdering
             .map(IndexedValue<*>::index)
             .withIndex()
-            .associateBy(keySelector = { it.index + 1 }, valueTransform = { it.value })
+            .associateBy(keySelector = { it.index + 1 }, valueTransform = IndexedValue<Int>::value)
 
         val pointCoordinates: List<Point<G2D>> = junctionPointsWithRoutePointOrdering.map { it.value.location }
 
@@ -302,8 +298,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                                                             vehicleType,
                                                                                             clearingDistance)
 
-        val junctionNodesByRoutePointIndex: Map<Int, NodeProximity> = nClosestNodes
-            .entries
+        return nClosestNodes.entries
             .mapNotNull { (junctionPointOneBasedIndex: Int, snap: SnapPointToNodesDTO) ->
 
                 val routePointIndex: Int = fromJunctionPointOneBasedIndexToRoutePointIndex[junctionPointOneBasedIndex]!!
@@ -315,24 +310,23 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                         val node: NodeProximity = nodes[0]
 
                         if (node.distanceToNode <= matchDistance)
-                            Pair(routePointIndex, node)
+                            routePointIndex to node
                         else
                             null
                     }
                     else -> null
                 }
             }
-            .toMap()
-
-        LOGGER.debug {
-            "Matched following road junction points from route points: ${
-                joinToLogString(junctionNodesByRoutePointIndex.toSortedMap().entries) {
-                    "Route point #${it.key + 1}: ${it.value}"
+            .also { routePointIndexToJunctionNode: List<Pair<Int, NodeProximity>> ->
+                LOGGER.debug {
+                    "Matched following road junction points from route points: ${
+                        joinToLogString(routePointIndexToJunctionNode) {
+                            "Route point #${it.first + 1}: ${it.second}"
+                        }
+                    }"
                 }
-            }"
-        }
-
-        return junctionNodesByRoutePointIndex
+            }
+            .toMap()
     }
 
     /**
