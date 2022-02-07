@@ -13,6 +13,7 @@ import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNo
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.FULLY_REDUNDANT_WITH_TERMINUS_LINKS
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.NON_REDUNDANT_WITH_TERMINUS_LINKS
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.RANDOM
+import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.node
 import fi.hsl.jore4.mapmatching.test.generators.Retry
 import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapSingleLinkTwice
 import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapTwoConnectedLinks
@@ -129,10 +130,10 @@ object NodeResolutionParamsGenerator {
                 val sizeOfSecondSequence = numViaNodes - sizeOfFirstSequence
 
                 val firstSequence: Gen<List<NodeProximity>> =
-                    lists().of(constant(startLink.closerNode)).ofSize(sizeOfFirstSequence)
+                    lists().of(node(startLink.closerNodeId)).ofSize(sizeOfFirstSequence)
 
                 val secondSequence: Gen<List<NodeProximity>> =
-                    lists().of(constant(endLink.closerNode)).ofSize(sizeOfSecondSequence)
+                    lists().of(node(endLink.closerNodeId)).ofSize(sizeOfSecondSequence)
 
                 firstSequence.zip(secondSequence, Collection<NodeProximity>::plus)
             }

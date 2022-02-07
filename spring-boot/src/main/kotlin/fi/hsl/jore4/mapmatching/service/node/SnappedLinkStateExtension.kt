@@ -6,14 +6,16 @@ import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 
 object SnappedLinkStateExtension {
 
-    fun SnappedLinkState.toNodeIdList(): List<InfrastructureNodeId> =
-        if (hasDiscreteNodes()) listOf(closerNode.id, furtherNode.id) else listOf(startNode.id)
+    fun SnappedLinkState.toNodeIdList(): List<InfrastructureNodeId> = if (hasDiscreteNodes())
+        listOf(closerNodeId, furtherNodeId)
+    else
+        listOf(startNodeId)
 
     fun SnappedLinkState.toNodeIdSequence() = NodeIdSequence(toNodeIdList())
 
     fun SnappedLinkState.getNodeIdSequenceCombinations(): List<NodeIdSequence> {
         if (!hasDiscreteNodes()) {
-            return listOf(NodeIdSequence(listOf(startNode.id)))
+            return listOf(NodeIdSequence(listOf(startNodeId)))
         }
 
         val nodeIds: List<InfrastructureNodeId> = toNodeIdList()

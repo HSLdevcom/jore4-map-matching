@@ -2,13 +2,16 @@ package fi.hsl.jore4.mapmatching.test.generators
 
 import fi.hsl.jore4.mapmatching.test.util.Quadruple
 import org.quicktheories.core.Gen
+import org.quicktheories.generators.Generate
 import org.quicktheories.generators.Generate.constant
 
 object CommonGenerators {
 
     val ZERO_DOUBLE: Gen<Double> = constant(0.0)
 
-    // pair values are discrete (not equal)
+    fun <T> pair(source: Gen<T>): Gen<Pair<T, T>> = source.zip(source, ::Pair)
+
+    // pair of discrete values (non-equal within single generated tuple)
     fun <T> discretePair(source: Gen<T>): Gen<Pair<T, T>> {
         return source.flatMap { value1 ->
             val getAnotherUniqueValue = Retry(source) { it != value1 }
@@ -17,7 +20,18 @@ object CommonGenerators {
         }
     }
 
-    // triple consists of three discrete values (unique within single generated tuple)
+    fun shuffledPair(source1: Gen<Double>, source2: Gen<Double>): Gen<Pair<Double, Double>> {
+        // Randomise order of distances generated from different sources.
+        return Generate.booleans()
+            .zip(source1, source2) { flipOrder, distance1, distance2 ->
+                if (flipOrder)
+                    distance2 to distance1
+                else
+                    distance1 to distance2
+            }
+    }
+
+    // triple consisting of three discrete values (unique within single generated tuple)
     fun <T> discreteTriple(source: Gen<T>): Gen<Triple<T, T, T>> {
         return discretePair(source)
             .flatMap { (value1, value2) ->
@@ -27,7 +41,7 @@ object CommonGenerators {
             }
     }
 
-    // quadruple consists of four discrete values (unique within single generated tuple)
+    // quadruple consisting of four discrete values (unique within single generated tuple)
     fun <T> discreteQuadruple(source: Gen<T>): Gen<Quadruple<T, T, T, T>> {
         return discreteTriple(source)
             .flatMap { (value1, value2, value3) ->

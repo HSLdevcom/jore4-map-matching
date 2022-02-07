@@ -21,7 +21,7 @@ class SnappedLinkStateTest {
             qt().forAll(SnappedLinkStateGenerator.snapLink())
                 .checkAssert { link: SnappedLinkState ->
 
-                    assertThat(link.hasNode(link.startNode.id))
+                    assertThat(link.hasNode(link.startNodeId))
                         .isEqualTo(true)
                 }
         }
@@ -32,7 +32,7 @@ class SnappedLinkStateTest {
             qt().forAll(SnappedLinkStateGenerator.snapLink())
                 .checkAssert { link: SnappedLinkState ->
 
-                    assertThat(link.hasNode(link.endNode.id))
+                    assertThat(link.hasNode(link.endNodeId))
                         .isEqualTo(true)
                 }
         }
@@ -43,7 +43,7 @@ class SnappedLinkStateTest {
             qt().forAll(SnappedLinkStateGenerator.snapTwoUnconnectedLinks())
                 .checkAssert { (firstLink: SnappedLinkState, secondLink: SnappedLinkState) ->
 
-                    assertThat(firstLink.hasNode(secondLink.startNode.id) || firstLink.hasNode(secondLink.endNode.id))
+                    assertThat(firstLink.hasNode(secondLink.startNodeId) || firstLink.hasNode(secondLink.endNodeId))
                         .isEqualTo(false)
                 }
         }
@@ -92,7 +92,7 @@ class SnappedLinkStateTest {
         }
 
         @Test
-        @DisplayName("When infrastructure link has one node at both endpoints")
+        @DisplayName("When infrastructure link has same node at both endpoints")
         fun whenSingleNodeAppearsAtBothEndpoints() {
             qt().forAll(SnappedLinkStateGenerator.snapLink(withDiscreteEndpoints = false))
                 .checkAssert { link: SnappedLinkState ->

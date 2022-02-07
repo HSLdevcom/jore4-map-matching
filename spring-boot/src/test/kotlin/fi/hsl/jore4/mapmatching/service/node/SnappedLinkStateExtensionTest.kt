@@ -39,7 +39,7 @@ class SnappedLinkStateExtensionTest {
                     .checkAssert { snappedLink ->
 
                         assertThat(snappedLink.toNodeIdList())
-                            .isEqualTo(listOf(snappedLink.startNode.id, snappedLink.endNode.id))
+                            .isEqualTo(listOf(snappedLink.startNodeId, snappedLink.endNodeId))
                     }
             }
 
@@ -50,7 +50,7 @@ class SnappedLinkStateExtensionTest {
                     .checkAssert { snappedLink ->
 
                         assertThat(snappedLink.toNodeIdList())
-                            .isEqualTo(listOf(snappedLink.endNode.id, snappedLink.startNode.id))
+                            .isEqualTo(listOf(snappedLink.endNodeId, snappedLink.startNodeId))
                     }
             }
         }
@@ -67,7 +67,7 @@ class SnappedLinkStateExtensionTest {
                     .checkAssert { snappedLink ->
 
                         assertThat(snappedLink.toNodeIdList())
-                            .isEqualTo(listOf(snappedLink.startNode.id))
+                            .isEqualTo(listOf(snappedLink.startNodeId))
                     }
             }
         }
@@ -90,8 +90,8 @@ class SnappedLinkStateExtensionTest {
 
                         assertThat(nodeIdSequences)
                             .isEqualTo(listOf(
-                                NodeIdSequence(listOf(snappedLink.startNode.id, snappedLink.endNode.id)),
-                                NodeIdSequence(listOf(snappedLink.endNode.id, snappedLink.startNode.id))))
+                                NodeIdSequence(listOf(snappedLink.startNodeId, snappedLink.endNodeId)),
+                                NodeIdSequence(listOf(snappedLink.endNodeId, snappedLink.startNodeId))))
                     }
             }
 
@@ -104,8 +104,8 @@ class SnappedLinkStateExtensionTest {
 
                         assertThat(nodeIdSequences)
                             .isEqualTo(listOf(
-                                NodeIdSequence(listOf(snappedLink.endNode.id, snappedLink.startNode.id)),
-                                NodeIdSequence(listOf(snappedLink.startNode.id, snappedLink.endNode.id))))
+                                NodeIdSequence(listOf(snappedLink.endNodeId, snappedLink.startNodeId)),
+                                NodeIdSequence(listOf(snappedLink.startNodeId, snappedLink.endNodeId))))
                     }
             }
         }
@@ -123,7 +123,7 @@ class SnappedLinkStateExtensionTest {
                         val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
 
                         assertThat(nodeIdSequences)
-                            .isEqualTo(listOf(NodeIdSequence(listOf(snappedLink.startNode.id))))
+                            .isEqualTo(listOf(NodeIdSequence(listOf(snappedLink.startNodeId))))
                     }
             }
         }

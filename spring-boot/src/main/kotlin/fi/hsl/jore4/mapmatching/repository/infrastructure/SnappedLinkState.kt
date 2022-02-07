@@ -3,7 +3,6 @@ package fi.hsl.jore4.mapmatching.repository.infrastructure
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
-import fi.hsl.jore4.mapmatching.model.NodeProximity
 
 /**
  * Contains information about a snap from an arbitrary point to an
@@ -13,14 +12,21 @@ import fi.hsl.jore4.mapmatching.model.NodeProximity
  * which the point is snapped
  * @property closestDistance the closest distance from the point being snapped
  * to the infrastructure link
- * @property startNode the node at start point of the infrastructure link
- * @property endNode the node at end point of the infrastructure link
+ * @property closestPointFractionalMeasure a [Double] between 0 and 1
+ * representing the location of the closest point on the infrastructure link to
+ * the source point, as a fraction of the link's 2D length
+ * @property infrastructureLinkLength the 2D length of the infrastructure link
+ * @property startNodeId the identifier of the infrastructure node at start
+ * point of the infrastructure link
+ * @property endNodeId the identifier of the infrastructure node at end point of
+ * the infrastructure link
  */
-@Suppress("unused", "MemberVisibilityCanBePrivate")
 data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
                             val closestDistance: Double,
-                            val startNode: NodeProximity,
-                            val endNode: NodeProximity)
+                            val closestPointFractionalMeasure: Double,
+                            val infrastructureLinkLength: Double,
+                            val startNodeId: InfrastructureNodeId,
+                            val endNodeId: InfrastructureNodeId)
     : HasInfrastructureNodeId {
 
     init {
@@ -29,52 +35,33 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
         require(closestDistance >= 0.0) {
             "closestDistance must be greater than or equal to 0.0: $closestDistance"
         }
-        require(closestDistance <= startNode.distanceToNode) {
-            "closestDistance cannot be greater than the distance to start node"
+        require(closestPointFractionalMeasure in 0.0..1.0) {
+            "closestPointFractionalMeasure must be in range 0.0..1.0: $closestPointFractionalMeasure"
         }
-        require(closestDistance <= endNode.distanceToNode) {
-            "closestDistance cannot be greater than the distance to end node"
+        require(infrastructureLinkLength >= 0.0) {
+            "infrastructureLinkLength must be greater than or equal to 0.0: $infrastructureLinkLength"
         }
     }
 
-    val isStartNodeCloser: Boolean
-        get() = startNode.distanceToNode < endNode.distanceToNode
-
-    val isEndNodeCloser: Boolean
-        get() = startNode.distanceToNode > endNode.distanceToNode
+    private val isEndNodeCloser: Boolean get() = closestPointFractionalMeasure > 0.5
 
     /**
-     * Returns the node that is closer to the point being snapped.
+     * The ID of the node that is closer to the point being snapped.
      */
-    val closerNode: NodeProximity
-        get() = if (!isEndNodeCloser) startNode else endNode
+    val closerNodeId: InfrastructureNodeId get() = if (!isEndNodeCloser) startNodeId else endNodeId
 
     /**
-     * Returns the node that is closer to the point being snapped.
+     * The ID of the node that lies further away from the point being snapped.
      */
-    val furtherNode: NodeProximity
-        get() = if (!isEndNodeCloser) endNode else startNode
-
-    /**
-     * Returns the ID of the node that is closer to the point being snapped.
-     */
-    val closerNodeId: InfrastructureNodeId
-        get() = closerNode.id
-
-    /**
-     * Returns the ID of the node that lies further away from the point being
-     * snapped.
-     */
-    val furtherNodeId: InfrastructureNodeId
-        get() = furtherNode.id
+    val furtherNodeId: InfrastructureNodeId get() = if (!isEndNodeCloser) endNodeId else startNodeId
 
     override fun getInfrastructureNodeId() = closerNodeId
 
-    fun hasNode(nodeId: InfrastructureNodeId) = startNode.id == nodeId || endNode.id == nodeId
+    fun hasNode(nodeId: InfrastructureNodeId) = startNodeId == nodeId || endNodeId == nodeId
 
-    fun hasSharedNode(that: SnappedLinkState) = hasNode(that.startNode.id) || hasNode(that.endNode.id)
+    fun hasSharedNode(that: SnappedLinkState) = hasNode(that.startNodeId) || hasNode(that.endNodeId)
 
-    fun hasDiscreteNodes(): Boolean = startNode.id != endNode.id
+    fun hasDiscreteNodes(): Boolean = startNodeId != endNodeId
 
     fun isOnSameLinkAs(other: SnappedLinkState): Boolean = infrastructureLinkId == other.infrastructureLinkId
 }

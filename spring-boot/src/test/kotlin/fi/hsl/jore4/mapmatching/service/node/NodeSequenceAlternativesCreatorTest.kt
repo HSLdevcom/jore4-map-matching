@@ -412,7 +412,7 @@ class NodeSequenceAlternativesCreatorTest {
                                 .element(0)
                                 .extracting(NodeIdSequence::list)
                                 .asList()
-                                .containsExactly(input.startLink.startNode.id)
+                                .containsExactly(input.startLink.startNodeId)
                         }
                 }
             }
@@ -605,23 +605,19 @@ class NodeSequenceAlternativesCreatorTest {
                                 {
                                     startLink: {
                                         id: ${params.startLink.infrastructureLinkId},
-                                        closestDistance: ${params.startLink.closestDistance},
-                                        startNodeId: ${params.startLink.startNode.id},
-                                        startNodeDistance: ${params.startLink.startNode.distanceToNode},
-                                        endNodeId: ${params.startLink.endNode.id},
-                                        endNodeDistance: ${params.startLink.endNode.distanceToNode}
+                                        closestPointFractionalMeasure: ${params.startLink.closestPointFractionalMeasure}, 
+                                        startNodeId: ${params.startLink.startNodeId},
+                                        endNodeId: ${params.startLink.endNodeId}
                                     },
                                     viaNodeIds: $viaNodeIds,
                                     endLink: {
                                         id: ${params.endLink.infrastructureLinkId},
-                                        closestDistance: ${params.endLink.closestDistance},
-                                        startNodeId: ${params.endLink.startNode.id},
-                                        startNodeDistance: ${params.endLink.startNode.distanceToNode},
-                                        endNodeId: ${params.endLink.endNode.id},
-                                        endNodeDistance: ${params.endLink.endNode.distanceToNode}
+                                        closestPointFractionalMeasure: ${params.endLink.closestPointFractionalMeasure}, 
+                                        startNodeId: ${params.endLink.startNodeId},
+                                        endNodeId: ${params.endLink.endNodeId}
                                     }
                                 }
-                                """.trimIndent()
+                            """.trimIndent()
                         }
                 )
         }
