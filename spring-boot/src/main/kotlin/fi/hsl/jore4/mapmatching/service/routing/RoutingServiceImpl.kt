@@ -100,7 +100,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         val nodeIdSeq: NodeIdSequence = nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)
 
         LOGGER.debug {
-            "Resolved node resolution params ${nodeSequenceAlternatives.toCompactString()} to nodes $nodeIdSeq"
+            "Resolved node resolution params ${nodeSequenceAlternatives.prettyPrint()} to nodes $nodeIdSeq"
         }
 
         return nodeIdSeq

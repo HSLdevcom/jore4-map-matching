@@ -61,5 +61,5 @@ data class NodeSequenceAlternatives(val startLinkId: InfrastructureLinkId,
      */
     fun isRoutePossible(): Boolean = nodeIdSequences.size > 1 || nodeIdSequences.first().size > 1
 
-    fun toCompactString() = "{startLinkId=$startLinkId, endLinkId=$endLinkId, viaNodeIds=$viaNodeIds}"
+    fun prettyPrint() = "{startLinkId=$startLinkId, endLinkId=$endLinkId, viaNodeIds=$viaNodeIds}"
 }

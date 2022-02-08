@@ -367,7 +367,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType, bufferAreaRestriction)
 
         LOGGER.debug {
-            "Resolved node resolution params ${nodeSequenceAlternatives.toCompactString()} to nodes $nodeIdSeq"
+            "Resolved node resolution params ${nodeSequenceAlternatives.prettyPrint()} to nodes $nodeIdSeq"
         }
 
         return nodeIdSeq
