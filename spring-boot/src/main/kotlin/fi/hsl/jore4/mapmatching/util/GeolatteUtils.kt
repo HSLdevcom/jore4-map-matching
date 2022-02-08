@@ -22,7 +22,7 @@ object GeolatteUtils {
     fun fromEwkb(wkb: ByteArray): Geometry<*> = Wkb.fromWkb(ByteBuffer.from(wkb))
 
     fun extractLineStringG2D(geometry: Geometry<*>): LineString<G2D> {
-        require(geometry.geometryType == GeometryType.LINESTRING && geometry.dimension == 2) {
+        require(geometry.geometryType == GeometryType.LINESTRING) {
             "Geometry does not represent a 2D LineString: $geometry"
         }
 
