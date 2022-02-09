@@ -343,13 +343,12 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                        bufferAreaRestriction: BufferAreaRestriction)
         : NodeIdSequence {
 
-        val nodeIdSeq: NodeIdSequence =
-            nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType, bufferAreaRestriction)
-
-        LOGGER.debug {
-            "Resolved node resolution params ${nodeSequenceAlternatives.prettyPrint()} to nodes $nodeIdSeq"
-        }
-
-        return nodeIdSeq
+        return nodeService
+            .resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType, bufferAreaRestriction)
+            .also { nodeIdSeq: NodeIdSequence ->
+                LOGGER.debug {
+                    "Resolved node resolution params ${nodeSequenceAlternatives.prettyPrint()} to nodes $nodeIdSeq"
+                }
+            }
     }
 }

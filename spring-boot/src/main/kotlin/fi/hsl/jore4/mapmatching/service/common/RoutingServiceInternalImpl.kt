@@ -24,11 +24,11 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
                            bufferAreaRestriction: BufferAreaRestriction?)
         : List<InfrastructureLinkTraversal> {
 
-        val routeLinks: List<RouteLinkDTO> =
-            routingRepository.findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
-
-        LOGGER.debug { "Got route links for nodes $nodeIdSequence: ${joinToLogString(routeLinks)}" }
-
-        return routeLinks.map(RouteLinkDTO::linkTraversal)
+        return routingRepository
+            .findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
+            .also { routeLinks: List<RouteLinkDTO> ->
+                LOGGER.debug { "Got route links for nodes $nodeIdSequence: ${joinToLogString(routeLinks)}" }
+            }
+            .map(RouteLinkDTO::linkTraversal)
     }
 }

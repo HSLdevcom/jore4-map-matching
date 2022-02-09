@@ -36,8 +36,8 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
                                                   nodeIdSequences,
                                                   vehicleType,
                                                   bufferAreaRestriction)
-            ?: throw IllegalStateException("Could not resolve node identifier sequence from ${
-                nodeSequenceAlternatives.prettyPrint()
-            }")
+            ?: throw IllegalStateException(
+                "Could not resolve node identifier sequence from ${nodeSequenceAlternatives.prettyPrint()}"
+            )
     }
 }

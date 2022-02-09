@@ -97,12 +97,12 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             "Cannot produce route based on single infrastructure node"
         }
 
-        val nodeIdSeq: NodeIdSequence = nodeService.resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)
-
-        LOGGER.debug {
-            "Resolved node resolution params ${nodeSequenceAlternatives.prettyPrint()} to nodes $nodeIdSeq"
-        }
-
-        return nodeIdSeq
+        return nodeService
+            .resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)
+            .also { nodeIdSeq: NodeIdSequence ->
+                LOGGER.debug {
+                    "Resolved node resolution params ${nodeSequenceAlternatives.prettyPrint()} to nodes $nodeIdSeq"
+                }
+            }
     }
 }

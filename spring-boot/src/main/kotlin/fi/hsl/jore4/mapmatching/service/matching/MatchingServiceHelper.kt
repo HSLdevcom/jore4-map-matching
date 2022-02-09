@@ -47,13 +47,11 @@ object MatchingServiceHelper {
                 val nationalId: Int? = routePoint.stopPointInfo?.nationalId
 
                 fromStopNationalIdToInfrastructureLink[nationalId]
-                    ?.let { link ->
+                    ?.also { link ->
                         LOGGER.debug {
                             "Resolved infrastructureLinkId=${link.infrastructureLinkId} as route $terminusType " +
                                 "link from public transport stop matched with nationalId=$nationalId"
                         }
-
-                        link
                     }
                     ?: run {
                         LOGGER.debug {
@@ -81,18 +79,17 @@ object MatchingServiceHelper {
         : SnappedLinkState {
 
         return linkSearchResult
-            ?.let {
-                val link: SnappedLinkState = it.link
-
-                LOGGER.debug {
-                    "Resolved infrastructureLinkId=${link.infrastructureLinkId} as route $terminusType link by " +
-                        "finding the closest link to point=$routePointLocation"
-                }
-
-                link
+            ?.let { snap ->
+                snap.link
+                    .also { link: SnappedLinkState ->
+                        LOGGER.debug {
+                            "Resolved infrastructureLinkId=${link.infrastructureLinkId} as route $terminusType link " +
+                                "by finding the closest link to point=$routePointLocation"
+                        }
+                    }
             }
             ?: throw IllegalStateException(
-                "Could not find infrastructure link within $linkQueryDistance meter distance from route "
-                    + "$terminusType point ($routePointLocation) while applying vehicle type constraint '$vehicleType'")
+                "Could not find infrastructure link within $linkQueryDistance meter distance from route $terminusType "
+                    + "point ($routePointLocation) while applying vehicle type constraint '$vehicleType'")
     }
 }
