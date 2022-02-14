@@ -32,14 +32,17 @@ import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
+import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
 import mu.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 import org.geolatte.geom.Point
-import org.geolatte.geom.ProjectedGeometryOperations
+import org.geolatte.geom.jts.JTS
+import org.locationtech.jts.linearref.LengthIndexedLine
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import kotlin.math.max
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -210,29 +213,54 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             .distinct() // remove duplicates
             .map(::InfrastructureLinkId)
 
-        val linkRecords: List<InfrastructureLinkRecord> = linkRepository.findByIds(linkIds)
-
-        val linkDataById: Map<Long, Pair<InfrastructureLinkRecord, Double>> =
-            linkRecords.associateBy(InfrastructureLinkRecord::getInfrastructureLinkId) { linkRecord ->
-                linkRecord to ProjectedGeometryOperations.Default.length(linkRecord.geom)
-            }
+        val linkRecordById: Map<Long, InfrastructureLinkRecord> = linkRepository
+            .findByIds(linkIds)
+            .associateBy(InfrastructureLinkRecord::getInfrastructureLinkId)
 
         return stops.mapNotNull { stop ->
             val linkId: Long = stop.locatedOnInfrastructureLinkId
 
-            linkDataById[linkId]?.let { (link: InfrastructureLinkRecord, linkLength: Double) ->
+            linkRecordById[linkId]?.let { linkRecord: InfrastructureLinkRecord ->
 
-                // Length of infrastructure link must never be zero in order to avoid division by zero.
-                val stopPointFractionalMeasureOnLink = stop.distanceFromLinkStartInMeters / linkLength
+                val stopDistFromStart: Double = stop.distanceFromLinkStartInMeters
+                val linkLength: Double = max(linkRecord.cost, linkRecord.reverseCost)
 
-                SnapStopToLinkDTO(stop.publicTransportStopNationalId,
-                                  SnappedLinkState(
-                                      InfrastructureLinkId(linkId),
-                                      0.0, // closest distance from stop to link can be set to zero
-                                      stopPointFractionalMeasureOnLink,
-                                      linkLength,
-                                      InfrastructureNodeId(link.startNodeId),
-                                      InfrastructureNodeId(link.endNodeId)))
+                val stopPointFractionalMeasureOnLink: Double? = when {
+                    linkLength.isWithinTolerance(0.0) -> {
+                        // Avoid division by zero. Length of infrastructure link should never be zero.
+                        null
+                    }
+                    stopDistFromStart <= linkLength -> stopDistFromStart / linkLength
+                    else -> {
+                        val linkGeom: org.locationtech.jts.geom.LineString = JTS.to(linkRecord.geom)
+                        val stopGeom: org.locationtech.jts.geom.Point = JTS.to(stop.geom)
+
+                        // Calculate fractional location of Point on LineString using JTS.
+                        val frac: Double = LengthIndexedLine(linkGeom).indexOf(stopGeom.coordinate)
+
+                        LOGGER.warn(
+                            "Distance of public transport stop (ID={}) from the start of the infrastructure link the " +
+                                "stop is located along (as taken from database) is greater than the length of the " +
+                                "link (ID={}): {} > {}. Calculated fractional measure manually: {}",
+                            stop.publicTransportStopId, linkId, stopDistFromStart, linkLength, frac)
+
+                        // Discard possible outliers. A too great distance between stop point and infrastructure link
+                        // might cause erroneous numbers.
+                        // TODO It will discovered later whether clamping values greater than 1.0 to 1.0 is beneficial.
+                        frac.takeIf { it in 0.0..1.0 }
+                    }
+                }
+
+                stopPointFractionalMeasureOnLink?.let { stopLocationOnLinkAsFraction ->
+                    SnapStopToLinkDTO(stop.publicTransportStopNationalId,
+                                      SnappedLinkState(
+                                          InfrastructureLinkId(linkId),
+                                          0.0, // closest distance from stop to link can be set to zero
+                                          stopLocationOnLinkAsFraction,
+                                          linkLength,
+                                          InfrastructureNodeId(linkRecord.startNodeId),
+                                          InfrastructureNodeId(linkRecord.endNodeId)))
+                }
             }
         }
     }
