@@ -116,8 +116,8 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 SELECT (g.gdump).path AS path, (g.gdump).geom AS geom
                 FROM (
                     SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump
-                ) AS g
-            ) AS point
+                ) g
+            ) point
             CROSS JOIN LATERAL (
                SELECT
                     link.infrastructure_link_id,
@@ -129,7 +129,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                     AND safe.vehicle_type = :vehicleType
                 ORDER BY distance
                 LIMIT 1
-            ) AS closest_link
+            ) closest_link
             INNER JOIN routing.infrastructure_link link
                 ON link.infrastructure_link_id = closest_link.infrastructure_link_id
             CROSS JOIN LATERAL (
