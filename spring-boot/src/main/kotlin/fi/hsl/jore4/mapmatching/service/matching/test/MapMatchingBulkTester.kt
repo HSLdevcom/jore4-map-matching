@@ -6,8 +6,6 @@ import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.matching.IMatchingService
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
-import fi.hsl.jore4.mapmatching.service.matching.test.SuccessfulMatchResult.BufferRadius
-import fi.hsl.jore4.mapmatching.service.matching.test.SuccessfulMatchResult.MatchDetails
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.length
 import mu.KotlinLogging
 import org.geolatte.geom.G2D
@@ -34,20 +32,36 @@ class MapMatchingBulkTester @Autowired constructor(val csvParser: IPublicTranspo
         LOGGER.info("Starting to map-match routes from file...")
 
         val duration: Duration = measureTime {
-            val matchResults: List<MatchResult> = processRoutes()
+            val (routeMatchResults, stopToStopSegmentMatchResults) = processFile()
 
-            resultsPublisher.publishResults(matchResults)
+            resultsPublisher.publishMatchResultsForRoutesAndStopToStopSegments(routeMatchResults,
+                                                                               stopToStopSegmentMatchResults)
         }
 
         LOGGER.info("Finished map-matching routes in {}", duration)
     }
 
-    fun processRoutes(): List<MatchResult> {
+    fun processFile(): Pair<List<MatchResult>, List<SegmentMatchResult>> {
         LOGGER.info("Loading public transport routes from file: {}", csvFile)
 
         val sourceRoutes: List<PublicTransportRoute> = csvParser.parsePublicTransportRoutes(csvFile)
 
-        val matchResults: List<MatchResult> = sourceRoutes.map { (routeId, routeGeometry, routePoints) ->
+        LOGGER.info("Number of source routes: {}", sourceRoutes.size)
+
+        val (stopToStopSegments: List<StopToStopSegment>, discardedRoutes: List<String>) =
+            ExtractStopToStopSegments.extractStopToStopSegments(sourceRoutes)
+
+        LOGGER.info("Number of stop-to-stop segments: {}", stopToStopSegments.size)
+        LOGGER.info("Number of discarded routes within resolution of stop-to-stop segments: {}", discardedRoutes.size)
+
+        val routeMatchResults: List<MatchResult> = matchRoutes(sourceRoutes)
+        val segmentMatchResults: List<SegmentMatchResult> = matchStopToStopSegments(stopToStopSegments)
+
+        return routeMatchResults to segmentMatchResults
+    }
+
+    private fun matchRoutes(routes: List<PublicTransportRoute>): List<MatchResult> {
+        return routes.map { (routeId, routeGeometry, routePoints) ->
             LOGGER.info("Starting to match route:    {}", routeId)
 
             val result: MatchResult = matchRoute(routeId, routeGeometry, routePoints)
@@ -59,8 +73,42 @@ class MapMatchingBulkTester @Autowired constructor(val csvParser: IPublicTranspo
 
             result
         }
+    }
 
-        return matchResults
+    private fun matchStopToStopSegments(segments: List<StopToStopSegment>): List<SegmentMatchResult> {
+        return segments.map { segment ->
+            val (segmentId, geometry, routePoints, referencingRoutes) = segment
+
+            LOGGER.info("Starting to match stop-to-stop segment:    {}", segmentId)
+
+            val result: MatchResult = matchRoute(segmentId, geometry, routePoints)
+
+            if (result.matchFound)
+                LOGGER.info("Successfully matched stop-to-stop segment: {}", segmentId)
+            else
+                LOGGER.info("Failed to match stop-to-stop segment:      {}", segmentId)
+
+            val numRoutePoints = routePoints.size
+
+            when (result) {
+                is SuccessfulRouteMatchResult -> SuccessfulSegmentMatchResult(segmentId,
+                                                                              geometry,
+                                                                              result.sourceRouteLength,
+                                                                              result.details,
+                                                                              segment.startStopId,
+                                                                              segment.endStopId,
+                                                                              numRoutePoints,
+                                                                              referencingRoutes)
+
+                else -> SegmentMatchFailure(segmentId,
+                                            geometry,
+                                            result.sourceRouteLength,
+                                            segment.startStopId,
+                                            segment.endStopId,
+                                            numRoutePoints,
+                                            referencingRoutes)
+            }
+        }
     }
 
     private fun matchRoute(routeId: String,
@@ -79,15 +127,15 @@ class MapMatchingBulkTester @Autowired constructor(val csvParser: IPublicTranspo
 
         return when (response) {
             is RoutingResponse.RoutingSuccessDTO -> {
-                SuccessfulMatchResult(routeId,
-                                      geometry,
-                                      lengthOfSourceRoute,
-                                      createMatchDetails(response,
-                                                         geometry,
-                                                         matchingParams.bufferRadiusInMeters))
+                SuccessfulRouteMatchResult(routeId,
+                                           geometry,
+                                           lengthOfSourceRoute,
+                                           createMatchDetails(response,
+                                                              geometry,
+                                                              matchingParams.bufferRadiusInMeters))
             }
 
-            else -> MatchFailure(routeId, geometry, lengthOfSourceRoute)
+            else -> RouteMatchFailure(routeId, geometry, lengthOfSourceRoute)
         }
     }
 
@@ -100,6 +148,7 @@ class MapMatchingBulkTester @Autowired constructor(val csvParser: IPublicTranspo
                                                           terminusLinkQueryDistance = 100.0,
                                                           terminusLinkQueryLimit = 5,
                                                           maxStopLocationDeviation = 80.0,
+                                                          fallbackToViaNodesAlgorithm = true,
                                                           roadJunctionMatching = roadJunctionMatchingParams)
         }
 

@@ -13,12 +13,9 @@ sealed interface MatchResult {
     val matchFound: Boolean
 }
 
-data class SuccessfulMatchResult(override val routeId: String,
-                                 override val sourceRouteGeometry: LineString<G2D>,
-                                 override val sourceRouteLength: Double,
-                                 val details: MatchDetails) : MatchResult {
+interface SuccessfulMatchResult : MatchResult {
 
-    override val matchFound = true
+    val details: MatchDetails
 
     fun getLengthOfFirstMatch(): Double = details.getLengthOfFirstMatch()
 
@@ -33,45 +30,90 @@ data class SuccessfulMatchResult(override val routeId: String,
 
     fun getLengthDifferencePercentageForClosestMatch(): Double =
         100.0 * getLengthDifferenceForClosestMatch() / sourceRouteLength
+}
 
-    @JvmInline
-    value class BufferRadius(val value: Double) : Comparable<BufferRadius> {
+interface SegmentMatchResult : MatchResult {
+    val startStopId: String
+    val endStopId: String
 
-        override fun compareTo(other: BufferRadius): Int = value.compareTo(other.value)
+    val numberOfRoutePoints: Int
+    val referencingRoutes: List<String>
+}
 
-        override fun toString() = value.toString()
+@JvmInline
+value class BufferRadius(val value: Double) : Comparable<BufferRadius> {
+
+    override fun compareTo(other: BufferRadius): Int = value.compareTo(other.value)
+
+    override fun toString() = value.toString()
+}
+
+data class MatchDetails(val lengthsOfMatchResults: SortedMap<BufferRadius, Double>) {
+
+    init {
+        require(lengthsOfMatchResults.isNotEmpty()) { "lengthsOfMatchResults must not be empty" }
     }
 
-    data class MatchDetails(val lengthsOfMatchResults: SortedMap<BufferRadius, Double>) {
+    fun getBufferRadiusOfFirstMatch(): BufferRadius = getMapEntryForFirstMatch().key
 
-        init {
-            require(lengthsOfMatchResults.isNotEmpty()) { "lengthsOfMatchResults must not be empty" }
-        }
+    fun getBufferRadiusOfClosestMatch(sourceRouteLength: Double): BufferRadius =
+        getMapEntryForClosestMatch(sourceRouteLength).key
 
-        fun getBufferRadiusOfFirstMatch(): BufferRadius = getMapEntryForFirstMatch().key
+    fun getLengthOfFirstMatch(): Double = getMapEntryForFirstMatch().value
 
-        fun getLengthOfFirstMatch(): Double = getMapEntryForFirstMatch().value
+    fun getLengthOfClosestMatch(sourceRouteLength: Double): Double = getMapEntryForClosestMatch(sourceRouteLength).value
 
-        fun getLengthOfClosestMatch(sourceRouteLength: Double): Double =
-            getMapEntryForClosestMatch(sourceRouteLength).value
+    private fun getMapEntryForFirstMatch(): Map.Entry<BufferRadius, Double> =
+        lengthsOfMatchResults.entries.first()
 
-        private fun getMapEntryForFirstMatch(): Map.Entry<BufferRadius, Double> =
-            lengthsOfMatchResults.entries.first()
-
-        private fun getMapEntryForClosestMatch(sourceRouteLength: Double): Map.Entry<BufferRadius, Double> {
-            return when (lengthsOfMatchResults.size) {
-                1 -> getMapEntryForFirstMatch()
-                else -> lengthsOfMatchResults.entries.minByOrNull { (bufferRadius, length) ->
-                    abs(length - sourceRouteLength)
-                }!!
-            }
+    private fun getMapEntryForClosestMatch(sourceRouteLength: Double): Map.Entry<BufferRadius, Double> {
+        return when (lengthsOfMatchResults.size) {
+            1 -> getMapEntryForFirstMatch()
+            else -> lengthsOfMatchResults.entries.minByOrNull { (bufferRadius, length) ->
+                abs(length - sourceRouteLength)
+            }!!
         }
     }
 }
 
-data class MatchFailure(override val routeId: String,
-                        override val sourceRouteGeometry: LineString<G2D>,
-                        override val sourceRouteLength: Double) : MatchResult {
+data class SuccessfulRouteMatchResult(override val routeId: String,
+                                      override val sourceRouteGeometry: LineString<G2D>,
+                                      override val sourceRouteLength: Double,
+                                      override val details: MatchDetails)
+    : SuccessfulMatchResult {
+
+    override val matchFound = true
+}
+
+data class RouteMatchFailure(override val routeId: String,
+                             override val sourceRouteGeometry: LineString<G2D>,
+                             override val sourceRouteLength: Double)
+    : MatchResult {
+
+    override val matchFound = false
+}
+
+data class SuccessfulSegmentMatchResult(override val routeId: String,
+                                        override val sourceRouteGeometry: LineString<G2D>,
+                                        override val sourceRouteLength: Double,
+                                        override val details: MatchDetails,
+                                        override val startStopId: String,
+                                        override val endStopId: String,
+                                        override val numberOfRoutePoints: Int,
+                                        override val referencingRoutes: List<String>)
+    : SuccessfulMatchResult, SegmentMatchResult {
+
+    override val matchFound = true
+}
+
+data class SegmentMatchFailure(override val routeId: String,
+                               override val sourceRouteGeometry: LineString<G2D>,
+                               override val sourceRouteLength: Double,
+                               override val startStopId: String,
+                               override val endStopId: String,
+                               override val numberOfRoutePoints: Int,
+                               override val referencingRoutes: List<String>)
+    : SegmentMatchResult {
 
     override val matchFound = false
 }
