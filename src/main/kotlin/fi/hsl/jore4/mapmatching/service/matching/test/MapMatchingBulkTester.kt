@@ -6,8 +6,6 @@ import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.matching.IMatchingService
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
-import fi.hsl.jore4.mapmatching.service.matching.test.SuccessfulMatchResult.BufferRadius
-import fi.hsl.jore4.mapmatching.service.matching.test.SuccessfulMatchResult.MatchDetails
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.length
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.PostConstruct
@@ -35,36 +33,94 @@ class MapMatchingBulkTester(
 
         val duration: Duration =
             measureTime {
-                val matchResults: List<MatchResult> = processRoutes()
+                val (routeMatchResults, stopToStopSegmentMatchResults) = processFile()
 
-                resultsPublisher.publishResults(matchResults)
+                resultsPublisher.publishMatchResultsForRoutesAndStopToStopSegments(
+                    routeMatchResults,
+                    stopToStopSegmentMatchResults
+                )
             }
 
         LOGGER.info { "Finished map-matching routes in $duration" }
     }
 
-    fun processRoutes(): List<MatchResult> {
+    fun processFile(): Pair<List<MatchResult>, List<SegmentMatchResult>> {
         LOGGER.info { "Loading public transport routes from file: $csvFile" }
 
         val sourceRoutes: List<PublicTransportRoute> = csvParser.parsePublicTransportRoutes(csvFile)
 
-        val matchResults: List<MatchResult> =
-            sourceRoutes.map { (routeId, routeGeometry, routePoints) ->
-                LOGGER.info { "Starting to match route:    $routeId" }
+        LOGGER.info { "Number of source routes: ${sourceRoutes.size}" }
 
-                val result: MatchResult = matchRoute(routeId, routeGeometry, routePoints)
+        val (stopToStopSegments: List<StopToStopSegment>, discardedRoutes: List<String>) =
+            ExtractStopToStopSegments.extractStopToStopSegments(sourceRoutes)
 
-                if (result.matchFound) {
-                    LOGGER.info { "Successfully matched route: $routeId" }
-                } else {
-                    LOGGER.info { "Failed to match route:      $routeId" }
-                }
+        LOGGER.info { "Number of stop-to-stop segments: ${stopToStopSegments.size}" }
+        LOGGER.info {
+            "Number of discarded routes within resolution of stop-to-stop segments: ${discardedRoutes.size}"
+        }
 
-                result
+        val routeMatchResults: List<MatchResult> = matchRoutes(sourceRoutes)
+        val segmentMatchResults: List<SegmentMatchResult> = matchStopToStopSegments(stopToStopSegments)
+
+        return routeMatchResults to segmentMatchResults
+    }
+
+    private fun matchRoutes(routes: List<PublicTransportRoute>): List<MatchResult> =
+        routes.map { (routeId, routeGeometry, routePoints) ->
+            LOGGER.info { "Starting to match route:    $routeId" }
+
+            val result: MatchResult = matchRoute(routeId, routeGeometry, routePoints)
+
+            if (result.matchFound) {
+                LOGGER.info { "Successfully matched route: $routeId" }
+            } else {
+                LOGGER.info { "Failed to match route:      $routeId" }
             }
 
-        return matchResults
-    }
+            result
+        }
+
+    private fun matchStopToStopSegments(segments: List<StopToStopSegment>): List<SegmentMatchResult> =
+        segments.map { segment ->
+            val (segmentId, geometry, routePoints, referencingRoutes) = segment
+
+            LOGGER.info { "Starting to match stop-to-stop segment:    $segmentId" }
+
+            val result: MatchResult = matchRoute(segmentId, geometry, routePoints)
+
+            if (result.matchFound) {
+                LOGGER.info { "Successfully matched stop-to-stop segment: $segmentId" }
+            } else {
+                LOGGER.info { "Failed to match stop-to-stop segment:      $segmentId" }
+            }
+
+            val numRoutePoints = routePoints.size
+
+            when (result) {
+                is SuccessfulRouteMatchResult ->
+                    SuccessfulSegmentMatchResult(
+                        segmentId,
+                        geometry,
+                        result.sourceRouteLength,
+                        result.details,
+                        segment.startStopId,
+                        segment.endStopId,
+                        numRoutePoints,
+                        referencingRoutes
+                    )
+
+                else ->
+                    SegmentMatchFailure(
+                        segmentId,
+                        geometry,
+                        result.sourceRouteLength,
+                        segment.startStopId,
+                        segment.endStopId,
+                        numRoutePoints,
+                        referencingRoutes
+                    )
+            }
+        }
 
     private fun matchRoute(
         routeId: String,
@@ -86,7 +142,7 @@ class MapMatchingBulkTester(
 
         return when (response) {
             is RoutingResponse.RoutingSuccessDTO -> {
-                SuccessfulMatchResult(
+                SuccessfulRouteMatchResult(
                     routeId,
                     geometry,
                     lengthOfSourceRoute,
@@ -98,7 +154,7 @@ class MapMatchingBulkTester(
                 )
             }
 
-            else -> MatchFailure(routeId, geometry, lengthOfSourceRoute)
+            else -> RouteMatchFailure(routeId, geometry, lengthOfSourceRoute)
         }
     }
 
