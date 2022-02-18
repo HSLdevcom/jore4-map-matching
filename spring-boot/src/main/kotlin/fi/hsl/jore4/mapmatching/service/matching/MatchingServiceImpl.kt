@@ -7,9 +7,9 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
-import fi.hsl.jore4.mapmatching.model.matching.RoutePointType.PUBLIC_TRANSPORT_STOP
-import fi.hsl.jore4.mapmatching.model.matching.RoutePointType.ROAD_JUNCTION
+import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType.END
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType.START
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkRecord
@@ -129,14 +129,11 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             .dropLast(1)
             .mapNotNull { (routePointIndex: Int, routePoint: RoutePoint) ->
 
-                val hasNodeId: HasInfrastructureNodeId? = when (routePoint.type) {
-                    // Only public transport stops are mapped to infrastructure links.
-                    PUBLIC_TRANSPORT_STOP -> fromRoutePointIndexToInfrastructureLink[routePointIndex]
-                    ROAD_JUNCTION -> fromRoutePointIndexToRoadJunctionNode[routePointIndex]
+                when (routePoint) {
+                    is RouteStopPoint -> fromRoutePointIndexToInfrastructureLink[routePointIndex]
+                    is RouteJunctionPoint -> fromRoutePointIndexToRoadJunctionNode[routePointIndex]
                     else -> null
                 }
-
-                hasNodeId
             }
 
         return NodeSequenceAlternativesCreator.create(firstLink, viaNodes, lastLink)
@@ -151,12 +148,11 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         : InfrastructureLinksOnRoute {
 
         val fromRoutePointIndexToStopNationalId: Map<Int, Int> = routePoints
-            .withIndex()
-            .mapNotNull { (index: Int, routePoint: RoutePoint) ->
-                if (routePoint.isStopPoint)
-                    routePoint.stopPointInfo?.nationalId?.let { index to it }
-                else
-                    null
+            .mapIndexedNotNull { index: Int, routePoint: RoutePoint ->
+                when (routePoint) {
+                    is RouteStopPoint -> routePoint.nationalId?.let { nationalId -> index to nationalId }
+                    else -> null
+                }
             }
             .toMap()
 
@@ -285,7 +281,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         val junctionPointsWithRoutePointOrdering: List<IndexedValue<RoutePoint>> = routePoints
             .withIndex()
-            .filter { it.value.type == ROAD_JUNCTION }
+            .filter { it.value is RouteJunctionPoint }
 
         val fromJunctionPointOneBasedIndexToRoutePointIndex: Map<Int, Int> = junctionPointsWithRoutePointOrdering
             .map(IndexedValue<*>::index)

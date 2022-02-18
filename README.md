@@ -155,9 +155,9 @@ An example of map-matching request body is given below:
     "routeGeometry": {
         "type": "LineString",
         "coordinates": [
-            [24.974325, 60.167355],
-            [24.974089, 60.167294],
-            [24.97202, 60.16677],
+            [24.952603, 60.165209],
+            [24.952566, 60.165521],
+            [24.952445, 60.165728],
             ...
         ]
     },
@@ -166,28 +166,27 @@ An example of map-matching request body is given below:
             "type": "PUBLIC_TRANSPORT_STOP",
             "location": {
                 "type": "Point",
-                "coordinates": [24.97428, 60.16735]
+                "coordinates": [24.952569, 60.165421]
             },
-            "stopPointInfo": {
-                "passengerId": "H1234"
-            }
+            "projectedLocation": {
+                "type": "Point",
+                "coordinates": [24.952603, 60.165209]
+            },
+            "nationalId": 123456,
+            "passengerId": "H1234"
         },
         {
-            "type": "PUBLIC_TRANSPORT_STOP",
+            "type": "ROAD_JUNCTION",
             "location": {
                 "type": "Point",
-                "coordinates": [24.97179, 60.16669]
-            },
-            "stopPointInfo": {
-                "nationalId": 123456,
-                "passengerId": "H5678"
+                "coordinates": [24.952445, 60.165728]
             }
         },
         {
             "type": "ROAD_JUNCTION",
             "location": {
                 "type": "Point",
-                "coordinates": [24.97153, 60.166648]
+                "coordinates": [24.951316, 60.165692]
             }
         },
         ...
@@ -210,11 +209,13 @@ The table below describes the main request body elements.
 
 Route points have the properties described in the table below.
 
-| Property        | Description |
-| --------------- | ----------- |
-| `type`          | The type of route point. One of the following: `PUBLIC_TRANSPORT_STOP`, `ROAD_JUNCTION`, `OTHER` |
-| `location`      | `Point` geometry for the route point in GeoJSON format |
-| `stopPointInfo` | Allowed only for route points that denote public transport stops. May contain properties `nationalId` (number) and/or `passengerId` (string). |
+| Property            | Description |
+| ------------------- | ----------- |
+| `type`              | The type of route point. One of the following: `PUBLIC_TRANSPORT_STOP`, `ROAD_JUNCTION`, `OTHER` |
+| `location`          | `Point` geometry for the route point in GeoJSON format (see example above) |
+| `projectedLocation` | `Point` geometry in GeoJSON format (see example above) for public transport stop location projected onto centerline of infrastructure link. Optional; allowed only when `type` is `PUBLIC_TRANSPORT_STOP`. |
+| `nationalId`        | The national stop ID for public transport stop. The property is optional, has value of number type, and is allowed only when `type` is `PUBLIC_TRANSPORT_STOP`. |
+| `passengerId`       | The short ID for public transport stop. The string property is mandatory when `type` is `PUBLIC_TRANSPORT_STOP`; otherwise not allowed. |
 
 The optional adjustable map-matching parameters are described in the following below.
 

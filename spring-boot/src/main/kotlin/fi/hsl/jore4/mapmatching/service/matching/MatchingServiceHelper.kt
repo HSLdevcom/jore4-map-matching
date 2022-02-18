@@ -3,7 +3,7 @@ package fi.hsl.jore4.mapmatching.service.matching
 import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
-import fi.hsl.jore4.mapmatching.model.matching.RoutePointType.PUBLIC_TRANSPORT_STOP
+import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
@@ -23,11 +23,6 @@ object MatchingServiceHelper {
         if (!hasAtLeastTwoDistinctRoutePointLocations(routePoints))
             return "At least 2 distinct locations within route points must be given"
 
-        val allRoutePointsValid = routePoints.all(RoutePoint::isStopPointInfoPresentOnlyIfTypeIsPublicTransportStop)
-
-        if (!allRoutePointsValid)
-            return "Found invalid route point having stopPointInfo present but type not ${PUBLIC_TRANSPORT_STOP.name}"
-
         return null
     }
 
@@ -42,9 +37,9 @@ object MatchingServiceHelper {
                                                 fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>)
         : SnappedLinkState? {
 
-        return when (routePoint.isStopPoint) {
-            true -> {
-                val nationalId: Int? = routePoint.stopPointInfo?.nationalId
+        return when (routePoint) {
+            is RouteStopPoint -> {
+                val nationalId: Int? = routePoint.nationalId
 
                 fromStopNationalIdToInfrastructureLink[nationalId]
                     ?.also { link ->
@@ -61,7 +56,7 @@ object MatchingServiceHelper {
                         null
                     }
             }
-            false -> {
+            else -> {
                 LOGGER.debug { "Route $terminusType point is not stop point" }
                 null
             }
