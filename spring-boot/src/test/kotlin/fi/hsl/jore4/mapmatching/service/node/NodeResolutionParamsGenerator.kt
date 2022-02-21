@@ -2,13 +2,19 @@ package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkEndpointDiscreteness.DISCRETE_ENDPOINT_NODES
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkEndpointDiscreteness.NON_DISCRETE_ENDPOINT_NODES
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkEndpointDiscreteness.NON_DISCRETE_ENDPOINT_NODES_ON_EITHER_TERMINUS_LINK
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection.BIDIRECTIONAL
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection.ONE_WAY
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection.ONE_WAY_AGAINST_DIGITISED_DIRECTION
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection.ONE_WAY_ALONG_DIGITISED_DIRECTION
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkEndpointDiscreteness.DISCRETE_NODES
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkEndpointDiscreteness.NON_DISCRETE_NODES
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISCRETE_LINKS
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISCRETE_LINKS_CONNECTED
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.DISCRETE_LINKS_UNCONNECTED
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK_SAME_SNAP_POINT_LOCATIONS
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_END_NODE
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_START_NODE
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.EMPTY
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.FULLY_REDUNDANT_WITH_TERMINUS_LINKS
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.NON_REDUNDANT_WITH_TERMINUS_LINKS
@@ -20,6 +26,7 @@ import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapTw
 import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapTwoUnconnectedLinks
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate.constant
+import org.quicktheories.generators.Generate.pick
 import org.quicktheories.generators.SourceDSL.integers
 import org.quicktheories.generators.SourceDSL.lists
 import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.node as randomNode
@@ -28,56 +35,99 @@ object NodeResolutionParamsGenerator {
 
     private const val MAX_NUMBER_OF_VIA_NODES: Int = 5
 
-    // Determines how to set IDs and nodes for startLink/endLink in NodeResolutionParams.
-    enum class TerminusLinkRelation {
+    /**
+     * Describes how start and end link on a route relate to each other. Basically, dictates how IDs and nodes
+     * are populated into startLink/endLink in NodeResolutionParams.
+     */
+    enum class TerminusLinkRelation(val onlyOneLinkInvolved: Boolean) {
 
-        // startLinkId == endLinkId
-        SAME,
+        /**
+         * startLinkId == endLinkId
+         */
+        SAME_LINK(true),
 
-        // startLinkId != endLinkId; links may or may not be connected to each other via nodes
-        DISCRETE_LINKS,
+        /**
+         * startLinkId == endLinkId; first snap point on link is closer to the start node of the infrastructure link
+         */
+        SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_START_NODE(true),
 
-        // startLinkId != endLinkId; start and end link share a common node i.e. they are connected to each other
-        DISCRETE_LINKS_CONNECTED,
+        /**
+         * startLinkId == endLinkId; first snap point on link is closer to the end node of the infrastructure link
+         */
+        SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_END_NODE(true),
 
-        // startLinkId != endLinkId; start and end link do not have a common node i.e. they are unconnected
-        DISCRETE_LINKS_UNCONNECTED,
+        /**
+         * startLinkId == endLinkId; first snap point on link is closer to the start node of the infrastructure link
+         */
+        SAME_LINK_SAME_SNAP_POINT_LOCATIONS(true),
+
+        /**
+         * startLinkId != endLinkId; links may or may not be connected to each other via nodes
+         */
+        DISCRETE_LINKS(false),
+
+        /**
+         * startLinkId != endLinkId; start and end link share a common node i.e. they are connected to each other
+         */
+        DISCRETE_LINKS_CONNECTED(false),
+
+        /**
+         * startLinkId != endLinkId; start and end link do not have a common node i.e. they are unconnected
+         */
+        DISCRETE_LINKS_UNCONNECTED(false),
+
+        ANY(false)
+    }
+
+    /**
+     * Determines whether infrastructure link should have discrete endpoint nodes.
+     */
+    enum class LinkEndpointDiscreteness {
+
+        DISCRETE_NODES,
+
+        // A single infrastructure node appears as both a start and end node of an infrastructure link.
+        NON_DISCRETE_NODES,
 
         ANY
     }
 
-    // Determines whether terminus links have discrete endpoint nodes.
-    enum class TerminusLinkEndpointDiscreteness {
+    /**
+     * Determines direction of traffic flow on infrastructure link.
+     */
+    enum class LinkDirection {
+        BIDIRECTIONAL,
 
-        // Both links have discrete endpoints.
-        DISCRETE_ENDPOINT_NODES,
-
-        // For one (and only one) terminus link on route, a single infrastructure node appears as both start and end
-        // node. In case a single link appears at both endpoints of route, this yields non-discrete endpoints on that
-        // link.
-        NON_DISCRETE_ENDPOINT_NODES_ON_EITHER_TERMINUS_LINK,
-
-        // For both terminus links, a single infrastructure node appears as both a start and end node.
-        NON_DISCRETE_ENDPOINT_NODES,
+        ONE_WAY,
+        ONE_WAY_ALONG_DIGITISED_DIRECTION,
+        ONE_WAY_AGAINST_DIGITISED_DIRECTION,
 
         ANY
     }
 
-    // Determines what kind of via nodes to populate to NodeResolutionParams.
+    /**
+     * Determines what kind of via nodes are populated into NodeResolutionParams.
+     */
     enum class ViaNodeGenerationScheme {
 
-        // generate empty set of via nodes
+        /**
+         * An empty set of via nodes is generated.
+         */
         EMPTY,
 
         RANDOM,
 
-        // Generate via node sequence which does not start or end with a node that is closer node of either snapped
-        // terminus link.
+        /**
+         * Generate via node sequence which does not start or end with a node that is closer node of either snapped
+         * terminus link.
+         */
         NON_REDUNDANT_WITH_TERMINUS_LINKS,
 
-        // Generate via node sequence which starts with a duplicated sequence of single node that is closer node of
-        // snapped start link and ends with a duplicated sequence of single node that is closer node of snapped end
-        // link.
+        /**
+         * Generate via node sequence which starts with a duplicated sequence of single node that is closer node of
+         * snapped start link and ends with a duplicated sequence of single node that is closer node of snapped end
+         * link.
+         */
         FULLY_REDUNDANT_WITH_TERMINUS_LINKS,
 
         ANY
@@ -85,8 +135,25 @@ object NodeResolutionParamsGenerator {
 
     private val EMPTY_VIA_NODE_LIST: Gen<List<NodeProximity>> = constant(emptyList())
 
-    private fun generateViaNodes(nodeSource: Gen<NodeProximity>): Gen<List<NodeProximity>> =
-        lists().of(nodeSource).ofSizeBetween(1, MAX_NUMBER_OF_VIA_NODES)
+    private fun generateTrafficFlowDirectionType(direction: LinkDirection): Gen<Int> = when (direction) {
+        BIDIRECTIONAL -> constant(2)
+        ONE_WAY -> integers().between(3, 4)
+        ONE_WAY_ALONG_DIGITISED_DIRECTION -> constant(4)
+        ONE_WAY_AGAINST_DIGITISED_DIRECTION -> constant(3)
+        LinkDirection.ANY -> integers().between(2, 4)
+    }
+
+    private fun toBoolean(endpointDiscreteness: LinkEndpointDiscreteness): Boolean? = when (endpointDiscreteness) {
+        DISCRETE_NODES -> true
+        NON_DISCRETE_NODES -> false
+        else -> null
+    }
+
+    private fun generateViaNodes(nodeSource: Gen<NodeProximity>): Gen<List<NodeProximity>> {
+        return lists()
+            .of(nodeSource)
+            .ofSizeBetween(1, MAX_NUMBER_OF_VIA_NODES)
+    }
 
     private fun generateNonRedundantViaNodesWithRegardToTerminusLinks(startLink: SnappedLinkState,
                                                                       endLink: SnappedLinkState)
@@ -146,17 +213,38 @@ object NodeResolutionParamsGenerator {
 
     class Builder {
 
-        private var terminusLinkRelation = TerminusLinkRelation.ANY
-        private var terminusLinkEndpointDiscreteness = TerminusLinkEndpointDiscreteness.ANY
-        private var viaNodeScheme = ViaNodeGenerationScheme.ANY
+        private var terminusLinkRelation: TerminusLinkRelation = TerminusLinkRelation.ANY
+
+        private var startLinkEndpointDiscreteness: LinkEndpointDiscreteness = LinkEndpointDiscreteness.ANY
+        private var startLinkDirection: LinkDirection = LinkDirection.ANY
+
+        private var endLinkEndpointDiscreteness: LinkEndpointDiscreteness = LinkEndpointDiscreteness.ANY
+        private var endLinkDirection: LinkDirection = LinkDirection.ANY
+
+        private var viaNodeScheme: ViaNodeGenerationScheme = ViaNodeGenerationScheme.ANY
 
         fun withTerminusLinkRelation(value: TerminusLinkRelation): Builder {
             terminusLinkRelation = value
             return this
         }
 
-        fun withTerminusLinkEndpointDiscreteness(value: TerminusLinkEndpointDiscreteness): Builder {
-            terminusLinkEndpointDiscreteness = value
+        fun withStartLinkEndpointDiscreteness(value: LinkEndpointDiscreteness): Builder {
+            startLinkEndpointDiscreteness = value
+            return this
+        }
+
+        fun withStartLinkDirection(value: LinkDirection): Builder {
+            startLinkDirection = value
+            return this
+        }
+
+        fun withEndLinkEndpointDiscreteness(value: LinkEndpointDiscreteness): Builder {
+            endLinkEndpointDiscreteness = value
+            return this
+        }
+
+        fun withEndLinkDirection(value: LinkDirection): Builder {
+            endLinkDirection = value
             return this
         }
 
@@ -166,67 +254,7 @@ object NodeResolutionParamsGenerator {
         }
 
         fun build(): Gen<NodeResolutionParams> {
-            val genTerminusLink: Gen<Pair<SnappedLinkState, SnappedLinkState>> = when (terminusLinkRelation) {
-                SAME -> when (terminusLinkEndpointDiscreteness) {
-                    DISCRETE_ENDPOINT_NODES -> snapSingleLinkTwice(withDiscreteEndpoints = true)
-                    TerminusLinkEndpointDiscreteness.ANY -> snapSingleLinkTwice()
-                    else -> snapSingleLinkTwice(withDiscreteEndpoints = false)
-                }
-                DISCRETE_LINKS -> when (terminusLinkEndpointDiscreteness) {
-                    DISCRETE_ENDPOINT_NODES -> {
-                        snapTwoConnectedLinks(3)
-                            .mix(snapTwoUnconnectedLinks(4), 50)
-                    }
-                    NON_DISCRETE_ENDPOINT_NODES_ON_EITHER_TERMINUS_LINK -> {
-                        snapTwoConnectedLinks(2)
-                            .mix(snapTwoUnconnectedLinks(3), 50)
-                    }
-                    NON_DISCRETE_ENDPOINT_NODES -> {
-                        snapTwoConnectedLinks(1)
-                            .mix(snapTwoUnconnectedLinks(2), 50)
-                    }
-                    TerminusLinkEndpointDiscreteness.ANY -> {
-                        snapTwoConnectedLinks()
-                            .mix(snapTwoUnconnectedLinks(), 50)
-                    }
-                }
-                DISCRETE_LINKS_CONNECTED -> when (terminusLinkEndpointDiscreteness) {
-                    DISCRETE_ENDPOINT_NODES -> snapTwoConnectedLinks(3)
-                    NON_DISCRETE_ENDPOINT_NODES_ON_EITHER_TERMINUS_LINK -> snapTwoConnectedLinks(2)
-                    NON_DISCRETE_ENDPOINT_NODES -> snapTwoConnectedLinks(1)
-                    TerminusLinkEndpointDiscreteness.ANY -> snapTwoConnectedLinks()
-                }
-                DISCRETE_LINKS_UNCONNECTED -> when (terminusLinkEndpointDiscreteness) {
-                    DISCRETE_ENDPOINT_NODES -> snapTwoUnconnectedLinks(4)
-                    NON_DISCRETE_ENDPOINT_NODES_ON_EITHER_TERMINUS_LINK -> snapTwoUnconnectedLinks(3)
-                    NON_DISCRETE_ENDPOINT_NODES -> snapTwoUnconnectedLinks(2)
-                    TerminusLinkEndpointDiscreteness.ANY -> snapTwoUnconnectedLinks()
-                }
-                TerminusLinkRelation.ANY -> when (terminusLinkEndpointDiscreteness) {
-                    DISCRETE_ENDPOINT_NODES -> {
-                        snapSingleLinkTwice(withDiscreteEndpoints = true)
-                            .mix(snapTwoConnectedLinks(3), 50)
-                            .mix(snapTwoUnconnectedLinks(4), 33)
-                    }
-                    NON_DISCRETE_ENDPOINT_NODES_ON_EITHER_TERMINUS_LINK -> {
-                        snapSingleLinkTwice(withDiscreteEndpoints = false)
-                            .mix(snapTwoConnectedLinks(2), 50)
-                            .mix(snapTwoUnconnectedLinks(3), 33)
-                    }
-                    NON_DISCRETE_ENDPOINT_NODES -> {
-                        snapSingleLinkTwice(withDiscreteEndpoints = false)
-                            .mix(snapTwoConnectedLinks(1), 50)
-                            .mix(snapTwoUnconnectedLinks(2), 33)
-                    }
-                    TerminusLinkEndpointDiscreteness.ANY -> {
-                        snapSingleLinkTwice()
-                            .mix(snapTwoConnectedLinks(), 50)
-                            .mix(snapTwoUnconnectedLinks(), 33)
-                    }
-                }
-            }
-
-            return genTerminusLink.flatMap { (startLink, endLink) ->
+            return generateTerminusLinks().flatMap { (startLink, endLink) ->
 
                 val genViaNodeList: Gen<List<NodeProximity>> = when (viaNodeScheme) {
                     EMPTY -> EMPTY_VIA_NODE_LIST
@@ -241,6 +269,100 @@ object NodeResolutionParamsGenerator {
                 }
 
                 genViaNodeList.map { viaNodeList -> NodeResolutionParams(startLink, viaNodeList, endLink) }
+            }
+        }
+
+        private fun generateTerminusLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+            return unwrapTerminusLinkRelation().flatMap { terminusLinkRelation ->
+
+                if (terminusLinkRelation.onlyOneLinkInvolved)
+                    snapSingleLinkTwice(terminusLinkRelation)
+                else
+                    snapTwoDiscreteLinks(terminusLinkRelation)
+            }
+        }
+
+        private fun unwrapTerminusLinkRelation(): Gen<TerminusLinkRelation> {
+            val unwrapAny: Gen<TerminusLinkRelation> = when (terminusLinkRelation) {
+                TerminusLinkRelation.ANY -> pick(listOf(SAME_LINK, DISCRETE_LINKS))
+                else -> constant(terminusLinkRelation)
+            }
+
+            return unwrapAny.flatMap { linkRel ->
+                when (linkRel) {
+                    SAME_LINK -> pick(listOf(SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_START_NODE,
+                                             SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_END_NODE,
+                                             SAME_LINK_SAME_SNAP_POINT_LOCATIONS))
+
+                    DISCRETE_LINKS -> pick(listOf(DISCRETE_LINKS_CONNECTED,
+                                                  DISCRETE_LINKS_UNCONNECTED))
+
+                    else -> constant(linkRel)
+                }
+            }
+        }
+
+        private fun snapSingleLinkTwice(terminusLinkRelation: TerminusLinkRelation)
+            : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+
+            val discreteEndpoints: Boolean? = toBoolean(startLinkEndpointDiscreteness)
+
+            val snapPointComparison: Int = when (terminusLinkRelation) {
+                SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_START_NODE -> -1
+                SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_END_NODE -> 1
+                SAME_LINK_SAME_SNAP_POINT_LOCATIONS -> 0
+                else -> throw IllegalStateException("Should not end up here")
+            }
+
+            return generateTrafficFlowDirectionType(startLinkDirection).flatMap { trafficFlowDirectionType ->
+
+                snapSingleLinkTwice(discreteEndpoints, trafficFlowDirectionType, snapPointComparison)
+            }
+        }
+
+        private fun snapTwoDiscreteLinks(terminusLinkRelation: TerminusLinkRelation)
+            : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+
+            val discreteEndpointsOnStartLink: Boolean? = toBoolean(startLinkEndpointDiscreteness)
+            val discreteEndpointsOnEndLink: Boolean? = toBoolean(endLinkEndpointDiscreteness)
+
+            return generateTrafficFlowDirectionType(startLinkDirection).flatMap { directionOnStartLink ->
+                generateTrafficFlowDirectionType(endLinkDirection).flatMap { directionOnEndLink ->
+
+                    when (terminusLinkRelation) {
+                        DISCRETE_LINKS_CONNECTED -> {
+                            when (discreteEndpointsOnStartLink to discreteEndpointsOnEndLink) {
+                                true to true -> snapTwoConnectedLinks(3,
+                                                                      directionOnStartLink,
+                                                                      directionOnEndLink)
+                                true to false, false to true -> snapTwoConnectedLinks(2,
+                                                                                      directionOnStartLink,
+                                                                                      directionOnEndLink)
+                                false to false -> snapTwoConnectedLinks(1,
+                                                                        directionOnStartLink,
+                                                                        directionOnEndLink)
+                                else -> snapTwoConnectedLinks(directionOnStartLink,
+                                                              directionOnEndLink)
+                            }
+                        }
+                        DISCRETE_LINKS_UNCONNECTED -> {
+                            when (discreteEndpointsOnStartLink to discreteEndpointsOnEndLink) {
+                                true to true -> snapTwoUnconnectedLinks(4,
+                                                                        directionOnStartLink,
+                                                                        directionOnEndLink)
+                                true to false, false to true -> snapTwoUnconnectedLinks(3,
+                                                                                        directionOnStartLink,
+                                                                                        directionOnEndLink)
+                                false to false -> snapTwoUnconnectedLinks(2,
+                                                                          directionOnStartLink,
+                                                                          directionOnEndLink)
+                                else -> snapTwoUnconnectedLinks(directionOnStartLink,
+                                                                directionOnEndLink)
+                            }
+                        }
+                        else -> throw IllegalStateException("Should not end up here")
+                    }
+                }
             }
         }
     }

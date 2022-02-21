@@ -15,6 +15,8 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
  * @property closestPointFractionalMeasure a [Double] between 0 and 1
  * representing the location of the closest point on the infrastructure link to
  * the source point, as a fraction of the link's 2D length
+ * @property trafficFlowDirectionType the direction of traffic flow on
+ * infrastructure link
  * @property infrastructureLinkLength the 2D length of the infrastructure link
  * @property startNodeId the identifier of the infrastructure node at start
  * point of the infrastructure link
@@ -24,6 +26,7 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
                             val closestDistance: Double,
                             val closestPointFractionalMeasure: Double,
+                            val trafficFlowDirectionType: Int,
                             val infrastructureLinkLength: Double,
                             val startNodeId: InfrastructureNodeId,
                             val endNodeId: InfrastructureNodeId)

@@ -44,20 +44,27 @@ object SnappedLinkStateGenerator {
     fun snapLink(): Gen<SnappedLinkState> = booleans().flatMap(this::snapLink)
 
     fun snapLink(withDiscreteEndpoints: Boolean): Gen<SnappedLinkState> {
-        return enumValues(LinkEndpointsProximityFilter::class.java)
-            .flatMap { proximityFilter ->
-                snapLink(proximityFilter, withDiscreteEndpoints)
+        return generateTrafficFlowDirectionType()
+            .flatMap { trafficFlowDirectionType ->
+                enumValues(LinkEndpointsProximityFilter::class.java)
+                    .flatMap { proximityFilter ->
+
+                        snapLink(withDiscreteEndpoints, trafficFlowDirectionType, proximityFilter)
+                    }
             }
     }
 
-    fun snapLink(nodeProximityFilter: LinkEndpointsProximityFilter, withDiscreteEndpoints: Boolean = true)
+    fun snapLink(withDiscreteEndpoints: Boolean,
+                 trafficFlowDirectionType: Int,
+                 nodeProximityFilter: LinkEndpointsProximityFilter? = null)
         : Gen<SnappedLinkState> {
 
-        val getSnappedLinkState: (LinkEndpointsProximityFilter) -> Gen<SnappedLinkState> =
+        val getSnappedLinkState: (LinkEndpointsProximityFilter?) -> Gen<SnappedLinkState> = { proximityFilter ->
             if (withDiscreteEndpoints)
-                this::generateSnappedLinkStateFromTwoNodes
+                generateSnappedLinkStateFromTwoNodes(trafficFlowDirectionType, proximityFilter)
             else
-                this::generateSnappedLinkStateFromOneNode
+                generateSnappedLinkStateFromOneNode(trafficFlowDirectionType, proximityFilter)
+        }
 
         return when (nodeProximityFilter) {
             START_NODE_CLOSER -> getSnappedLinkState(START_NODE_CLOSER)
@@ -71,59 +78,139 @@ object SnappedLinkStateGenerator {
                 getSnappedLinkState(END_NODE_CLOSER)
                     .mix(getSnappedLinkState(NODES_AT_EQUAL_DISTANCE), 50)
             }
+            else -> getSnappedLinkState(null)
         }
     }
 
-    fun snapSingleLinkTwice(withDiscreteEndpoints: Boolean? = null): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+    fun snapSingleLinkTwice(withDiscreteEndpoints: Boolean?,
+                            trafficFlowDirectionType: Int,
+                            snapPointComparison: Int)
+        : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+
+        require(snapPointComparison in -1..1) { "snapPointComparison must be in range -1..1" }
+
+        val genSnapPointLocationFraction: Gen<Pair<Double, Double>> = when (snapPointComparison) {
+            -1 -> {
+                doubles().between(0.0, 1.0 - DOUBLE_TOLERANCE)
+                    .flatMap { firstFrac ->
+                        doubles().between(firstFrac + DOUBLE_TOLERANCE, 1.0)
+                            .map { secondFrac -> firstFrac to secondFrac }
+                    }
+            }
+            0 -> duplicate(SNAP_POINT_LOCATION_FRACTION)
+            1 -> {
+                doubles().between(DOUBLE_TOLERANCE, 1.0)
+                    .flatMap { firstFrac ->
+                        doubles().between(0.0, firstFrac - DOUBLE_TOLERANCE)
+                            .map { secondFrac -> firstFrac to secondFrac }
+                    }
+            }
+            // null case
+            else -> pair(SNAP_POINT_LOCATION_FRACTION)
+        }
+
         val genNumberOfDiscreteNodes: Gen<Int> = when (withDiscreteEndpoints) {
             true -> constant(2)
             false -> constant(1)
             else -> integers().between(1, 2)
         }
 
-        return snapTwoLinks(duplicate(infrastructureLinkId()),
-                            genNumberOfDiscreteNodes.flatMap {
-                                nodeIdQuadruple(it,
-                                                discreteNodesBetweenHalves = false)
-                            })
+        return genNumberOfDiscreteNodes.flatMap { numDiscreteNodes ->
+
+            snapTwoLinks(trafficFlowDirectionType,
+                         trafficFlowDirectionType,
+                         duplicate(infrastructureLinkId()),
+                         genSnapPointLocationFraction,
+                         nodeIdQuadruple(numDiscreteNodes, discreteNodesBetweenHalves = false))
+        }
     }
 
-    // Generate pairs of links having a common node.
-    fun snapTwoConnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> = integers()
-        .between(1, 3)
-        .flatMap(this::snapTwoConnectedLinks)
+    // Generate pairs of links having common node.
+    fun snapTwoConnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+        return generateTrafficFlowDirectionType()
+            .flatMap { firstLinkDirection ->
+                generateTrafficFlowDirectionType()
+                    .flatMap { secondLinkDirection ->
+                        snapTwoConnectedLinks(firstLinkDirection, secondLinkDirection)
+                    }
+            }
+    }
 
-    // Generate pairs of links having a common node.
-    fun snapTwoConnectedLinks(numberOfDiscreteNodes: Int): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+    // Generate pairs of links having common node.
+    fun snapTwoConnectedLinks(firstLinkDirection: Int, secondLinkDirection: Int)
+        : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+
+        return integers()
+            .between(1, 3)
+            .flatMap { numberOfDiscreteNodes ->
+                snapTwoConnectedLinks(numberOfDiscreteNodes, firstLinkDirection, secondLinkDirection)
+            }
+    }
+
+    // Generate pairs of links having common node.
+    fun snapTwoConnectedLinks(numberOfDiscreteNodes: Int,
+                              firstLinkDirection: Int,
+                              secondLinkDirection: Int): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+
         require(numberOfDiscreteNodes in 1..3) {
             "numberOfDiscreteNodes must be in range 1..3, but was: $numberOfDiscreteNodes"
         }
 
-        return snapTwoLinks(infrastructureLinkIdPair(),
+        return snapTwoLinks(firstLinkDirection,
+                            secondLinkDirection,
+                            infrastructureLinkIdPair(),
+                            pair(SNAP_POINT_LOCATION_FRACTION),
                             nodeIdQuadruple(numberOfDiscreteNodes, discreteNodesBetweenHalves = false))
     }
 
     // Generate pairs of links that do not have a common node.
-    fun snapTwoUnconnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> = integers()
-        .between(2, 4)
-        .flatMap(this::snapTwoUnconnectedLinks)
+    fun snapTwoUnconnectedLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+        return generateTrafficFlowDirectionType()
+            .flatMap { firstLinkDirection ->
+                generateTrafficFlowDirectionType()
+                    .flatMap { secondLinkDirection ->
+                        snapTwoUnconnectedLinks(firstLinkDirection, secondLinkDirection)
+                    }
+            }
+    }
 
     // Generate pairs of links that do not have a common node.
-    fun snapTwoUnconnectedLinks(numberOfDiscreteNodes: Int): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+    fun snapTwoUnconnectedLinks(firstLinkDirection: Int, secondLinkDirection: Int)
+        : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+
+        return integers()
+            .between(2, 4)
+            .flatMap { numberOfDiscreteNodes ->
+                snapTwoUnconnectedLinks(numberOfDiscreteNodes, firstLinkDirection, secondLinkDirection)
+            }
+    }
+
+    // Generate pairs of links that do not have a common node.
+    fun snapTwoUnconnectedLinks(numberOfDiscreteNodes: Int,
+                                firstLinkDirection: Int,
+                                secondLinkDirection: Int)
+        : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+
         require(numberOfDiscreteNodes in 1..4) {
             "numberOfDiscreteNodes must be in range 1..4, but was: $numberOfDiscreteNodes"
         }
 
-        return snapTwoLinks(infrastructureLinkIdPair(),
+        return snapTwoLinks(firstLinkDirection,
+                            secondLinkDirection,
+                            infrastructureLinkIdPair(),
+                            pair(SNAP_POINT_LOCATION_FRACTION),
                             nodeIdQuadruple(numberOfDiscreteNodes, discreteNodesBetweenHalves = true))
     }
 
-    private fun snapTwoLinks(genLinkIdPair: Gen<Pair<InfrastructureLinkId, InfrastructureLinkId>>,
+    private fun snapTwoLinks(linkDirection1: Int,
+                             linkDirection2: Int,
+                             genLinkIdPair: Gen<Pair<InfrastructureLinkId, InfrastructureLinkId>>,
+                             genSnapPointLocationFractionPair: Gen<Pair<Double, Double>>,
                              genNodeIds: Gen<Quadruple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>>)
         : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
 
         return genLinkIdPair.zip(DISTANCE_PAIR,
-                                 pair(SNAP_POINT_LOCATION_FRACTION),
+                                 genSnapPointLocationFractionPair,
                                  pair(LINK_LENGTH),
                                  genNodeIds) { (linkId1, linkId2),
                                                (distanceToLink1, distanceToLink2),
@@ -134,23 +221,46 @@ object SnappedLinkStateGenerator {
             Pair(createSnappedLinkState(linkId1,
                                         distanceToLink1,
                                         snapPointLocationFraction1,
+                                        linkDirection1,
                                         linkLength1,
                                         nodeId1, nodeId2),
                  createSnappedLinkState(linkId2,
                                         distanceToLink2,
                                         snapPointLocationFraction2,
+                                        linkDirection2,
                                         linkLength2,
                                         nodeId3, nodeId4))
         }
     }
 
-    private fun generateSnappedLinkStateFromOneNode(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> =
-        generateSnappedLinkState(generateSnapPointLocationFraction(nodeProximityFilter), nodeIdPair(false))
+    private fun generateSnappedLinkStateFromOneNode(trafficFlowDirectionType: Int,
+                                                    nodeProximityFilter: LinkEndpointsProximityFilter?)
+        : Gen<SnappedLinkState> {
 
-    private fun generateSnappedLinkStateFromTwoNodes(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<SnappedLinkState> =
-        generateSnappedLinkState(generateSnapPointLocationFraction(nodeProximityFilter), discreteNodeIdPair())
+        val genSnapPointLocationFraction: Gen<Double> = nodeProximityFilter
+            ?.let { generateSnapPointLocationFraction(it) }
+            ?: SNAP_POINT_LOCATION_FRACTION
 
-    private fun generateSnappedLinkState(genSnapPointLocationFraction: Gen<Double>,
+        return generateSnappedLinkState(trafficFlowDirectionType,
+                                        genSnapPointLocationFraction,
+                                        nodeIdPair(false))
+    }
+
+    private fun generateSnappedLinkStateFromTwoNodes(trafficFlowDirectionType: Int,
+                                                     nodeProximityFilter: LinkEndpointsProximityFilter?)
+        : Gen<SnappedLinkState> {
+
+        val genSnapPointLocationFraction: Gen<Double> = nodeProximityFilter
+            ?.let { generateSnapPointLocationFraction(it) }
+            ?: SNAP_POINT_LOCATION_FRACTION
+
+        return generateSnappedLinkState(trafficFlowDirectionType,
+                                        genSnapPointLocationFraction,
+                                        discreteNodeIdPair())
+    }
+
+    private fun generateSnappedLinkState(trafficFlowDirectionType: Int,
+                                         genSnapPointLocationFraction: Gen<Double>,
                                          genNodeIdPair: Gen<Pair<InfrastructureNodeId, InfrastructureNodeId>>)
         : Gen<SnappedLinkState> {
 
@@ -166,6 +276,7 @@ object SnappedLinkStateGenerator {
             createSnappedLinkState(infrastructureLinkId,
                                    distanceToLink,
                                    snapPointLocationFraction,
+                                   trafficFlowDirectionType,
                                    linkLength,
                                    startNodeId, endNodeId)
         }
@@ -180,9 +291,12 @@ object SnappedLinkStateGenerator {
             END_NODE_CLOSER_OR_EQUAL_DISTANCE -> doubles().between(0.5, 1.0)
         }
 
+    private fun generateTrafficFlowDirectionType(): Gen<Int> = integers().between(2, 4)
+
     private fun createSnappedLinkState(infrastructureLinkId: InfrastructureLinkId,
                                        distanceToLink: Double,
                                        snapPointLocationFraction: Double,
+                                       trafficFlowDirectionType: Int,
                                        linkLength: Double,
                                        startNodeId: InfrastructureNodeId,
                                        endNodeId: InfrastructureNodeId)
@@ -196,6 +310,7 @@ object SnappedLinkStateGenerator {
         return SnappedLinkState(infrastructureLinkId,
                                 closestDistanceToLink,
                                 snapPointLocationFraction,
+                                trafficFlowDirectionType,
                                 linkLength,
                                 startNodeId, endNodeId)
     }

@@ -257,6 +257,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                           InfrastructureLinkId(linkId),
                                           0.0, // closest distance from stop to link can be set to zero
                                           stopLocationOnLinkAsFraction,
+                                          linkRecord.trafficFlowDirectionType,
                                           linkLength,
                                           InfrastructureNodeId(linkRecord.startNodeId),
                                           InfrastructureNodeId(linkRecord.endNodeId)))

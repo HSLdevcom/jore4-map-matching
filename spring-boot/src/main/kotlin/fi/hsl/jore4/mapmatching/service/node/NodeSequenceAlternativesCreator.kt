@@ -5,7 +5,6 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.getNodeIdSequenceCombinations
-import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toNodeIdSequence
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 
 object NodeSequenceAlternativesCreator {
@@ -59,7 +58,7 @@ object NodeSequenceAlternativesCreator {
 
             // This very special corner case needs to be treated separately in order to have a well-behaving algorithm.
             if (startLink.isOnSameLinkAs(endLink)) {
-                return createResponseForSingleLinkWithNoViaNodes(startLink)
+                return createResponseForSingleLinkWithNoViaNodes(startLink, endLink.closestPointFractionalMeasure)
             }
         } else {
             nonOverlappingViaNodeIdSequence = NodeIdSequence(mergedNodeIdsOnStartLink.drop(1)
@@ -91,7 +90,7 @@ object NodeSequenceAlternativesCreator {
         : NodeSequenceAlternatives {
 
         if (startLink.isOnSameLinkAs(endLink)) {
-            return createResponseForSingleLinkWithNoViaNodes(startLink)
+            return createResponseForSingleLinkWithNoViaNodes(startLink, endLink.closestPointFractionalMeasure)
         }
 
         val startLinkNodeIdSequences: List<NodeIdSequence> = startLink.getNodeIdSequenceCombinations()
@@ -146,10 +145,38 @@ object NodeSequenceAlternativesCreator {
         }
     }
 
-    private fun createResponseForSingleLinkWithNoViaNodes(link: SnappedLinkState): NodeSequenceAlternatives {
+    private fun createResponseForSingleLinkWithNoViaNodes(link: SnappedLinkState,
+                                                          secondSnapPointFractionalLocation: Double)
+        : NodeSequenceAlternatives {
+
+        val nodeIds: List<InfrastructureNodeId> = link.run {
+            if (hasDiscreteNodes()) {
+                when (trafficFlowDirectionType) {
+                    3 -> {
+                        if (closestPointFractionalMeasure < secondSnapPointFractionalLocation)
+                            listOf(endNodeId, startNodeId, endNodeId, startNodeId)
+                        else
+                            listOf(endNodeId, startNodeId)
+                    }
+                    4 -> {
+                        if (closestPointFractionalMeasure > secondSnapPointFractionalLocation)
+                            listOf(startNodeId, endNodeId, startNodeId, endNodeId)
+                        else
+                            listOf(startNodeId, endNodeId)
+                    }
+                    else -> {
+                        if (closestPointFractionalMeasure <= secondSnapPointFractionalLocation)
+                            listOf(startNodeId, endNodeId)
+                        else
+                            listOf(endNodeId, startNodeId)
+                    }
+                }
+            } else listOf(startNodeId)
+        }
+
         return NodeSequenceAlternatives(link.infrastructureLinkId,
                                         link.infrastructureLinkId,
                                         NodeIdSequence.empty(),
-                                        listOf(link.toNodeIdSequence()))
+                                        listOf(NodeIdSequence(nodeIds)))
     }
 }

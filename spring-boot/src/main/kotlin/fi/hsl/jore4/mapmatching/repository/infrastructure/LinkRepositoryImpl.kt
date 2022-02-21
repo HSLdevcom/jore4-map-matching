@@ -40,6 +40,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
     private data class ClosestLinkResult(val pointSeqNum: Int,
                                          val infrastructureLinkId: InfrastructureLinkId,
+                                         val trafficFlowDirectionType: Int,
                                          val closestDistance: Double,
                                          val closestPointFractionalMeasure: Double,
                                          val linkLength: Double,
@@ -71,13 +72,15 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 val startNodeId = rs.getLong("start_node_id")
                 val endNodeId = rs.getLong("end_node_id")
 
+                val trafficFlowDirectionType = rs.getInt("traffic_flow_direction_type")
+                val linkLength = rs.getDouble("infrastructure_link_len2d")
+
                 val closestDistance = rs.getDouble("closest_distance")
                 val closestPointFractionalMeasure = rs.getDouble("fractional_measure")
 
-                val linkLength = rs.getDouble("infrastructure_link_len2d")
-
                 ClosestLinkResult(pointSeqNum,
                                   InfrastructureLinkId(infrastructureLinkId),
+                                  trafficFlowDirectionType,
                                   closestDistance,
                                   closestPointFractionalMeasure,
                                   linkLength,
@@ -94,6 +97,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                SnappedLinkState(it.infrastructureLinkId,
                                                 it.closestDistance,
                                                 it.closestPointFractionalMeasure,
+                                                it.trafficFlowDirectionType,
                                                 it.linkLength,
                                                 it.startNodeId,
                                                 it.endNodeId))
@@ -109,6 +113,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 link.infrastructure_link_id,
                 link.start_node_id,
                 link.end_node_id,
+                link.traffic_flow_direction_type,
                 closest_link.distance AS closest_distance,
                 closest_link_aux.fractional_measure,
                 closest_link_aux.infrastructure_link_len2d
