@@ -37,30 +37,6 @@ import org.quicktheories.dsl.TheoryBuilder
 class NodeSequenceAlternativesCreatorTest {
 
     @Test
-    @DisplayName("Verify ID of start infrastructure link")
-    fun verifyStartLinkId() {
-        forAll(anyInput())
-            .checkAssert { input: NodeResolutionParams ->
-
-                assertThat(createOutput(input))
-                    .extracting(NodeSequenceAlternatives::startLinkId)
-                    .isEqualTo(input.startLink.infrastructureLinkId)
-            }
-    }
-
-    @Test
-    @DisplayName("Verify ID of end infrastructure link")
-    fun verifyEndLinkId() {
-        forAll(anyInput())
-            .checkAssert { input: NodeResolutionParams ->
-
-                assertThat(createOutput(input))
-                    .extracting(NodeSequenceAlternatives::endLinkId)
-                    .isEqualTo(input.endLink.infrastructureLinkId)
-            }
-    }
-
-    @Test
     @DisplayName("Verify that count of node ID sequences is between one and four")
     fun verifyNumberOfNodeIdSequences() {
         forAll(anyInput())

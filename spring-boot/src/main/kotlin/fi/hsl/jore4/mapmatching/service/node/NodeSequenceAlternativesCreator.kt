@@ -83,10 +83,8 @@ object NodeSequenceAlternativesCreator {
             }
         }
 
-        return NodeSequenceAlternatives(startLink.infrastructureLinkId,
-                                        endLink.infrastructureLinkId,
-                                        nonOverlappingViaNodeIdSequence,
-                                        nodeIdSequenceCombos)
+        return NodeSequenceAlternatives(nodeIdSequenceCombos,
+                                        nonOverlappingViaNodeIdSequence)
     }
 
     private fun createWithoutViaNodes(startLink: SnappedLinkState, endLink: SnappedLinkState)
@@ -108,10 +106,8 @@ object NodeSequenceAlternativesCreator {
         else
             nodeIdSequenceCombos
 
-        return NodeSequenceAlternatives(startLink.infrastructureLinkId,
-                                        endLink.infrastructureLinkId,
-                                        NodeIdSequence.empty(),
-                                        filteredNodeIdSequences)
+        return NodeSequenceAlternatives(filteredNodeIdSequences,
+                                        NodeIdSequence.empty() /* viaNodeIds */)
     }
 
     private fun mergeNodeIdsOnStartLink(startLink: SnappedLinkState,
@@ -177,9 +173,7 @@ object NodeSequenceAlternativesCreator {
             } else listOf(startNodeId)
         }
 
-        return NodeSequenceAlternatives(link.infrastructureLinkId,
-                                        link.infrastructureLinkId,
-                                        NodeIdSequence.empty(),
-                                        listOf(NodeIdSequence(nodeIds)))
+        return NodeSequenceAlternatives(listOf(NodeIdSequence(nodeIds)),
+                                        NodeIdSequence.empty() /* viaNodeIds */)
     }
 }

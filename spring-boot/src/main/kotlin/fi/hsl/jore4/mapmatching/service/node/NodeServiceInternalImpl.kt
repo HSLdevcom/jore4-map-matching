@@ -31,9 +31,7 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
             "Resolving best node identifier sequence among alternatives: ${joinToLogString(nodeIdSequences)}"
         }
 
-        return nodeRepository.resolveNodeSequence(nodeSequenceAlternatives.startLinkId,
-                                                  nodeSequenceAlternatives.endLinkId,
-                                                  nodeIdSequences,
+        return nodeRepository.resolveNodeSequence(nodeIdSequences,
                                                   vehicleType,
                                                   bufferAreaRestriction)
             ?: throw IllegalStateException(

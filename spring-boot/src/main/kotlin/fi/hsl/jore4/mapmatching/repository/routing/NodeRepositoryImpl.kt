@@ -1,6 +1,5 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
-import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.NodeProximity
@@ -60,9 +59,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             }
     }
 
-    override fun resolveNodeSequence(startLinkId: InfrastructureLinkId,
-                                     endLinkId: InfrastructureLinkId,
-                                     nodeIdSequences: Iterable<NodeIdSequence>,
+    override fun resolveNodeSequence(nodeIdSequences: Iterable<NodeIdSequence>,
                                      vehicleType: VehicleType,
                                      bufferAreaRestriction: BufferAreaRestriction?)
         : NodeIdSequence? {
@@ -93,18 +90,15 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             pstmt.setArray(3, toSqlArray(seq3, conn))
             pstmt.setArray(4, toSqlArray(seq4, conn))
 
-            pstmt.setLong(5, startLinkId.value)
-            pstmt.setLong(6, endLinkId.value)
-
-            pstmt.setString(7, vehicleType.value)
+            pstmt.setString(5, vehicleType.value)
 
             // Set additional parameters if restricting infrastructure links
             // with a buffer area.
             bufferAreaRestriction?.run {
-                pstmt.setLong(8, startLinkId.value)
-                pstmt.setLong(9, endLinkId.value)
-                pstmt.setBytes(10, toEwkb(lineGeometry))
-                pstmt.setDouble(11, bufferRadiusInMeters)
+                pstmt.setLong(6, infrastructureLinkIdAtStart.value)
+                pstmt.setLong(7, infrastructureLinkIdAtEnd.value)
+                pstmt.setBytes(8, toEwkb(lineGeometry))
+                pstmt.setDouble(9, bufferRadiusInMeters)
             }
 
             pstmt
@@ -163,8 +157,10 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 else
                     QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
+            // Using "dummy_id" in SQL in order to be able to extract node IDs as result set rows instead of an SQL
+            // array which is more cumbersome to handle in JVM code.
             return """
-                SELECT DISTINCT ON (start_link_id) unnest(node_arr) AS node_id
+                SELECT DISTINCT ON (dummy_id) unnest(node_arr) AS node_id
                 FROM (
                     SELECT _node_seq.*
                     FROM (
@@ -176,7 +172,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                     WHERE cardinality(_node_seq.node_arr) > 0
                 ) node_seq
                 CROSS JOIN (
-                    SELECT ? AS start_link_id, ? AS end_link_id
+                    SELECT 1 AS dummy_id
                 ) terminus_links
                 CROSS JOIN LATERAL (
                     SELECT max(pgr.route_agg_cost) AS route_agg_cost
@@ -188,9 +184,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                         U_turn_on_edge := true
                     ) pgr
                     GROUP BY node_seq_id
-                    HAVING array_agg(edge) @> ARRAY[start_link_id, end_link_id]
                 ) route_overview
-                ORDER BY start_link_id, route_agg_cost;
+                ORDER BY dummy_id, route_agg_cost;
                 """.trimIndent()
         }
 
