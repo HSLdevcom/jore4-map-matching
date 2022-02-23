@@ -31,6 +31,8 @@ object CommonGenerators {
             }
     }
 
+    fun <T> duplicate(source: Gen<T>): Gen<Pair<T, T>> = source.map { value -> value to value }
+
     // triple consisting of three discrete values (unique within single generated tuple)
     fun <T> discreteTriple(source: Gen<T>): Gen<Triple<T, T, T>> {
         return discretePair(source)

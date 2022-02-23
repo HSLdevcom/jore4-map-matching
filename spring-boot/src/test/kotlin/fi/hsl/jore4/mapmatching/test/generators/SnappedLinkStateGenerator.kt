@@ -4,6 +4,7 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.ZERO_DOUBLE
+import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.duplicate
 import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.pair
 import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.shuffledPair
 import fi.hsl.jore4.mapmatching.test.generators.InfrastructureLinkIdGenerator.infrastructureLinkId
@@ -37,10 +38,8 @@ object SnappedLinkStateGenerator {
     private val DISTANCE_PAIR: Gen<Pair<Double, Double>> = shuffledPair(NON_NEGATIVE_DISTANCE, POSITIVE_DISTANCE)
 
     private val SNAP_FRACTIONAL: Gen<Double> = doubles().between(0.0, 1.0)
-    private val SNAP_FRACTIONAL_PAIR: Gen<Pair<Double, Double>> = pair(SNAP_FRACTIONAL)
 
     private val LINK_LENGTH: Gen<Double> = doubles().between(2.0, 5_000.0)
-    private val LINK_LENGTH_PAIR: Gen<Pair<Double, Double>> = pair(LINK_LENGTH)
 
     fun snapLink(): Gen<SnappedLinkState> = booleans().flatMap(this::snapLink)
 
@@ -82,7 +81,7 @@ object SnappedLinkStateGenerator {
             else -> integers().between(1, 2)
         }
 
-        return snapTwoLinks(infrastructureLinkId().map { id -> id to id },
+        return snapTwoLinks(duplicate(infrastructureLinkId()),
                             numberOfDiscreteNodesGen.flatMap { nodeIdQuadruple(it, discreteNodesBetweenHalves = false) })
     }
 
@@ -120,8 +119,8 @@ object SnappedLinkStateGenerator {
         : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
 
         return linkIdsGen.zip(DISTANCE_PAIR,
-                              SNAP_FRACTIONAL_PAIR,
-                              LINK_LENGTH_PAIR,
+                              pair(SNAP_FRACTIONAL),
+                              pair(LINK_LENGTH),
                               nodeIdsGen) { (linkId1, linkId2),
                                             (distanceToLink1, distanceToLink2),
                                             (snapFractional1, snapFractional2),
