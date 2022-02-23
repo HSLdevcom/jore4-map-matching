@@ -94,23 +94,23 @@ object NodeResolutionParamsGenerator {
 
         return integers().between(1, MAX_NUMBER_OF_VIA_NODES).flatMap { numViaNodes ->
 
-            val firstNodeGen: Gen<NodeProximity> = Retry(randomNode()) { node ->
+            val genFirstNode: Gen<NodeProximity> = Retry(randomNode()) { node ->
                 node.id != startLink.closerNodeId
                     && (node.id != endLink.closerNodeId || !startLink.isOnSameLinkAs(endLink) && numViaNodes > 1)
             }
 
-            val lastNodeGen: Gen<NodeProximity> = Retry(randomNode()) { node ->
+            val genLastNode: Gen<NodeProximity> = Retry(randomNode()) { node ->
                 node.id != endLink.closerNodeId
             }
 
             when (numViaNodes) {
-                1 -> firstNodeGen.map { node -> listOf(node) }
-                2 -> firstNodeGen.zip(lastNodeGen) { firstNode, secondNode -> listOf(firstNode, secondNode) }
+                1 -> genFirstNode.map { node -> listOf(node) }
+                2 -> genFirstNode.zip(genLastNode) { firstNode, secondNode -> listOf(firstNode, secondNode) }
                 else -> {
-                    val middleNodesGen: Gen<List<NodeProximity>> = lists().of(randomNode()).ofSize(numViaNodes - 2)
+                    val genMiddleNodes: Gen<List<NodeProximity>> = lists().of(randomNode()).ofSize(numViaNodes - 2)
 
-                    firstNodeGen.zip(middleNodesGen,
-                                     lastNodeGen) { firstNode, middleNodes, lastNode ->
+                    genFirstNode.zip(genMiddleNodes,
+                                     genLastNode) { firstNode, middleNodes, lastNode ->
 
                         listOf(firstNode) + middleNodes + lastNode
                     }
@@ -129,11 +129,13 @@ object NodeResolutionParamsGenerator {
 
                 val sizeOfSecondSequence = numViaNodes - sizeOfFirstSequence
 
-                val firstSequence: Gen<List<NodeProximity>> =
-                    lists().of(node(startLink.closerNodeId)).ofSize(sizeOfFirstSequence)
+                val firstSequence: Gen<List<NodeProximity>> = lists()
+                    .of(node(startLink.closerNodeId))
+                    .ofSize(sizeOfFirstSequence)
 
-                val secondSequence: Gen<List<NodeProximity>> =
-                    lists().of(node(endLink.closerNodeId)).ofSize(sizeOfSecondSequence)
+                val secondSequence: Gen<List<NodeProximity>> = lists()
+                    .of(node(endLink.closerNodeId))
+                    .ofSize(sizeOfSecondSequence)
 
                 firstSequence.zip(secondSequence, Collection<NodeProximity>::plus)
             }
@@ -164,7 +166,7 @@ object NodeResolutionParamsGenerator {
         }
 
         fun build(): Gen<NodeResolutionParams> {
-            val terminusLinkGen: Gen<Pair<SnappedLinkState, SnappedLinkState>> = when (terminusLinkRelation) {
+            val genTerminusLink: Gen<Pair<SnappedLinkState, SnappedLinkState>> = when (terminusLinkRelation) {
                 SAME -> when (terminusLinkEndpointDiscreteness) {
                     DISCRETE_ENDPOINT_NODES -> snapSingleLinkTwice(withDiscreteEndpoints = true)
                     TerminusLinkEndpointDiscreteness.ANY -> snapSingleLinkTwice()
@@ -224,9 +226,9 @@ object NodeResolutionParamsGenerator {
                 }
             }
 
-            return terminusLinkGen.flatMap { (startLink, endLink) ->
+            return genTerminusLink.flatMap { (startLink, endLink) ->
 
-                val viaNodeListGen: Gen<List<NodeProximity>> = when (viaNodeScheme) {
+                val genViaNodeList: Gen<List<NodeProximity>> = when (viaNodeScheme) {
                     EMPTY -> EMPTY_VIA_NODE_LIST
                     RANDOM -> generateViaNodes(randomNode())
                     NON_REDUNDANT_WITH_TERMINUS_LINKS -> {
@@ -238,7 +240,7 @@ object NodeResolutionParamsGenerator {
                     ViaNodeGenerationScheme.ANY -> EMPTY_VIA_NODE_LIST.mix(generateViaNodes(randomNode()), 50)
                 }
 
-                viaNodeListGen.map { viaNodeList -> NodeResolutionParams(startLink, viaNodeList, endLink) }
+                genViaNodeList.map { viaNodeList -> NodeResolutionParams(startLink, viaNodeList, endLink) }
             }
         }
     }
