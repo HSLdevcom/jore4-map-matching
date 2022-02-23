@@ -63,12 +63,7 @@ object InfrastructureNodeIdGenerator {
             1 -> infrastructureNodeId().map { id -> Quadruple(id, id, id, id) }
             2 -> when (discreteNodesBetweenHalves) {
                 true -> discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id1, id2, id2) }
-                false -> discreteNodeIdPair().zip(booleans()) { (id1, id2), shuffle ->
-                    if (shuffle)
-                        Quadruple(id1, id2, id1, id2)
-                    else
-                        Quadruple(id1, id2, id2, id1)
-                }
+                false -> discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id2, id1, id2) }
             }
             3 -> when (discreteNodesBetweenHalves) {
                 true -> discreteNodeIdTriple().zip(booleans()) { (id1, id2, id3), shuffle ->
