@@ -128,8 +128,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 SELECT (g.gdump).path AS path, (g.gdump).geom AS geom
                 FROM (
                     SELECT ST_Dump(ST_Transform(ST_GeomFromEWKB(:ewkb), 3067)) AS gdump
-                ) AS g
-            ) AS point, LATERAL (
+                ) g
+            ) point, LATERAL (
                 SELECT
                     node.id,
                     point.geom <-> node.the_geom AS distance
@@ -143,7 +143,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                         WHERE safe.vehicle_type = :vehicleType
                             AND (link.start_node_id = node.id OR link.end_node_id = node.id)
                     )
-            ) AS close_node
+            ) close_node
             ORDER BY point_seq ASC, distance ASC
             """.trimIndent()
 
@@ -174,10 +174,10 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                         UNION SELECT 4, ?::bigint[]
                     ) _node_seq
                     WHERE cardinality(_node_seq.node_arr) > 0
-                ) AS node_seq
+                ) node_seq
                 CROSS JOIN (
                     SELECT ? AS start_link_id, ? AS end_link_id
-                ) AS terminus_links
+                ) terminus_links
                 CROSS JOIN LATERAL (
                     SELECT max(pgr.route_agg_cost) AS route_agg_cost
                     FROM pgr_dijkstraVia(
@@ -186,7 +186,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                         directed := true,
                         strict := true,
                         U_turn_on_edge := true
-                    ) AS pgr
+                    ) pgr
                     GROUP BY node_seq_id
                     HAVING array_agg(edge) @> ARRAY[start_link_id, end_link_id]
                 ) route_overview
@@ -196,9 +196,8 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
         private fun toSqlArray(nodeIdSequence: NodeIdSequence?, conn: Connection): java.sql.Array {
             val nodeIdArr: Array<Long> = nodeIdSequence?.list
-                ?.let { nodeIds ->
-                    nodeIds.map(InfrastructureNodeId::value).toTypedArray()
-                } ?: emptyArray()
+                ?.run { map(InfrastructureNodeId::value).toTypedArray() }
+                ?: emptyArray()
 
             return conn.createArrayOf("bigint", nodeIdArr)
         }
