@@ -21,4 +21,8 @@ data class RouteDTO(val routeLinks: List<RouteLinkDTO>,
             }
         }
     }
+
+    companion object {
+        val EMPTY = RouteDTO(emptyList(), null, null)
+    }
 }

@@ -38,6 +38,10 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                           bufferAreaRestriction: BufferAreaRestriction?)
         : RouteDTO {
 
+        if (nodeIdSequence.isEmpty()) {
+            return RouteDTO.EMPTY
+        }
+
         val parameterSetter = PreparedStatementSetter { pstmt ->
 
             pstmt.setString(1, vehicleType.value)
