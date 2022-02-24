@@ -1,13 +1,17 @@
 package fi.hsl.jore4.mapmatching.test.generators
 
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.test.util.Quadruple
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate
 import org.quicktheories.generators.Generate.constant
+import org.quicktheories.generators.Generate.enumValues
 
 object CommonGenerators {
 
     val ZERO_DOUBLE: Gen<Double> = constant(0.0)
+
+    fun trafficFlowDirectionType(): Gen<TrafficFlowDirectionType> = enumValues(TrafficFlowDirectionType::class.java)
 
     fun <T> pair(source: Gen<T>): Gen<Pair<T, T>> = source.zip(source, ::Pair)
 

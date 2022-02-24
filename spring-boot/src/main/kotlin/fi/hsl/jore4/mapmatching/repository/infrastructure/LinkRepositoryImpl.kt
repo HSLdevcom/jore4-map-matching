@@ -2,6 +2,7 @@ package fi.hsl.jore4.mapmatching.repository.infrastructure
 
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkRecord
@@ -40,7 +41,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
     private data class ClosestLinkResult(val pointSeqNum: Int,
                                          val infrastructureLinkId: InfrastructureLinkId,
-                                         val trafficFlowDirectionType: Int,
+                                         val trafficFlowDirectionType: TrafficFlowDirectionType,
                                          val closestDistance: Double,
                                          val closestPointFractionalMeasure: Double,
                                          val linkLength: Double,
@@ -80,7 +81,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
                 ClosestLinkResult(pointSeqNum,
                                   InfrastructureLinkId(infrastructureLinkId),
-                                  trafficFlowDirectionType,
+                                  TrafficFlowDirectionType.from(trafficFlowDirectionType),
                                   closestDistance,
                                   closestPointFractionalMeasure,
                                   linkLength,

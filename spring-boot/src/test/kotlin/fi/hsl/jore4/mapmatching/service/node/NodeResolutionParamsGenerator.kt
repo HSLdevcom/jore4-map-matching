@@ -1,6 +1,9 @@
 package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.NodeProximity
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.AGAINST_DIGITISED_DIRECTION
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.ALONG_DIGITISED_DIRECTION
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection.BIDIRECTIONAL
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection.ONE_WAY
@@ -19,6 +22,7 @@ import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNo
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.FULLY_REDUNDANT_WITH_TERMINUS_LINKS
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.NON_REDUNDANT_WITH_TERMINUS_LINKS
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.RANDOM
+import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.trafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.node
 import fi.hsl.jore4.mapmatching.test.generators.Retry
 import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapSingleLinkTwice
@@ -135,12 +139,14 @@ object NodeResolutionParamsGenerator {
 
     private val EMPTY_VIA_NODE_LIST: Gen<List<NodeProximity>> = constant(emptyList())
 
-    private fun generateTrafficFlowDirectionType(direction: LinkDirection): Gen<Int> = when (direction) {
-        BIDIRECTIONAL -> constant(2)
-        ONE_WAY -> integers().between(3, 4)
-        ONE_WAY_ALONG_DIGITISED_DIRECTION -> constant(4)
-        ONE_WAY_AGAINST_DIGITISED_DIRECTION -> constant(3)
-        LinkDirection.ANY -> integers().between(2, 4)
+    private fun generateTrafficFlowDirectionType(direction: LinkDirection): Gen<TrafficFlowDirectionType> {
+        return when (direction) {
+            BIDIRECTIONAL -> constant(TrafficFlowDirectionType.BIDIRECTIONAL)
+            ONE_WAY -> integers().between(3, 4).map(TrafficFlowDirectionType::from)
+            ONE_WAY_ALONG_DIGITISED_DIRECTION -> constant(ALONG_DIGITISED_DIRECTION)
+            ONE_WAY_AGAINST_DIGITISED_DIRECTION -> constant(AGAINST_DIGITISED_DIRECTION)
+            LinkDirection.ANY -> trafficFlowDirectionType()
+        }
     }
 
     private fun toBoolean(endpointDiscreteness: LinkEndpointDiscreteness): Boolean? = when (endpointDiscreteness) {

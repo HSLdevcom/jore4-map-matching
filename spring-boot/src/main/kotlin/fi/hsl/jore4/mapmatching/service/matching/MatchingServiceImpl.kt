@@ -5,6 +5,7 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.NodeProximity
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
@@ -257,7 +258,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                           InfrastructureLinkId(linkId),
                                           0.0, // closest distance from stop to link can be set to zero
                                           stopLocationOnLinkAsFraction,
-                                          linkRecord.trafficFlowDirectionType,
+                                          TrafficFlowDirectionType.from(linkRecord.trafficFlowDirectionType),
                                           linkLength,
                                           InfrastructureNodeId(linkRecord.startNodeId),
                                           InfrastructureNodeId(linkRecord.endNodeId)))

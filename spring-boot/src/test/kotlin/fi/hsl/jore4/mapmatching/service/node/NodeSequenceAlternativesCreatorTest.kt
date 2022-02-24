@@ -3,6 +3,7 @@ package fi.hsl.jore4.mapmatching.service.node
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.ALONG_DIGITISED_DIRECTION
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection.BIDIRECTIONAL
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.LinkDirection.ONE_WAY
@@ -508,7 +509,7 @@ class NodeSequenceAlternativesCreatorTest {
 
                                 val nodeIds: List<InfrastructureNodeId> = input.startLink.run {
                                     when (trafficFlowDirectionType) {
-                                        4 -> listOf(startNodeId, endNodeId, startNodeId, endNodeId)
+                                        ALONG_DIGITISED_DIRECTION -> listOf(startNodeId, endNodeId, startNodeId, endNodeId)
                                         else -> listOf(endNodeId, startNodeId, endNodeId, startNodeId)
                                     }
                                 }

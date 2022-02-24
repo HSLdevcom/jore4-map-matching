@@ -1,6 +1,10 @@
 package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.AGAINST_DIGITISED_DIRECTION
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.ALONG_DIGITISED_DIRECTION
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.BIDIRECTIONAL
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.getNodeIdSequenceCombinations
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toNodeIdList
@@ -18,7 +22,7 @@ import org.quicktheories.dsl.TheoryBuilder
 @DisplayName("Test SnappedLinkStateExtension class")
 class SnappedLinkStateExtensionTest {
 
-    private fun forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType: Int,
+    private fun forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType: TrafficFlowDirectionType,
                                                      nodeProximityFilter: LinkEndpointsProximityFilter? = null)
         : TheoryBuilder<SnappedLinkState> {
 
@@ -38,7 +42,7 @@ class SnappedLinkStateExtensionTest {
             @Test
             @DisplayName("When link in one-way and direction of traffic flow is same as digitised direction")
             fun whenLinkIsOneWayAndDirectionOfTrafficFlowIsSameAsDigitisedDirection() {
-                return forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType = 4)
+                return forSnappedLinksWithDiscreteEndpoints(ALONG_DIGITISED_DIRECTION)
                     .checkAssert { snappedLink ->
 
                         assertThat(snappedLink.toNodeIdList())
@@ -49,7 +53,7 @@ class SnappedLinkStateExtensionTest {
             @Test
             @DisplayName("When link in one-way and direction of traffic flow is against digitised direction")
             fun whenLinkIsOneWayAndDirectionOfTrafficFlowIsAgainstDigitisedDirection() {
-                return forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType = 3)
+                return forSnappedLinksWithDiscreteEndpoints(AGAINST_DIGITISED_DIRECTION)
                     .checkAssert { snappedLink ->
 
                         assertThat(snappedLink.toNodeIdList())
@@ -64,7 +68,7 @@ class SnappedLinkStateExtensionTest {
                 @Test
                 @DisplayName("When distance to start node is less than or equal to distance to end node")
                 fun whenDistanceToStartNodeIsLessThanOrEqualToDistanceToEndNode() {
-                    return forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType = 2,
+                    return forSnappedLinksWithDiscreteEndpoints(BIDIRECTIONAL,
                                                                 START_NODE_CLOSER_OR_EQUAL_DISTANCE)
                         .checkAssert { snappedLink ->
 
@@ -76,7 +80,7 @@ class SnappedLinkStateExtensionTest {
                 @Test
                 @DisplayName("When distance to start node is greater than distance to end node")
                 fun whenDistanceToStartNodeIsGreaterThanDistanceToEndNode() {
-                    return forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType = 2,
+                    return forSnappedLinksWithDiscreteEndpoints(BIDIRECTIONAL,
                                                                 END_NODE_CLOSER)
                         .checkAssert { snappedLink ->
 
@@ -116,7 +120,7 @@ class SnappedLinkStateExtensionTest {
             @Test
             @DisplayName("When link in one-way and direction of traffic flow is same as digitised direction")
             fun whenLinkIsOneWayAndDirectionOfTrafficFlowIsSameAsDigitisedDirection() {
-                return forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType = 4)
+                return forSnappedLinksWithDiscreteEndpoints(ALONG_DIGITISED_DIRECTION)
                     .checkAssert { snappedLink ->
 
                         assertThat(snappedLink.getNodeIdSequenceCombinations())
@@ -128,7 +132,7 @@ class SnappedLinkStateExtensionTest {
             @Test
             @DisplayName("When link in one-way and direction of traffic flow is against digitised direction")
             fun whenLinkIsOneWayAndDirectionOfTrafficFlowIsAgainstDigitisedDirection() {
-                return forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType = 3)
+                return forSnappedLinksWithDiscreteEndpoints(AGAINST_DIGITISED_DIRECTION)
                     .checkAssert { snappedLink ->
 
                         assertThat(snappedLink.getNodeIdSequenceCombinations())
@@ -144,7 +148,7 @@ class SnappedLinkStateExtensionTest {
                 @Test
                 @DisplayName("When distance to start node is less than or equal to distance to end node")
                 fun whenDistanceToStartNodeIsLessThanOrEqualToDistanceToEndNode() {
-                    return forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType = 2,
+                    return forSnappedLinksWithDiscreteEndpoints(BIDIRECTIONAL,
                                                                 START_NODE_CLOSER_OR_EQUAL_DISTANCE)
                         .checkAssert { snappedLink ->
                             val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()
@@ -159,7 +163,7 @@ class SnappedLinkStateExtensionTest {
                 @Test
                 @DisplayName("When distance to start node is greater than distance to end node")
                 fun whenDistanceToStartNodeIsGreaterThanDistanceToEndNode() {
-                    return forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType = 2,
+                    return forSnappedLinksWithDiscreteEndpoints(BIDIRECTIONAL,
                                                                 END_NODE_CLOSER)
                         .checkAssert { snappedLink ->
                             val nodeIdSequences: List<NodeIdSequence> = snappedLink.getNodeIdSequenceCombinations()

@@ -3,6 +3,7 @@ package fi.hsl.jore4.mapmatching.repository.infrastructure
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
 
 /**
  * Contains information about a snap from an arbitrary point to an
@@ -26,7 +27,7 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
                             val closestDistance: Double,
                             val closestPointFractionalMeasure: Double,
-                            val trafficFlowDirectionType: Int,
+                            val trafficFlowDirectionType: TrafficFlowDirectionType,
                             val infrastructureLinkLength: Double,
                             val startNodeId: InfrastructureNodeId,
                             val endNodeId: InfrastructureNodeId)

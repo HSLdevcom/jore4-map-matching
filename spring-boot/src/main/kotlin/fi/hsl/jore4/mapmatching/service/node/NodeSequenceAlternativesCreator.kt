@@ -3,6 +3,9 @@ package fi.hsl.jore4.mapmatching.service.node
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.AGAINST_DIGITISED_DIRECTION
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.ALONG_DIGITISED_DIRECTION
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.BIDIRECTIONAL
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.getNodeIdSequenceCombinations
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
@@ -152,21 +155,21 @@ object NodeSequenceAlternativesCreator {
         val nodeIds: List<InfrastructureNodeId> = link.run {
             if (hasDiscreteNodes()) {
                 when (trafficFlowDirectionType) {
-                    3 -> {
-                        if (closestPointFractionalMeasure < secondSnapPointFractionalLocation)
-                            listOf(endNodeId, startNodeId, endNodeId, startNodeId)
+                    BIDIRECTIONAL -> {
+                        if (closestPointFractionalMeasure <= secondSnapPointFractionalLocation)
+                            listOf(startNodeId, endNodeId)
                         else
                             listOf(endNodeId, startNodeId)
                     }
-                    4 -> {
+                    ALONG_DIGITISED_DIRECTION -> {
                         if (closestPointFractionalMeasure > secondSnapPointFractionalLocation)
                             listOf(startNodeId, endNodeId, startNodeId, endNodeId)
                         else
                             listOf(startNodeId, endNodeId)
                     }
-                    else -> {
-                        if (closestPointFractionalMeasure <= secondSnapPointFractionalLocation)
-                            listOf(startNodeId, endNodeId)
+                    AGAINST_DIGITISED_DIRECTION -> {
+                        if (closestPointFractionalMeasure < secondSnapPointFractionalLocation)
+                            listOf(endNodeId, startNodeId, endNodeId, startNodeId)
                         else
                             listOf(endNodeId, startNodeId)
                     }
