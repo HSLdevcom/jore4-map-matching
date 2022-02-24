@@ -31,6 +31,8 @@ import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingPar
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
+import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
+import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
 import mu.KotlinLogging
@@ -114,7 +116,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     }
 
     /**
-     * @throws [IllegalStateException]
+     * @throws [IllegalStateException] in case a sequence of infrastructure node identifiers could not be resolved
      */
     internal fun findTerminusLinksAndNodeSequenceAlternatives(routePoints: List<RoutePoint>,
                                                               vehicleType: VehicleType,
@@ -136,7 +138,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             ?.let { getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(routePoints, vehicleType, it) }
             ?: emptyMap()
 
-        val viaNodes: List<HasInfrastructureNodeId> = routePoints
+        val viaNodeIds: List<InfrastructureNodeId> = routePoints
             .withIndex()
             .drop(1)
             .dropLast(1)
@@ -148,10 +150,13 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                     else -> null
                 }
             }
+            .map(HasInfrastructureNodeId::getInfrastructureNodeId)
+
+        val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(firstLink, viaNodeIds, lastLink)
 
         return PreProcessingResult(firstLink,
                                    lastLink,
-                                   NodeSequenceAlternativesCreator.create(firstLink, viaNodes, lastLink))
+                                   NodeSequenceAlternativesCreator.create(nodesToVisit))
     }
 
     /**

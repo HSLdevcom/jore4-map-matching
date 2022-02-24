@@ -11,8 +11,6 @@ object CommonGenerators {
 
     val ZERO_DOUBLE: Gen<Double> = constant(0.0)
 
-    fun trafficFlowDirectionType(): Gen<TrafficFlowDirectionType> = enumValues(TrafficFlowDirectionType::class.java)
-
     fun <T> pair(source: Gen<T>): Gen<Pair<T, T>> = source.zip(source, ::Pair)
 
     // pair of discrete values (non-equal within single generated tuple)

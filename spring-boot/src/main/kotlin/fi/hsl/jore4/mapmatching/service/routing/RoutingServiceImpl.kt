@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.routing
 
+import fi.hsl.jore4.mapmatching.Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
@@ -71,21 +72,36 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
     private fun findClosestInfrastructureLinks(points: List<Point<G2D>>,
                                                vehicleType: VehicleType,
                                                linkQueryDistance: Int)
-        : Collection<SnapPointToLinkDTO> {
+        : List<SnapPointToLinkDTO> {
 
-        val closestLinksResult: SortedMap<Int, SnapPointToLinkDTO> = linkRepository
+        val closestLinks: Collection<SnapPointToLinkDTO> = linkRepository
             .findClosestLinks(points, vehicleType, linkQueryDistance.toDouble())
             .toSortedMap()
-
-        LOGGER.debug {
-            "Found closest links within $linkQueryDistance m radius: ${
-                joinToLogString(closestLinksResult.entries) {
-                    "Point #${it.key}: ${it.value}"
+            .also { sortedResults: SortedMap<Int, SnapPointToLinkDTO> ->
+                LOGGER.debug {
+                    "Found closest links within $linkQueryDistance m radius: ${
+                        joinToLogString(sortedResults.entries) {
+                            "Point #${it.key}: ${it.value}"
+                        }
+                    }"
                 }
-            }"
-        }
+            }
+            .values
 
-        return closestLinksResult.values
+        // On the first and last link on route, the location is snapped to terminus node if within close distance.
+
+        fun snapToTerminusNode(snap: SnapPointToLinkDTO): SnapPointToLinkDTO =
+            snap.withLocationOnLinkSnappedToTerminusNodeIfWithinDistance(SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
+
+        fun firstSnap() = snapToTerminusNode(closestLinks.first())
+        fun lastSnap() = snapToTerminusNode(closestLinks.last())
+
+        return when (closestLinks.size) {
+            0 -> emptyList()
+            1 -> listOf(firstSnap())
+            2 -> listOf(firstSnap(), lastSnap())
+            else -> listOf(firstSnap()) + closestLinks.drop(1).dropLast(1) + lastSnap()
+        }
     }
 
     /**

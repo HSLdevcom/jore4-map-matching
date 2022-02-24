@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.matching
 
+import fi.hsl.jore4.mapmatching.Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS
 import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
@@ -76,6 +77,7 @@ object MatchingServiceHelper {
         return linkSearchResult
             ?.let { snap ->
                 snap.link
+                    .withSnappedToTerminusNode(SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
                     .also { link: SnappedLinkState ->
                         LOGGER.debug {
                             "Resolved infrastructureLinkId=${link.infrastructureLinkId} as route $terminusType link " +

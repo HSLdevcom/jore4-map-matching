@@ -12,10 +12,10 @@ data class RouteDTO(val routeLinks: List<RouteLinkDTO>,
         0 -> emptyList()
         1 -> listOf(trimmedStartLink ?: routeLinks.first())
         else -> when {
-            routeLinks.size == 2 && trimmedStartLink == null && trimmedEndLink == null -> routeLinks
+            trimmedStartLink == null && trimmedEndLink == null -> routeLinks
             else -> {
-                val start: List<RouteLinkDTO> = trimmedStartLink?.let { listOf(it) } ?: emptyList()
-                val end: List<RouteLinkDTO> = trimmedEndLink?.let { listOf(it) } ?: emptyList()
+                val start: List<RouteLinkDTO> = listOf(trimmedStartLink ?: routeLinks.first())
+                val end: List<RouteLinkDTO> = listOf(trimmedEndLink ?: routeLinks.last())
 
                 start + routeLinks.drop(1).dropLast(1) + end
             }

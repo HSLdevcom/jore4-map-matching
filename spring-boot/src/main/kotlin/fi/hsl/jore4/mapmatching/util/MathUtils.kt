@@ -1,11 +1,29 @@
 package fi.hsl.jore4.mapmatching.util
 
-import kotlin.math.abs
+import java.math.BigDecimal
+import java.math.MathContext
 
-@Suppress("MemberVisibilityCanBePrivate")
 object MathUtils {
 
-    const val DOUBLE_TOLERANCE: Double = 0.00001
+    const val DEFAULT_DOUBLE_TOLERANCE = 0.00001
 
-    fun Double.isWithinTolerance(other: Double) = abs(this - other) < DOUBLE_TOLERANCE
+    private const val MAX_DECIMAL_PRECISION_FOR_TOLERANCE_CHECKING = 10
+
+    private val MIN_DOUBLE_TOLERANCE = BigDecimal.ONE.movePointLeft(MAX_DECIMAL_PRECISION_FOR_TOLERANCE_CHECKING)
+
+    fun Double.isWithinTolerance(other: Double): Boolean = isWithinTolerance(other, DEFAULT_DOUBLE_TOLERANCE)
+
+    fun Double.isWithinTolerance(other: Double, tolerance: Double): Boolean {
+        val refinedTolerance = bigDecimalForToleranceChecking(tolerance)
+
+        require(refinedTolerance >= MIN_DOUBLE_TOLERANCE) { "tolerance must be >= $MIN_DOUBLE_TOLERANCE" }
+
+        val difference: BigDecimal = bigDecimalForToleranceChecking(this) - bigDecimalForToleranceChecking(other)
+
+        return difference.abs() < refinedTolerance
+    }
+
+    private fun bigDecimalForToleranceChecking(n: Double): BigDecimal {
+        return BigDecimal(n, MathContext(MAX_DECIMAL_PRECISION_FOR_TOLERANCE_CHECKING))
+    }
 }
