@@ -5,8 +5,10 @@ package fi.hsl.jore4.mapmatching.model.tables;
 
 
 import fi.hsl.jore4.mapmatching.config.jooq.converter.LineStringBinding;
+import fi.hsl.jore4.mapmatching.config.jooq.converter.TrafficFlowDirectionTypeConverter;
 import fi.hsl.jore4.mapmatching.model.Keys;
 import fi.hsl.jore4.mapmatching.model.Routing;
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType;
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkRecord;
 
 import java.util.Arrays;
@@ -69,7 +71,7 @@ public class InfrastructureLink extends TableImpl<InfrastructureLinkRecord> {
     /**
      * The column <code>routing.infrastructure_link.traffic_flow_direction_type</code>. A numeric enum value for direction of traffic flow allowed on the infrastructure link
      */
-    public final TableField<InfrastructureLinkRecord, Integer> TRAFFIC_FLOW_DIRECTION_TYPE = createField(DSL.name("traffic_flow_direction_type"), SQLDataType.INTEGER.nullable(false), this, "A numeric enum value for direction of traffic flow allowed on the infrastructure link");
+    public final TableField<InfrastructureLinkRecord, TrafficFlowDirectionType> TRAFFIC_FLOW_DIRECTION_TYPE = createField(DSL.name("traffic_flow_direction_type"), SQLDataType.INTEGER.nullable(false), this, "A numeric enum value for direction of traffic flow allowed on the infrastructure link", new TrafficFlowDirectionTypeConverter());
 
     /**
      * The column <code>routing.infrastructure_link.municipality_code</code>. The official code of municipality in which the link is located
@@ -217,7 +219,7 @@ public class InfrastructureLink extends TableImpl<InfrastructureLinkRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> fieldsRow() {
+    public Row13<Long, Integer, String, TrafficFlowDirectionType, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> fieldsRow() {
         return (Row13) super.fieldsRow();
     }
 }

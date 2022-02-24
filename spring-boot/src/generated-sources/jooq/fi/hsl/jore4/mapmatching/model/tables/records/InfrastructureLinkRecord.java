@@ -4,6 +4,7 @@
 package fi.hsl.jore4.mapmatching.model.tables.records;
 
 
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType;
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink;
 
 import org.geolatte.geom.C2D;
@@ -20,7 +21,7 @@ import org.jooq.impl.UpdatableRecordImpl;
  * The infrastructure links, e.g. road or rail elements: https://www.transmodel-cen.eu/model/index.htm?goto=2:1:1:1:453
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class InfrastructureLinkRecord extends UpdatableRecordImpl<InfrastructureLinkRecord> implements Record13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> {
+public class InfrastructureLinkRecord extends UpdatableRecordImpl<InfrastructureLinkRecord> implements Record13<Long, Integer, String, TrafficFlowDirectionType, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> {
 
     private static final long serialVersionUID = 1L;
 
@@ -69,15 +70,15 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     /**
      * Setter for <code>routing.infrastructure_link.traffic_flow_direction_type</code>. A numeric enum value for direction of traffic flow allowed on the infrastructure link
      */
-    public void setTrafficFlowDirectionType(Integer value) {
+    public void setTrafficFlowDirectionType(TrafficFlowDirectionType value) {
         set(3, value);
     }
 
     /**
      * Getter for <code>routing.infrastructure_link.traffic_flow_direction_type</code>. A numeric enum value for direction of traffic flow allowed on the infrastructure link
      */
-    public Integer getTrafficFlowDirectionType() {
-        return (Integer) get(3);
+    public TrafficFlowDirectionType getTrafficFlowDirectionType() {
+        return (TrafficFlowDirectionType) get(3);
     }
 
     /**
@@ -220,12 +221,12 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     // -------------------------------------------------------------------------
 
     @Override
-    public Row13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> fieldsRow() {
+    public Row13<Long, Integer, String, TrafficFlowDirectionType, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> fieldsRow() {
         return (Row13) super.fieldsRow();
     }
 
     @Override
-    public Row13<Long, Integer, String, Integer, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> valuesRow() {
+    public Row13<Long, Integer, String, TrafficFlowDirectionType, Integer, Integer, Integer, JSONB, LineString<C2D>, Long, Long, Double, Double> valuesRow() {
         return (Row13) super.valuesRow();
     }
 
@@ -245,7 +246,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public Field<Integer> field4() {
+    public Field<TrafficFlowDirectionType> field4() {
         return InfrastructureLink.INFRASTRUCTURE_LINK.TRAFFIC_FLOW_DIRECTION_TYPE;
     }
 
@@ -310,7 +311,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public Integer component4() {
+    public TrafficFlowDirectionType component4() {
         return getTrafficFlowDirectionType();
     }
 
@@ -375,7 +376,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public Integer value4() {
+    public TrafficFlowDirectionType value4() {
         return getTrafficFlowDirectionType();
     }
 
@@ -443,7 +444,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public InfrastructureLinkRecord value4(Integer value) {
+    public InfrastructureLinkRecord value4(TrafficFlowDirectionType value) {
         setTrafficFlowDirectionType(value);
         return this;
     }
@@ -503,7 +504,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     }
 
     @Override
-    public InfrastructureLinkRecord values(Long value1, Integer value2, String value3, Integer value4, Integer value5, Integer value6, Integer value7, JSONB value8, LineString<C2D> value9, Long value10, Long value11, Double value12, Double value13) {
+    public InfrastructureLinkRecord values(Long value1, Integer value2, String value3, TrafficFlowDirectionType value4, Integer value5, Integer value6, Integer value7, JSONB value8, LineString<C2D> value9, Long value10, Long value11, Double value12, Double value13) {
         value1(value1);
         value2(value2);
         value3(value3);
@@ -534,7 +535,7 @@ public class InfrastructureLinkRecord extends UpdatableRecordImpl<Infrastructure
     /**
      * Create a detached, initialised InfrastructureLinkRecord
      */
-    public InfrastructureLinkRecord(Long infrastructureLinkId, Integer infrastructureSourceId, String externalLinkId, Integer trafficFlowDirectionType, Integer municipalityCode, Integer externalLinkType, Integer externalLinkState, JSONB name, LineString<C2D> geom, Long startNodeId, Long endNodeId, Double cost, Double reverseCost) {
+    public InfrastructureLinkRecord(Long infrastructureLinkId, Integer infrastructureSourceId, String externalLinkId, TrafficFlowDirectionType trafficFlowDirectionType, Integer municipalityCode, Integer externalLinkType, Integer externalLinkState, JSONB name, LineString<C2D> geom, Long startNodeId, Long endNodeId, Double cost, Double reverseCost) {
         super(InfrastructureLink.INFRASTRUCTURE_LINK);
 
         setInfrastructureLinkId(infrastructureLinkId);

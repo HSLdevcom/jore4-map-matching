@@ -221,6 +221,11 @@
                                     </includes>
                                     <forcedTypes>
                                         <forcedType>
+                                            <userType>fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType</userType>
+                                            <converter>fi.hsl.jore4.mapmatching.config.jooq.converter.TrafficFlowDirectionTypeConverter</converter>
+                                            <includeExpression>.*\.infrastructure_link\.traffic_flow_direction_type</includeExpression>
+                                        </forcedType>
+                                        <forcedType>
                                             <userType>org.geolatte.geom.LineString&lt;org.geolatte.geom.C2D&gt;</userType>
                                             <converter>fi.hsl.jore4.mapmatching.config.jooq.converter.LineStringBinding</converter>
                                             <includeExpression>.*\.infrastructure_link\.geom</includeExpression>
