@@ -14,21 +14,14 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
  * @property nodeIdSequences list of infrastructure network node identifier
  * sequences from which the best needs to be resolved. Each sequence starts with
  * endpoint nodes of the start link and ends with the nodes associated with the
- * route's end link. [viaNodeIds] are inserted in between. The list contains at
- * most four sequences of node identifiers depending on whether direction of
- * traversal on terminus links can be determined based on the interim nodes
- * (in [viaNodeIds]).
- * @property viaNodeIds the identifiers of interim infrastructure network nodes
- * through which the route must pass. This property is just informational (for
- * possibly debugging purposes) and should not be used in resolving the optimal
- * route. This is a "cleaned" version of what user has originally provided e.g.
- * consecutive duplicates are removed.
+ * route's end link. The list contains at most four sequences of node
+ * identifiers depending on whether direction of traversal on terminus links can
+ * be determined based on the interim nodes.
  */
-data class NodeSequenceAlternatives(val nodeIdSequences: List<NodeIdSequence>,
-                                    val viaNodeIds: NodeIdSequence) {
+data class NodeSequenceAlternatives(val nodeIdSequences: List<NodeIdSequence>) {
 
     init {
-        require(nodeIdSequences.isNotEmpty()) { "At least one node ID sequence needs to be provided" }
+        require(nodeIdSequences.isNotEmpty()) { "At least one node ID sequence must be provided" }
         require(nodeIdSequences.size <= 4) {
             "At most four node ID sequence may be provided: ${nodeIdSequences.size}"
         }
@@ -51,6 +44,13 @@ data class NodeSequenceAlternatives(val nodeIdSequences: List<NodeIdSequence>,
     fun prettyPrint(): String {
         val startNodeIds: List<InfrastructureNodeId> = nodeIdSequences.map { it.list.first() }.distinct()
         val endNodeIds: List<InfrastructureNodeId> = nodeIdSequences.map { it.list.last() }.distinct()
+
+        // It is sufficient to grab via node IDs from the first sequence because via node IDs are
+        // the same for all sequences since we just picked all the unique start and end node IDs
+        // above.
+        val viaNodeIds: List<InfrastructureNodeId> = nodeIdSequences[0].list
+            .dropWhile { it in startNodeIds }
+            .dropLastWhile { it in endNodeIds }
 
         return """{"startNodeIds": $startNodeIds, "viaNodeIds": $viaNodeIds, "endNodeIds": $endNodeIds}"""
     }

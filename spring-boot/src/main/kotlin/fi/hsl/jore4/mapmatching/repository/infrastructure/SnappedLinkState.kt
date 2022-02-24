@@ -4,6 +4,7 @@ import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
+import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
 
 /**
  * Contains information about a snap from an arbitrary point to an
@@ -13,7 +14,7 @@ import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
  * which the point is snapped
  * @property closestDistance the closest distance from the point being snapped
  * to the infrastructure link
- * @property closestPointFractionalMeasure a [Double] between 0 and 1
+ * @property closestPointFractionalMeasure a [Double] between 0.0 and 1.0
  * representing the location of the closest point on the infrastructure link to
  * the source point, as a fraction of the link's 2D length
  * @property trafficFlowDirectionType the direction of traffic flow on
@@ -24,6 +25,7 @@ import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
  * @property endNodeId the identifier of the infrastructure node at end point of
  * the infrastructure link
  */
+@Suppress("MemberVisibilityCanBePrivate")
 data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
                             val closestDistance: Double,
                             val closestPointFractionalMeasure: Double,
@@ -47,17 +49,24 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
         }
     }
 
-    private val isEndNodeCloser: Boolean get() = closestPointFractionalMeasure > 0.5
+    /**
+     * @property closerNodeId is the ID of the node that is closer to the snapped projected point on link.
+     */
+    val closerNodeId: InfrastructureNodeId
+        get() = if (closestPointFractionalMeasure <= 0.5) startNodeId else endNodeId
 
     /**
-     * The ID of the node that is closer to the point being snapped.
+     * @property furtherNodeId is the ID of the node that lies further away from the snapped projected point on link.
      */
-    val closerNodeId: InfrastructureNodeId get() = if (!isEndNodeCloser) startNodeId else endNodeId
+    val furtherNodeId: InfrastructureNodeId get() = if (startNodeId == closerNodeId) endNodeId else startNodeId
 
-    /**
-     * The ID of the node that lies further away from the point being snapped.
-     */
-    val furtherNodeId: InfrastructureNodeId get() = if (!isEndNodeCloser) endNodeId else startNodeId
+    val isSnappedToStartNode: Boolean by lazy {
+        closestPointFractionalMeasure.isWithinTolerance(0.0)
+    }
+
+    val isSnappedToEndNode: Boolean by lazy {
+        closestPointFractionalMeasure.isWithinTolerance(1.0)
+    }
 
     override fun getInfrastructureNodeId() = closerNodeId
 
@@ -68,4 +77,25 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
     fun hasDiscreteNodes(): Boolean = startNodeId != endNodeId
 
     fun isOnSameLinkAs(other: SnappedLinkState): Boolean = infrastructureLinkId == other.infrastructureLinkId
+
+    fun withSnappedToTerminusNode(thresholdDistanceOfSnappingToLinkEndpointInMeters: Double): SnappedLinkState {
+        val distanceFromStartOfLink: Double = closestPointFractionalMeasure * infrastructureLinkLength
+
+        val closestPointFractionalMeasurePossiblySnappedToEndpoint: Double =
+            if (distanceFromStartOfLink.isWithinTolerance(0.0, thresholdDistanceOfSnappingToLinkEndpointInMeters))
+                0.0
+            else if (distanceFromStartOfLink.isWithinTolerance(infrastructureLinkLength,
+                                                               thresholdDistanceOfSnappingToLinkEndpointInMeters))
+                1.0
+            else
+                closestPointFractionalMeasure
+
+        return SnappedLinkState(infrastructureLinkId,
+                                closestDistance,
+                                closestPointFractionalMeasurePossiblySnappedToEndpoint,
+                                trafficFlowDirectionType,
+                                infrastructureLinkLength,
+                                startNodeId,
+                                endNodeId)
+    }
 }
