@@ -28,14 +28,14 @@ object NodeSequenceAlternativesCreator {
 
         val filteredViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(viaNodeIds)
 
-        val viaNodeIdsBelongingToStartLink = filteredViaNodeIds.takeWhile { startLink.hasNode(it) }
+        val viaNodeIdsBelongingToStartLink = filteredViaNodeIds.takeWhile(startLink::hasNode)
 
         val viaNodeIdsAfterStartLinkNodesRemoved: List<InfrastructureNodeId> =
             filteredViaNodeIds.drop(viaNodeIdsBelongingToStartLink.size)
 
         val viaNodeIdsBelongingToEndLink: List<InfrastructureNodeId> = viaNodeIdsAfterStartLinkNodesRemoved
             .reversed()
-            .takeWhile { endLink.hasNode(it) }
+            .takeWhile(endLink::hasNode)
             .reversed()
 
         val viaNodeIdsAfterNodesOfTerminusLinksRemoved: List<InfrastructureNodeId> =
@@ -73,14 +73,13 @@ object NodeSequenceAlternativesCreator {
         val nodeIdSequencesOnEndLink: List<NodeIdSequence> =
             getNodeIdSequencesOnTerminusLink(endLink, mergedNodeIdsOnEndLink)
 
-        val nodeIdSequenceCombos: List<NodeIdSequence> = nodeIdSequencesOnStartLink
-            .flatMap { startNodeIdSeq ->
-                nodeIdSequencesOnEndLink.map { endNodeIdSeq ->
-                    startNodeIdSeq
-                        .concat(NodeIdSequence(viaNodeIdsAfterNodesOfTerminusLinksRemoved))
-                        .concat(endNodeIdSeq)
-                }
+        val nodeIdSequenceCombos: List<NodeIdSequence> = nodeIdSequencesOnStartLink.flatMap { startNodeIdSeq ->
+            nodeIdSequencesOnEndLink.map { endNodeIdSeq ->
+                startNodeIdSeq
+                    .concat(NodeIdSequence(viaNodeIdsAfterNodesOfTerminusLinksRemoved))
+                    .concat(endNodeIdSeq)
             }
+        }
 
         return NodeSequenceAlternatives(startLink.infrastructureLinkId,
                                         endLink.infrastructureLinkId,
@@ -98,17 +97,14 @@ object NodeSequenceAlternativesCreator {
         val startLinkNodeIdSequences: List<NodeIdSequence> = startLink.getNodeIdSequenceCombinations()
         val endLinkNodeIdSequences: List<NodeIdSequence> = endLink.getNodeIdSequenceCombinations()
 
-        val nodeIdSequenceCombos: List<NodeIdSequence> = startLinkNodeIdSequences
-            .flatMap { startLinkNodeIdSeq ->
-                endLinkNodeIdSequences.map { endLinkNodeIdSeq ->
-                    startLinkNodeIdSeq.concat(endLinkNodeIdSeq)
-                }
-            }
-
-        val filteredNodeIdSequences: List<NodeIdSequence> = when (startLink.hasSharedNode(endLink)) {
-            true -> nodeIdSequenceCombos.map(NodeIdSequence::duplicatesRemoved)
-            false -> nodeIdSequenceCombos
+        val nodeIdSequenceCombos: List<NodeIdSequence> = startLinkNodeIdSequences.flatMap { startLinkNodeIdSeq ->
+            endLinkNodeIdSequences.map(startLinkNodeIdSeq::concat)
         }
+
+        val filteredNodeIdSequences: List<NodeIdSequence> = if (startLink.hasSharedNode(endLink))
+            nodeIdSequenceCombos.map(NodeIdSequence::duplicatesRemoved)
+        else
+            nodeIdSequenceCombos
 
         return NodeSequenceAlternatives(startLink.infrastructureLinkId,
                                         endLink.infrastructureLinkId,
