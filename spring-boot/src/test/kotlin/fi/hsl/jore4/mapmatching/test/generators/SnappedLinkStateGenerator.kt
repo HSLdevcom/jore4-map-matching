@@ -22,7 +22,6 @@ import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.STA
 import fi.hsl.jore4.mapmatching.test.generators.LinkEndpointsProximityFilter.START_NODE_CLOSER_OR_EQUAL_DISTANCE
 import fi.hsl.jore4.mapmatching.test.util.Quadruple
 import fi.hsl.jore4.mapmatching.util.MathUtils.DOUBLE_TOLERANCE
-import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate.booleans
 import org.quicktheories.generators.Generate.constant
@@ -216,18 +215,18 @@ object SnappedLinkStateGenerator {
                                                (linkLength1, linkLength2),
                                                (nodeId1, nodeId2, nodeId3, nodeId4) ->
 
-            Pair(createSnappedLinkState(linkId1,
-                                        distanceToLink1,
-                                        snapPointLocationFraction1,
-                                        linkDirection1,
-                                        linkLength1,
-                                        nodeId1, nodeId2),
-                 createSnappedLinkState(linkId2,
-                                        distanceToLink2,
-                                        snapPointLocationFraction2,
-                                        linkDirection2,
-                                        linkLength2,
-                                        nodeId3, nodeId4))
+            Pair(SnappedLinkState(linkId1,
+                                  distanceToLink1,
+                                  snapPointLocationFraction1,
+                                  linkDirection1,
+                                  linkLength1,
+                                  nodeId1, nodeId2),
+                 SnappedLinkState(linkId2,
+                                  distanceToLink2,
+                                  snapPointLocationFraction2,
+                                  linkDirection2,
+                                  linkLength2,
+                                  nodeId3, nodeId4))
         }
     }
 
@@ -271,43 +270,22 @@ object SnappedLinkStateGenerator {
                                                            linkLength,
                                                            (startNodeId, endNodeId) ->
 
-            createSnappedLinkState(infrastructureLinkId,
-                                   distanceToLink,
-                                   snapPointLocationFraction,
-                                   trafficFlowDirectionType,
-                                   linkLength,
-                                   startNodeId, endNodeId)
+            SnappedLinkState(infrastructureLinkId,
+                             distanceToLink,
+                             snapPointLocationFraction,
+                             trafficFlowDirectionType,
+                             linkLength,
+                             startNodeId, endNodeId)
         }
     }
 
-    private fun generateSnapPointLocationFraction(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<Double> =
-        when (nodeProximityFilter) {
+    private fun generateSnapPointLocationFraction(nodeProximityFilter: LinkEndpointsProximityFilter): Gen<Double> {
+        return when (nodeProximityFilter) {
             START_NODE_CLOSER -> doubles().between(0.0, 0.5 - DOUBLE_TOLERANCE)
             END_NODE_CLOSER -> doubles().between(0.5 + DOUBLE_TOLERANCE, 1.0)
             NODES_AT_EQUAL_DISTANCE -> constant(0.5)
             START_NODE_CLOSER_OR_EQUAL_DISTANCE -> doubles().between(0.0, 0.5)
             END_NODE_CLOSER_OR_EQUAL_DISTANCE -> doubles().between(0.5, 1.0)
         }
-
-    private fun createSnappedLinkState(infrastructureLinkId: InfrastructureLinkId,
-                                       distanceToLink: Double,
-                                       snapPointLocationFraction: Double,
-                                       trafficFlowDirectionType: TrafficFlowDirectionType,
-                                       linkLength: Double,
-                                       startNodeId: InfrastructureNodeId,
-                                       endNodeId: InfrastructureNodeId)
-        : SnappedLinkState {
-
-        val snappedToEndpointNode: Boolean =
-            snapPointLocationFraction.isWithinTolerance(0.0) || snapPointLocationFraction.isWithinTolerance(1.0)
-
-        val closestDistanceToLink: Double = if (snappedToEndpointNode) 0.0 else distanceToLink
-
-        return SnappedLinkState(infrastructureLinkId,
-                                closestDistanceToLink,
-                                snapPointLocationFraction,
-                                trafficFlowDirectionType,
-                                linkLength,
-                                startNodeId, endNodeId)
     }
 }
