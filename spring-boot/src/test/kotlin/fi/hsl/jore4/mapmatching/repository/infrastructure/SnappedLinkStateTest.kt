@@ -1,6 +1,5 @@
-package fi.hsl.jore4.mapmatching.repository.routing
+package fi.hsl.jore4.mapmatching.repository.infrastructure
 
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
