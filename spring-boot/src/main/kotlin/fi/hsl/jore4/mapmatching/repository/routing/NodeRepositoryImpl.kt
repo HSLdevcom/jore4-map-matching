@@ -157,8 +157,9 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 else
                     QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
-            // Using "dummy_id" in SQL in order to be able to extract node IDs as result set rows instead of an SQL
-            // array which is more cumbersome to handle in JVM code.
+            // Using "dummy_id" in SQL in order to be able to extract the (unknown amount of) node IDs as multi-row
+            // JDBC result set. An alternative choice would be to return an SQL array yielding a result set containing
+            // only a single row, which is more cumbersome to handle in JVM code.
             return """
                 SELECT DISTINCT ON (dummy_id) unnest(node_arr) AS node_id
                 FROM (
