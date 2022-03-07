@@ -77,10 +77,10 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             endLink: SnappedLinkState,
             nodeSequenceAlternatives: NodeSequenceAlternatives) = try {
 
-            findTerminusLinksAndViaNodes(routePoints,
-                                         vehicleType,
-                                         matchingParameters.terminusLinkQueryDistance,
-                                         matchingParameters.roadJunctionMatching)
+            findTerminusLinksAndNodeSequenceAlternatives(routePoints,
+                                                         vehicleType,
+                                                         matchingParameters.terminusLinkQueryDistance,
+                                                         matchingParameters.roadJunctionMatching)
         } catch (ex: RuntimeException) {
             val errMessage: String = ex.message ?: "Could not resolve node sequence alternatives"
             LOGGER.warn(errMessage)
@@ -116,10 +116,10 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     /**
      * @throws [IllegalStateException]
      */
-    internal fun findTerminusLinksAndViaNodes(routePoints: List<RoutePoint>,
-                                              vehicleType: VehicleType,
-                                              terminusLinkQueryDistance: Double,
-                                              junctionMatchingParams: JunctionMatchingParameters?)
+    internal fun findTerminusLinksAndNodeSequenceAlternatives(routePoints: List<RoutePoint>,
+                                                              vehicleType: VehicleType,
+                                                              terminusLinkQueryDistance: Double,
+                                                              junctionMatchingParams: JunctionMatchingParameters?)
         : PreProcessingResult {
 
         // Resolve infrastructure links to visit on route derived from the given route points.
