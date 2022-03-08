@@ -20,9 +20,9 @@ import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.Termi
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_END_NODE
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_START_NODE
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.EMPTY
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.FULLY_REDUNDANT_WITH_TERMINUS_LINKS
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.NON_REDUNDANT_WITH_TERMINUS_LINKS
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.VIA_NODES_EMPTY
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.VIA_NODES_FULLY_REDUNDANT
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.VIA_NODES_NON_REDUNDANT
 import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toNodeIdList
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import org.assertj.core.api.Assertions.assertThat
@@ -217,7 +217,7 @@ class NodeSequenceAlternativesCreatorTest {
                         : TheoryBuilder<NodeResolutionParams> = forAll(createInput(DISCRETE_LINKS,
                                                                                    DISCRETE_NODES to BIDIRECTIONAL,
                                                                                    DISCRETE_NODES to BIDIRECTIONAL,
-                                                                                   EMPTY))
+                                                                                   VIA_NODES_EMPTY))
 
                     @Test
                     @DisplayName("List of alternative node ID sequences should consist of four unique sequences")
@@ -321,7 +321,7 @@ class NodeSequenceAlternativesCreatorTest {
                             : TheoryBuilder<NodeResolutionParams> = forAll(createInput(DISCRETE_LINKS_CONNECTED,
                                                                                        DISCRETE_NODES to BIDIRECTIONAL,
                                                                                        DISCRETE_NODES to BIDIRECTIONAL,
-                                                                                       EMPTY))
+                                                                                       VIA_NODES_EMPTY))
 
                         @Test
                         @DisplayName("There should be one node ID sequence containing three items")
@@ -360,7 +360,7 @@ class NodeSequenceAlternativesCreatorTest {
                             forAll(createInput(DISCRETE_LINKS_UNCONNECTED,
                                                DISCRETE_NODES to BIDIRECTIONAL,
                                                DISCRETE_NODES to BIDIRECTIONAL,
-                                               EMPTY))
+                                               VIA_NODES_EMPTY))
 
                         @Test
                         @DisplayName("There should be four node ID sequences containing four items")
@@ -388,7 +388,7 @@ class NodeSequenceAlternativesCreatorTest {
         private fun forInputs(): TheoryBuilder<NodeResolutionParams> = forAll(createInput(TerminusLinkRelation.ANY,
                                                                                           LinkEndpointDiscreteness.ANY,
                                                                                           LinkEndpointDiscreteness.ANY,
-                                                                                          EMPTY))
+                                                                                          VIA_NODES_EMPTY))
 
         @Test
         @DisplayName("Sequence of via node IDs should be empty")
@@ -412,7 +412,7 @@ class NodeSequenceAlternativesCreatorTest {
 
                 private fun forInputs()
                     : TheoryBuilder<NodeResolutionParams> = forAll(singleLinkInput(NON_DISCRETE_NODES,
-                                                                                   EMPTY))
+                                                                                   VIA_NODES_EMPTY))
 
                 @Test
                 @DisplayName("Verify that node ID sequence contains exactly one item")
@@ -455,11 +455,11 @@ class NodeSequenceAlternativesCreatorTest {
                         singleLinkInput(SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_START_NODE,
                                         DISCRETE_NODES,
                                         ONE_WAY_AGAINST_DIGITISED_DIRECTION,
-                                        EMPTY)
+                                        VIA_NODES_EMPTY)
                             .mix(singleLinkInput(SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_END_NODE,
                                                  DISCRETE_NODES,
                                                  ONE_WAY_ALONG_DIGITISED_DIRECTION,
-                                                 EMPTY),
+                                                 VIA_NODES_EMPTY),
                                  50)
                     )
 
@@ -507,7 +507,7 @@ class NodeSequenceAlternativesCreatorTest {
                         : TheoryBuilder<NodeResolutionParams> = forAll(singleLinkInput(SAME_LINK,
                                                                                        DISCRETE_NODES,
                                                                                        BIDIRECTIONAL,
-                                                                                       EMPTY))
+                                                                                       VIA_NODES_EMPTY))
 
                     @Test
                     @DisplayName("Verify that node ID sequence contains exactly two items")
@@ -560,7 +560,7 @@ class NodeSequenceAlternativesCreatorTest {
                 : TheoryBuilder<NodeResolutionParams> = forAll(createInput(TerminusLinkRelation.ANY,
                                                                            LinkEndpointDiscreteness.ANY,
                                                                            LinkEndpointDiscreteness.ANY,
-                                                                           FULLY_REDUNDANT_WITH_TERMINUS_LINKS))
+                                                                           VIA_NODES_FULLY_REDUNDANT))
 
             @Test
             @DisplayName("Sequence of via node IDs should be empty")
@@ -582,7 +582,7 @@ class NodeSequenceAlternativesCreatorTest {
 
                 private fun forInputs()
                     : TheoryBuilder<NodeResolutionParams> = forAll(singleLinkInput(LinkEndpointDiscreteness.ANY,
-                                                                                   FULLY_REDUNDANT_WITH_TERMINUS_LINKS))
+                                                                                   VIA_NODES_FULLY_REDUNDANT))
 
                 @Test
                 @DisplayName("List of node ID sequences should consist of only one list")
@@ -607,7 +607,7 @@ class NodeSequenceAlternativesCreatorTest {
                 : TheoryBuilder<NodeResolutionParams> = forAll(createInput(TerminusLinkRelation.ANY,
                                                                            LinkEndpointDiscreteness.ANY,
                                                                            LinkEndpointDiscreteness.ANY,
-                                                                           NON_REDUNDANT_WITH_TERMINUS_LINKS))
+                                                                           VIA_NODES_NON_REDUNDANT))
 
             @Test
             @DisplayName("Sequence of via node IDs should not be empty")

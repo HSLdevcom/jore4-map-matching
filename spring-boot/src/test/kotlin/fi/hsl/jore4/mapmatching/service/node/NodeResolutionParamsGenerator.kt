@@ -18,10 +18,10 @@ import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.Termi
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK_SAME_SNAP_POINT_LOCATIONS
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_END_NODE
 import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.TerminusLinkRelation.SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_START_NODE
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.EMPTY
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.FULLY_REDUNDANT_WITH_TERMINUS_LINKS
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.NON_REDUNDANT_WITH_TERMINUS_LINKS
-import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.RANDOM
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.VIA_NODES_EMPTY
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.VIA_NODES_FULLY_REDUNDANT
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.VIA_NODES_NON_REDUNDANT
+import fi.hsl.jore4.mapmatching.service.node.NodeResolutionParamsGenerator.ViaNodeGenerationScheme.VIA_NODES_RANDOM
 import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.trafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.test.generators.NodeProximityGenerator.node
 import fi.hsl.jore4.mapmatching.test.generators.Retry
@@ -118,22 +118,22 @@ object NodeResolutionParamsGenerator {
         /**
          * An empty set of via nodes is generated.
          */
-        EMPTY,
+        VIA_NODES_EMPTY,
 
-        RANDOM,
+        VIA_NODES_RANDOM,
 
         /**
          * Generate via node sequence which does not start or end with a node that is closer node of either snapped
          * terminus link.
          */
-        NON_REDUNDANT_WITH_TERMINUS_LINKS,
+        VIA_NODES_NON_REDUNDANT,
 
         /**
          * Generate via node sequence which starts with a duplicated sequence of single node that is closer node of
          * snapped start link and ends with a duplicated sequence of single node that is closer node of snapped end
          * link.
          */
-        FULLY_REDUNDANT_WITH_TERMINUS_LINKS,
+        VIA_NODES_FULLY_REDUNDANT,
 
         ANY
     }
@@ -164,8 +164,7 @@ object NodeResolutionParamsGenerator {
             .ofSizeBetween(1, MAX_NUMBER_OF_VIA_NODES)
     }
 
-    private fun generateNonRedundantViaNodesWithRegardToTerminusLinks(startLink: SnappedLinkState,
-                                                                      endLink: SnappedLinkState)
+    private fun generateNonRedundantViaNodes(startLink: SnappedLinkState, endLink: SnappedLinkState)
         : Gen<List<NodeProximity>> {
 
         return integers().between(1, MAX_NUMBER_OF_VIA_NODES).flatMap { numViaNodes ->
@@ -195,8 +194,7 @@ object NodeResolutionParamsGenerator {
         }
     }
 
-    private fun generateFullyRedundantViaNodesWithRegardToTerminusLinks(startLink: SnappedLinkState,
-                                                                        endLink: SnappedLinkState)
+    private fun generateFullyRedundantViaNodes(startLink: SnappedLinkState, endLink: SnappedLinkState)
         : Gen<List<NodeProximity>> {
 
         return integers().between(1, MAX_NUMBER_OF_VIA_NODES).flatMap { numViaNodes ->
@@ -266,14 +264,10 @@ object NodeResolutionParamsGenerator {
             return generateTerminusLinks().flatMap { (startLink, endLink) ->
 
                 val genViaNodeList: Gen<List<NodeProximity>> = when (viaNodeScheme) {
-                    EMPTY -> EMPTY_VIA_NODE_LIST
-                    RANDOM -> generateViaNodes(randomNode())
-                    NON_REDUNDANT_WITH_TERMINUS_LINKS -> {
-                        generateNonRedundantViaNodesWithRegardToTerminusLinks(startLink, endLink)
-                    }
-                    FULLY_REDUNDANT_WITH_TERMINUS_LINKS -> {
-                        generateFullyRedundantViaNodesWithRegardToTerminusLinks(startLink, endLink)
-                    }
+                    VIA_NODES_EMPTY -> EMPTY_VIA_NODE_LIST
+                    VIA_NODES_RANDOM -> generateViaNodes(randomNode())
+                    VIA_NODES_NON_REDUNDANT -> generateNonRedundantViaNodes(startLink, endLink)
+                    VIA_NODES_FULLY_REDUNDANT -> generateFullyRedundantViaNodes(startLink, endLink)
                     ViaNodeGenerationScheme.ANY -> EMPTY_VIA_NODE_LIST.mix(generateViaNodes(randomNode()), 50)
                 }
 
