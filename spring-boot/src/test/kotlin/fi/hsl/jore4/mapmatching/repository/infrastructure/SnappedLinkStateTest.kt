@@ -18,10 +18,9 @@ class SnappedLinkStateTest {
         @DisplayName("Should return true when given ID of start node")
         fun shouldReturnTrueForStartNodeId() {
             qt().forAll(SnappedLinkStateGenerator.snapLink())
-                .checkAssert { link: SnappedLinkState ->
+                .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(link.hasNode(link.startNodeId))
-                        .isEqualTo(true)
+                    assertThat(snap.hasNode(snap.startNodeId)).isEqualTo(true)
                 }
         }
 
@@ -29,10 +28,9 @@ class SnappedLinkStateTest {
         @DisplayName("Should return true when given ID of end node")
         fun shouldReturnTrueForEndNodeId() {
             qt().forAll(SnappedLinkStateGenerator.snapLink())
-                .checkAssert { link: SnappedLinkState ->
+                .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(link.hasNode(link.endNodeId))
-                        .isEqualTo(true)
+                    assertThat(snap.hasNode(snap.endNodeId)).isEqualTo(true)
                 }
         }
 
@@ -40,9 +38,9 @@ class SnappedLinkStateTest {
         @DisplayName("Should return false when given other node ID")
         fun whenTwoLinksDoNotShareNode() {
             qt().forAll(SnappedLinkStateGenerator.snapTwoUnconnectedLinks())
-                .checkAssert { (firstLink: SnappedLinkState, secondLink: SnappedLinkState) ->
+                .checkAssert { (firstSnap: SnappedLinkState, secondSnap: SnappedLinkState) ->
 
-                    assertThat(firstLink.hasNode(secondLink.startNodeId) || firstLink.hasNode(secondLink.endNodeId))
+                    assertThat(firstSnap.hasNode(secondSnap.startNodeId) || firstSnap.hasNode(secondSnap.endNodeId))
                         .isEqualTo(false)
                 }
         }
@@ -56,9 +54,9 @@ class SnappedLinkStateTest {
         @DisplayName("When two infrastructure links have a common node")
         fun whenTwoLinksShareNode() {
             qt().forAll(SnappedLinkStateGenerator.snapTwoConnectedLinks())
-                .checkAssert { (firstLink: SnappedLinkState, secondLink: SnappedLinkState) ->
+                .checkAssert { (firstSnap: SnappedLinkState, secondSnap: SnappedLinkState) ->
 
-                    assertThat(firstLink.hasSharedNode(secondLink))
+                    assertThat(firstSnap.hasSharedNode(secondSnap))
                         .isEqualTo(true)
                 }
         }
@@ -67,9 +65,9 @@ class SnappedLinkStateTest {
         @DisplayName("When two infrastructure links do not have a common node")
         fun whenTwoLinksDoNotShareNode() {
             qt().forAll(SnappedLinkStateGenerator.snapTwoUnconnectedLinks())
-                .checkAssert { (firstLink: SnappedLinkState, secondLink: SnappedLinkState) ->
+                .checkAssert { (firstSnap: SnappedLinkState, secondSnap: SnappedLinkState) ->
 
-                    assertThat(firstLink.hasSharedNode(secondLink))
+                    assertThat(firstSnap.hasSharedNode(secondSnap))
                         .isEqualTo(false)
                 }
         }
@@ -83,10 +81,9 @@ class SnappedLinkStateTest {
         @DisplayName("When endpoint nodes of infrastructure links are discrete")
         fun whenEndpointNodesAreDiscrete() {
             qt().forAll(SnappedLinkStateGenerator.snapLink(withDiscreteEndpoints = true))
-                .checkAssert { link: SnappedLinkState ->
+                .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(link.hasDiscreteNodes())
-                        .isEqualTo(true)
+                    assertThat(snap.hasDiscreteNodes()).isEqualTo(true)
                 }
         }
 
@@ -94,10 +91,9 @@ class SnappedLinkStateTest {
         @DisplayName("When infrastructure link has same node at both endpoints")
         fun whenSingleNodeAppearsAtBothEndpoints() {
             qt().forAll(SnappedLinkStateGenerator.snapLink(withDiscreteEndpoints = false))
-                .checkAssert { link: SnappedLinkState ->
+                .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(link.hasDiscreteNodes())
-                        .isEqualTo(false)
+                    assertThat(snap.hasDiscreteNodes()).isEqualTo(false)
                 }
         }
     }
