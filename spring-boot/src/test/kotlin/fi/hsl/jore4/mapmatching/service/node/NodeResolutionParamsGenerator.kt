@@ -29,6 +29,7 @@ import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapSi
 import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapTwoConnectedLinks
 import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapTwoUnconnectedLinks
 import org.quicktheories.core.Gen
+import org.quicktheories.generators.Generate.booleans
 import org.quicktheories.generators.Generate.constant
 import org.quicktheories.generators.Generate.pick
 import org.quicktheories.generators.SourceDSL.integers
@@ -149,10 +150,12 @@ object NodeResolutionParamsGenerator {
         }
     }
 
-    private fun toBoolean(endpointDiscreteness: LinkEndpointDiscreteness): Boolean? = when (endpointDiscreteness) {
-        DISCRETE_NODES -> true
-        NON_DISCRETE_NODES -> false
-        else -> null
+    private fun generateLinkEndpointDiscreteness(endpointDiscreteness: LinkEndpointDiscreteness): Gen<Boolean> {
+        return when (endpointDiscreteness) {
+            DISCRETE_NODES -> constant(true)
+            NON_DISCRETE_NODES -> constant(false)
+            LinkEndpointDiscreteness.ANY -> booleans()
+        }
     }
 
     private fun generateViaNodes(nodeSource: Gen<NodeProximity>): Gen<List<NodeProximity>> {
@@ -311,8 +314,6 @@ object NodeResolutionParamsGenerator {
         private fun snapSingleLinkTwice(terminusLinkRelation: TerminusLinkRelation)
             : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
 
-            val discreteEndpoints: Boolean? = toBoolean(startLinkEndpointDiscreteness)
-
             val snapPointComparison: Int = when (terminusLinkRelation) {
                 SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_START_NODE -> -1
                 SAME_LINK_SNAP_FIRST_POINT_CLOSER_TO_END_NODE -> 1
@@ -320,53 +321,40 @@ object NodeResolutionParamsGenerator {
                 else -> throw IllegalStateException("Should not end up here")
             }
 
-            return generateTrafficFlowDirectionType(startLinkDirection).flatMap { trafficFlowDirectionType ->
+            return generateLinkEndpointDiscreteness(startLinkEndpointDiscreteness).flatMap { discreteNodes ->
 
-                snapSingleLinkTwice(discreteEndpoints, trafficFlowDirectionType, snapPointComparison)
+                generateTrafficFlowDirectionType(startLinkDirection).flatMap { trafficFlowDirectionType ->
+
+                    snapSingleLinkTwice(discreteNodes, trafficFlowDirectionType, snapPointComparison)
+                }
             }
         }
 
         private fun snapTwoDiscreteLinks(terminusLinkRelation: TerminusLinkRelation)
             : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
 
-            val discreteEndpointsOnStartLink: Boolean? = toBoolean(startLinkEndpointDiscreteness)
-            val discreteEndpointsOnEndLink: Boolean? = toBoolean(endLinkEndpointDiscreteness)
+            return generateLinkEndpointDiscreteness(startLinkEndpointDiscreteness).flatMap { discreteNodesOnStartLink ->
 
-            return generateTrafficFlowDirectionType(startLinkDirection).flatMap { directionOnStartLink ->
-                generateTrafficFlowDirectionType(endLinkDirection).flatMap { directionOnEndLink ->
+                generateLinkEndpointDiscreteness(endLinkEndpointDiscreteness).flatMap { discreteNodesOnEndLink ->
 
-                    when (terminusLinkRelation) {
-                        DISCRETE_LINKS_CONNECTED -> {
-                            when (discreteEndpointsOnStartLink to discreteEndpointsOnEndLink) {
-                                true to true -> snapTwoConnectedLinks(3,
-                                                                      directionOnStartLink,
-                                                                      directionOnEndLink)
-                                true to false, false to true -> snapTwoConnectedLinks(2,
+                    generateTrafficFlowDirectionType(startLinkDirection).flatMap { directionOnStartLink ->
+
+                        generateTrafficFlowDirectionType(endLinkDirection).flatMap { directionOnEndLink ->
+
+                            when (terminusLinkRelation) {
+                                DISCRETE_LINKS_CONNECTED -> snapTwoConnectedLinks(discreteNodesOnStartLink,
+                                                                                  discreteNodesOnEndLink,
+                                                                                  directionOnStartLink,
+                                                                                  directionOnEndLink)
+
+                                DISCRETE_LINKS_UNCONNECTED -> snapTwoUnconnectedLinks(discreteNodesOnStartLink,
+                                                                                      discreteNodesOnEndLink,
                                                                                       directionOnStartLink,
                                                                                       directionOnEndLink)
-                                false to false -> snapTwoConnectedLinks(1,
-                                                                        directionOnStartLink,
-                                                                        directionOnEndLink)
-                                else -> snapTwoConnectedLinks(directionOnStartLink,
-                                                              directionOnEndLink)
+
+                                else -> throw IllegalStateException("Should not end up here")
                             }
                         }
-                        DISCRETE_LINKS_UNCONNECTED -> {
-                            when (discreteEndpointsOnStartLink to discreteEndpointsOnEndLink) {
-                                true to true -> snapTwoUnconnectedLinks(4,
-                                                                        directionOnStartLink,
-                                                                        directionOnEndLink)
-                                true to false, false to true -> snapTwoUnconnectedLinks(3,
-                                                                                        directionOnStartLink,
-                                                                                        directionOnEndLink)
-                                false to false -> snapTwoUnconnectedLinks(2,
-                                                                          directionOnStartLink,
-                                                                          directionOnEndLink)
-                                else -> snapTwoUnconnectedLinks(directionOnStartLink,
-                                                                directionOnEndLink)
-                            }
-                        }
-                        else -> throw IllegalStateException("Should not end up here")
                     }
                 }
             }

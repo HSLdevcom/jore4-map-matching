@@ -6,7 +6,6 @@ import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.discreteQuadrup
 import fi.hsl.jore4.mapmatching.test.generators.CommonGenerators.discreteTriple
 import fi.hsl.jore4.mapmatching.test.util.Quadruple
 import org.quicktheories.core.Gen
-import org.quicktheories.generators.Generate.booleans
 import org.quicktheories.generators.Generate.longRange
 
 object InfrastructureNodeIdGenerator {
@@ -35,47 +34,60 @@ object InfrastructureNodeIdGenerator {
         discreteQuadruple(infrastructureNodeId())
 
     /**
-     * Generate quadruple of node IDs.
+     * Generate a quadruple of node IDs for single infrastructure link that is
+     * snapped on twice.
      *
-     * @param numberOfDiscreteNodes number of discrete node identifiers to be
-     * created within a single tuple
-     * @param discreteNodesBetweenHalves a Boolean indicating whether same node
-     * identifiers can appear in both halves of a [Quadruple] (a half means here
-     * either the first two or last two items of a quadruple)
+     * @param discreteNodes is a Boolean indicating whether the link should have
+     * discrete endpoint nodes.
      *
      * @return [Quadruple] containing four node identifiers.
      */
-    fun nodeIdQuadruple(numberOfDiscreteNodes: Int,
-                        discreteNodesBetweenHalves: Boolean)
+    fun nodeIdQuadrupleForSingleLink(discreteNodes: Boolean)
         : Gen<Quadruple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>> {
 
-        if (discreteNodesBetweenHalves) {
-            require(numberOfDiscreteNodes in 2..4) {
-                "numberOfDiscreteNodes must be in range 2..4 when discreteNodesBetweenHalves=true, but was: $numberOfDiscreteNodes"
-            }
-        } else {
-            require(numberOfDiscreteNodes in 1..4) {
-                "numberOfDiscreteNodes must be in range 1..4, but was: $numberOfDiscreteNodes"
-            }
-        }
+        return if (discreteNodes)
+            discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id2, id1, id2) }
+        else
+            infrastructureNodeId().map { id -> Quadruple(id, id, id, id) }
+    }
 
-        return when (numberOfDiscreteNodes) {
-            1 -> infrastructureNodeId().map { id -> Quadruple(id, id, id, id) }
-            2 -> when (discreteNodesBetweenHalves) {
-                true -> discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id1, id2, id2) }
-                false -> discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id2, id1, id2) }
-            }
-            3 -> when (discreteNodesBetweenHalves) {
-                true -> discreteNodeIdTriple().zip(booleans()) { (id1, id2, id3), shuffle ->
-                    if (shuffle)
-                        Quadruple(id1, id1, id2, id3)
-                    else
-                        Quadruple(id1, id2, id3, id3)
-                }
-                false -> discreteNodeIdTriple().map { (id1, id2, id3) -> Quadruple(id1, id2, id2, id3) }
-            }
-            4 -> discreteNodeIdQuadruple()
-            else -> throw IllegalStateException("Something went wrong while generating quadruple of node IDs")
+    /**
+     * Generate quadruple of node IDs for two infrastructure links.
+     *
+     * @param discreteNodesOnFirstLink is a Boolean indicating whether the first
+     * link should have discrete endpoint nodes.
+     * @param discreteNodesOnSecondLink is a Boolean indicating whether the
+     * second link should have discrete endpoint nodes.
+     * @param isCommonNode is a Boolean indicating whether the two links should
+     * be connected via a common node.
+     *
+     * @return [Quadruple] containing four node identifiers.
+     */
+    fun nodeIdQuadrupleForTwoLinks(discreteNodesOnFirstLink: Boolean,
+                                   discreteNodesOnSecondLink: Boolean,
+                                   isCommonNode: Boolean)
+        : Gen<Quadruple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>> {
+
+        return if (discreteNodesOnFirstLink && discreteNodesOnSecondLink) {
+            if (isCommonNode)
+                discreteNodeIdTriple().map { (id1, id2, id3) -> Quadruple(id1, id2, id2, id3) }
+            else
+                discreteNodeIdQuadruple()
+        } else if (discreteNodesOnFirstLink) {
+            if (isCommonNode)
+                discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id2, id2, id2) }
+            else
+                discreteNodeIdTriple().map { (id1, id2, id3) -> Quadruple(id1, id2, id3, id3) }
+        } else if (discreteNodesOnSecondLink) {
+            if (isCommonNode)
+                discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id1, id1, id2) }
+            else
+                discreteNodeIdTriple().map { (id1, id2, id3) -> Quadruple(id1, id1, id2, id3) }
+        } else {
+            if (isCommonNode)
+                infrastructureNodeId().map { id -> Quadruple(id, id, id, id) }
+            else
+                discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id1, id2, id2) }
         }
     }
 }
