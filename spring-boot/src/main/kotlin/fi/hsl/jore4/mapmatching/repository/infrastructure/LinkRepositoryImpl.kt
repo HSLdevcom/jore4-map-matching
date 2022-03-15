@@ -125,7 +125,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 ) g
             ) point
             CROSS JOIN LATERAL (
-               SELECT
+                SELECT
                     link.infrastructure_link_id,
                     point.geom <-> link.geom AS distance
                 FROM routing.infrastructure_link link
