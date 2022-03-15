@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.service.matching
+package fi.hsl.jore4.mapmatching.repository.infrastructure
 
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 

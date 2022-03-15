@@ -81,6 +81,7 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
 
         private const val DEFAULT_BUFFER_RADIUS_IN_METERS: Double = 50.0
         private const val DEFAULT_TERMINUS_LINK_QUERY_DISTANCE: Double = 50.0
+        private const val DEFAULT_MAX_STOP_LOCATION_DEVIATION: Double = 80.0
         private const val DEFAULT_ROAD_JUNCTION_MATCHING_ENABLED: Boolean = true
         private const val DEFAULT_JUNCTION_NODE_MATCH_DISTANCE: Double = 5.0
         private const val DEFAULT_JUNCTION_NODE_CLEARING_DISTANCE: Double = 30.0
@@ -93,6 +94,8 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
             val bufferRadiusInMeters: Double = parameters?.bufferRadiusInMeters ?: DEFAULT_BUFFER_RADIUS_IN_METERS
             val terminusLinkQueryDistance: Double =
                 parameters?.terminusLinkQueryDistance ?: DEFAULT_TERMINUS_LINK_QUERY_DISTANCE
+            val maxStopLocationDeviation: Double =
+                parameters?.maxStopLocationDeviation ?: DEFAULT_MAX_STOP_LOCATION_DEVIATION
 
             val roadJunctionMatchingParameters: JunctionMatchingParameters? =
                 if (parameters?.roadJunctionMatchingEnabled ?: DEFAULT_ROAD_JUNCTION_MATCHING_ENABLED) {
@@ -106,6 +109,7 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
 
             return PublicTransportRouteMatchingParameters(bufferRadiusInMeters,
                                                           terminusLinkQueryDistance,
+                                                          maxStopLocationDeviation,
                                                           roadJunctionMatchingParameters)
         }
     }

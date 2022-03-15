@@ -1,22 +1,10 @@
 package fi.hsl.jore4.mapmatching.repository.infrastructure
 
-import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.VehicleType
-import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkRecord
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 
 interface ILinkRepository {
-
-    /**
-     * Find infrastructure links by their identifiers.
-     *
-     * @param ids the local identifiers of infrastructure links to retrieve
-     *
-     * @return [List] of [InfrastructureLinkRecord]s found by the given
-     * identifiers.
-     */
-    fun findByIds(ids: Collection<InfrastructureLinkId>): List<InfrastructureLinkRecord>
 
     /**
      * Find the closest link for every given point within the given distance.
@@ -37,5 +25,6 @@ interface ILinkRepository {
      */
     fun findClosestLinks(points: List<Point<G2D>>,
                          vehicleType: VehicleType,
-                         distanceInMeters: Double): Map<Int, SnapPointToLinkDTO>
+                         distanceInMeters: Double)
+        : Map<Int, SnapPointToLinkDTO>
 }

@@ -1,7 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.matching
 
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
-import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.NodeProximity
@@ -11,11 +10,11 @@ import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType.END
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType.START
-import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkRecord
-import fi.hsl.jore4.mapmatching.model.tables.records.PublicTransportStopRecord
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.IStopRepository
+import fi.hsl.jore4.mapmatching.repository.infrastructure.PublicTransportStopMatchParameters
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
@@ -34,17 +33,13 @@ import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
-import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
 import mu.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 import org.geolatte.geom.Point
-import org.geolatte.geom.jts.JTS
-import org.locationtech.jts.linearref.LengthIndexedLine
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import kotlin.math.max
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -82,6 +77,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             findTerminusLinksAndNodeSequenceAlternatives(routePoints,
                                                          vehicleType,
                                                          matchingParameters.terminusLinkQueryDistance,
+                                                         matchingParameters.maxStopLocationDeviation,
                                                          matchingParameters.roadJunctionMatching)
         } catch (ex: RuntimeException) {
             val errMessage: String = ex.message ?: "Could not resolve node sequence alternatives"
@@ -121,6 +117,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     internal fun findTerminusLinksAndNodeSequenceAlternatives(routePoints: List<RoutePoint>,
                                                               vehicleType: VehicleType,
                                                               terminusLinkQueryDistance: Double,
+                                                              maxStopLocationDeviation: Double,
                                                               junctionMatchingParams: JunctionMatchingParameters?)
         : PreProcessingResult {
 
@@ -131,7 +128,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             fromRoutePointIndexToInfrastructureLink: Map<Int, SnappedLinkState?>
         ) = findInfrastructureLinksOnRoute(routePoints,
                                            vehicleType,
-                                           terminusLinkQueryDistance)
+                                           terminusLinkQueryDistance,
+                                           maxStopLocationDeviation)
 
         // Resolve infrastructure network nodes to visit on route derived from the given route points.
         val fromRoutePointIndexToRoadJunctionNode: Map<Int, NodeProximity?> = junctionMatchingParams
@@ -164,27 +162,37 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
      */
     internal fun findInfrastructureLinksOnRoute(routePoints: List<RoutePoint>,
                                                 vehicleType: VehicleType,
-                                                terminusLinkQueryDistance: Double)
+                                                terminusLinkQueryDistance: Double,
+                                                maxStopLocationDeviation: Double)
         : InfrastructureLinksOnRoute {
 
-        val fromRoutePointIndexToStopNationalId: Map<Int, Int> = routePoints
+        val fromRoutePointIndexToStopMatchParams: Map<Int, PublicTransportStopMatchParameters> = routePoints
             .mapIndexedNotNull { index: Int, routePoint: RoutePoint ->
                 when (routePoint) {
-                    is RouteStopPoint -> routePoint.nationalId?.let { nationalId -> index to nationalId }
+                    is RouteStopPoint -> routePoint.nationalId?.let { nationalId ->
+
+                        // Prefer projected location because it is expected to be closer to
+                        // public transport stop location within Digiroad.
+                        val sourceLocation: Point<G2D> = routePoint.projectedLocation ?: routePoint.location
+
+                        index to PublicTransportStopMatchParameters(nationalId, sourceLocation)
+                    }
                     else -> null
                 }
             }
             .toMap()
 
-        val foundStops: List<PublicTransportStopRecord> =
-            stopRepository.findByNationalIds(fromRoutePointIndexToStopNationalId.values)
+        val stopSearchParams: Collection<PublicTransportStopMatchParameters> =
+            fromRoutePointIndexToStopMatchParams.values
 
-        val snappedLinks: List<SnapStopToLinkDTO> = findInfrastructureLinksAssociatedWithStops(foundStops)
+        val snappedLinksFromStops: List<SnapStopToLinkDTO> =
+            stopRepository.findStopsAndSnapToInfrastructureLinks(stopSearchParams, maxStopLocationDeviation)
 
         val fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState> =
-            snappedLinks.associateBy(SnapStopToLinkDTO::stopNationalId, SnapStopToLinkDTO::link)
+            snappedLinksFromStops.associateBy(SnapStopToLinkDTO::stopNationalId, SnapStopToLinkDTO::link)
 
-        val fromRoutePointIndexToMatchedStopNationalId: Map<Int, Int> = fromRoutePointIndexToStopNationalId
+        val fromRoutePointIndexToMatchedStopNationalId: Map<Int, Int> = fromRoutePointIndexToStopMatchParams
+            .mapValues { mapEntry -> mapEntry.value.nationalId }
             .filterValues(fromStopNationalIdToInfrastructureLink::containsKey)
 
         LOGGER.debug {
@@ -208,67 +216,6 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                         terminusLinkQueryDistance)
 
         return InfrastructureLinksOnRoute(startLink, endLink, fromRoutePointIndexToInfrastructureLink)
-    }
-
-    internal fun findInfrastructureLinksAssociatedWithStops(stops: List<PublicTransportStopRecord>)
-        : List<SnapStopToLinkDTO> {
-
-        val linkIds: List<InfrastructureLinkId> = stops
-            .map(PublicTransportStopRecord::getLocatedOnInfrastructureLinkId)
-            .distinct() // remove duplicates
-            .map(::InfrastructureLinkId)
-
-        val linkRecordById: Map<Long, InfrastructureLinkRecord> = linkRepository
-            .findByIds(linkIds)
-            .associateBy(InfrastructureLinkRecord::getInfrastructureLinkId)
-
-        return stops.mapNotNull { stop ->
-            val linkId: Long = stop.locatedOnInfrastructureLinkId
-
-            linkRecordById[linkId]?.let { linkRecord: InfrastructureLinkRecord ->
-
-                val stopDistFromStart: Double = stop.distanceFromLinkStartInMeters
-                val linkLength: Double = max(linkRecord.cost, linkRecord.reverseCost)
-
-                val stopPointFractionalMeasureOnLink: Double? = when {
-                    linkLength.isWithinTolerance(0.0) -> {
-                        // Avoid division by zero. Length of infrastructure link should never be zero.
-                        null
-                    }
-                    stopDistFromStart <= linkLength -> stopDistFromStart / linkLength
-                    else -> {
-                        val linkGeom: org.locationtech.jts.geom.LineString = JTS.to(linkRecord.geom)
-                        val stopGeom: org.locationtech.jts.geom.Point = JTS.to(stop.geom)
-
-                        // Calculate fractional location of Point on LineString using JTS.
-                        val frac: Double = LengthIndexedLine(linkGeom).indexOf(stopGeom.coordinate)
-
-                        LOGGER.warn(
-                            "Distance of public transport stop (ID={}) from the start of the infrastructure link the " +
-                                "stop is located along (as taken from database) is greater than the length of the " +
-                                "link (ID={}): {} > {}. Calculated fractional measure manually: {}",
-                            stop.publicTransportStopId, linkId, stopDistFromStart, linkLength, frac)
-
-                        // Discard possible outliers. A too great distance between stop point and infrastructure link
-                        // might cause erroneous numbers.
-                        // TODO It will discovered later whether clamping values greater than 1.0 to 1.0 is beneficial.
-                        frac.takeIf { it in 0.0..1.0 }
-                    }
-                }
-
-                stopPointFractionalMeasureOnLink?.let { stopLocationOnLinkAsFraction ->
-                    SnapStopToLinkDTO(stop.publicTransportStopNationalId,
-                                      SnappedLinkState(
-                                          InfrastructureLinkId(linkId),
-                                          0.0, // closest distance from stop to link can be set to zero
-                                          stopLocationOnLinkAsFraction,
-                                          linkRecord.trafficFlowDirectionType,
-                                          linkLength,
-                                          InfrastructureNodeId(linkRecord.startNodeId),
-                                          InfrastructureNodeId(linkRecord.endNodeId)))
-                }
-            }
-        }
     }
 
     /**

@@ -1,30 +1,101 @@
 package fi.hsl.jore4.mapmatching.repository.infrastructure
 
-import fi.hsl.jore4.mapmatching.model.tables.PublicTransportStop
-import fi.hsl.jore4.mapmatching.model.tables.records.PublicTransportStopRecord
-import org.jooq.DSLContext
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
+import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.sql.ResultSet
 
 @Repository
-class StopRepositoryImpl @Autowired constructor(val dslContext: DSLContext) : IStopRepository {
+class StopRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : IStopRepository {
 
     @Transactional(readOnly = true)
-    override fun findByNationalIds(publicTransportStopNationalIds: Collection<Int>): List<PublicTransportStopRecord> {
-        if (publicTransportStopNationalIds.isEmpty()) {
+    override fun findStopsAndSnapToInfrastructureLinks(stopMatchParams: Collection<PublicTransportStopMatchParameters>,
+                                                       maxDistanceBetweenExpectedAndActualStopLocation: Double)
+        : List<SnapStopToLinkDTO> {
+
+        if (stopMatchParams.isEmpty()) {
             return emptyList()
         }
 
-        return dslContext
-            .select()
-            .from(STOP)
-            .where(STOP.PUBLIC_TRANSPORT_STOP_NATIONAL_ID.`in`(publicTransportStopNationalIds))
-            .fetch()
-            .into(PublicTransportStopRecord::class.java)
+        val queryString: String = createQueryForFindingStopsByNationalId(stopMatchParams.size)
+
+        val jdbcParams = MapSqlParameterSource()
+            .addValue("vehicleType", VehicleType.GENERIC_BUS.value)
+            .addValue("maxDistance", maxDistanceBetweenExpectedAndActualStopLocation)
+
+        stopMatchParams.withIndex().forEach { (index: Int, params: PublicTransportStopMatchParameters) ->
+            val seq = index + 1
+
+            jdbcParams
+                .addValue("nationalId$seq", params.nationalId)
+                .addValue("srcLocation$seq", toEwkb(params.sourceLocation))
+        }
+
+        return jdbcTemplate.query(queryString, jdbcParams) { rs: ResultSet, _: Int ->
+            val stopNationalId = rs.getInt("stop_national_id")
+
+            val infrastructureLinkId = rs.getLong("infrastructure_link_id")
+            val startNodeId = rs.getLong("start_node_id")
+            val endNodeId = rs.getLong("end_node_id")
+
+            val trafficFlowDirectionType = rs.getInt("traffic_flow_direction_type")
+            val linkLength = rs.getDouble("infrastructure_link_len2d")
+
+            val closestPointFractionalMeasure = rs.getDouble("fractional_measure")
+
+            SnapStopToLinkDTO(stopNationalId,
+                              SnappedLinkState(InfrastructureLinkId(infrastructureLinkId),
+                                               0.0, // closest distance from stop to link is ignored
+                                               closestPointFractionalMeasure,
+                                               TrafficFlowDirectionType.from(trafficFlowDirectionType),
+                                               linkLength,
+                                               InfrastructureNodeId(startNodeId),
+                                               InfrastructureNodeId(endNodeId)))
+        }
     }
 
     companion object {
-        private val STOP = PublicTransportStop.PUBLIC_TRANSPORT_STOP
+
+        private fun createQueryForFindingStopsByNationalId(numberOfStops: Int): String {
+            require(numberOfStops in 1..500) { "numberOfStops must be in range 1..500" }
+
+            fun createUnionSubquery(numberOfStops: Int): String = (1..numberOfStops).joinToString(
+                transform = { i: Int ->
+                    "SELECT $i AS seq, :nationalId$i AS stop_national_id, :srcLocation$i AS src_location"
+                },
+                // Indent in separator should match the main query string below in order to have
+                // properly formatted SQL result.
+                separator = "\n                UNION "
+            )
+
+            return """
+            SELECT
+                stop_params.stop_national_id,
+                link.infrastructure_link_id,
+                link.start_node_id,
+                link.end_node_id,
+                link.traffic_flow_direction_type,
+                ST_LineLocatePoint(link.geom, stop.geom) AS fractional_measure,
+                ST_Length(link.geom) AS infrastructure_link_len2d
+            FROM (
+                ${createUnionSubquery(numberOfStops)}
+            ) stop_params
+            INNER JOIN routing.public_transport_stop stop ON
+                stop.public_transport_stop_national_id = stop_params.stop_national_id
+            INNER JOIN routing.infrastructure_link link ON
+                link.infrastructure_link_id = stop.located_on_infrastructure_link_id
+            INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type safe
+                ON safe.infrastructure_link_id = link.infrastructure_link_id
+            WHERE ST_DWithin(stop.geom, ST_Transform(ST_GeomFromEWKB(stop_params.src_location), 3067), :maxDistance)
+                AND safe.vehicle_type = :vehicleType
+            ORDER BY stop_params.seq ASC;""".trimIndent()
+        }
     }
 }

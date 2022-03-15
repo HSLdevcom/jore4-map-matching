@@ -37,6 +37,16 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
      * stop from route endpoints. Terminus links generally fall partly outside
      * the buffer area used to restrict infrastructure links. Hence, terminus
      * links need to be treated separately.
+     * @property maxStopLocationDeviation the maximum distance within which two
+     * locations given for a public transport stop are allowed to be away from
+     * each other, in order to include the stop in the set of route points that
+     * are matched with infrastructure links. The first location is the one
+     * hosted in this map-matching service (mostly originating from Digiroad)
+     * and the second one is the location defined within the client system
+     * (invoking this map-matching service). If the distance between these two
+     * type of locations exceeds [maxStopLocationDeviation], then the affected
+     * stops are discarded from the set of route points that are matched with
+     * infrastructure links.
      * @property roadJunctionMatchingEnabled indicates whether road junction
      * nodes should be taken into account in map-matching. If explicitly set to
      * false, then road junction matching is disabled and parameters
@@ -53,6 +63,7 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
      */
     data class MapMatchingParametersDTO(val bufferRadiusInMeters: Double?,
                                         val terminusLinkQueryDistance: Double?,
+                                        val maxStopLocationDeviation: Double?,
                                         val roadJunctionMatchingEnabled: Boolean?,
                                         val junctionNodeMatchDistance: Double?,
                                         val junctionNodeClearingDistance: Double?) {

@@ -16,6 +16,15 @@ import java.lang.IllegalArgumentException
  * route endpoints. Terminus links generally fall partly outside the buffer area
  * used to restrict infrastructure links. Hence, terminus links need to be
  * treated separately.
+ * @property maxStopLocationDeviation the maximum distance within which two
+ * locations given for a public transport stop are allowed to be away from each
+ * other, in order to include the stop in the set of route points that are
+ * matched with infrastructure links. The first location is the one hosted in
+ * this map-matching service (mostly originating from Digiroad) and the second
+ * one is the location defined within the client system (invoking this
+ * map-matching service). If the distance between these two type of locations
+ * exceeds [maxStopLocationDeviation], then the affected stops are discarded
+ * from the set of route points that are matched with infrastructure links.
  * @property roadJunctionMatching contains details for matching road junction
  * nodes. If missing, then road junction node matching is disabled. Road
  * junction points are identified as essential items in producing accurate match
@@ -25,6 +34,7 @@ import java.lang.IllegalArgumentException
  */
 data class PublicTransportRouteMatchingParameters(val bufferRadiusInMeters: Double,
                                                   val terminusLinkQueryDistance: Double,
+                                                  val maxStopLocationDeviation: Double,
                                                   val roadJunctionMatching: JunctionMatchingParameters?) {
 
     /**
