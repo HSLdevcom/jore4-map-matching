@@ -79,6 +79,8 @@ class MapMatchingBulkTestResultsPublisherImpl @Autowired constructor(val objectM
         val outputFile: File =
             writeGeoJsonToFile(getFailedSegmentsAsGeoJson(failed), "failed_stop-to-stop_segments.geojson")
         LOGGER.info("Wrote failed stop-to-stop segments to file: ${outputFile.absolutePath}")
+
+        createGeoPackage(failed)
     }
 
     private fun writeGeoJsonToFile(features: GeoJsonFeatureCollection<G2D, String>, filename: String): File {
@@ -259,6 +261,11 @@ class MapMatchingBulkTestResultsPublisherImpl @Autowired constructor(val objectM
                                     postfix = "]")
                             })
             }
+        }
+
+        private fun createGeoPackage(matchResults: List<SegmentMatchFailure>) {
+            val file = File.createTempFile("geopkg", "db", File("target"))
+            GeoPackageUtils.createGeoPackage(file, matchResults)
         }
     }
 }
