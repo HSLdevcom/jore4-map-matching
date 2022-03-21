@@ -97,6 +97,8 @@ class MapMatchingBulkTestResultsPublisherImpl(
         val outputFile: File =
             writeGeoJsonToFile(getFailedSegmentsAsGeoJson(failed), "failed_stop-to-stop_segments.geojson")
         LOGGER.info { "Wrote failed stop-to-stop segments to file: ${outputFile.absolutePath}" }
+
+        createGeoPackage(failed)
     }
 
     private fun writeGeoJsonToFile(
@@ -320,6 +322,11 @@ class MapMatchingBulkTestResultsPublisherImpl(
                     }"
                 }
             }
+        }
+
+        private fun createGeoPackage(matchResults: List<SegmentMatchFailure>) {
+            val file = File.createTempFile("geopkg", "db", File("target"))
+            GeoPackageUtils.createGeoPackage(file, matchResults)
         }
     }
 }
