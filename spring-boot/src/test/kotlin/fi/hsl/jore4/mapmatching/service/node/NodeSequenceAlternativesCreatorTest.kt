@@ -221,24 +221,31 @@ class NodeSequenceAlternativesCreatorTest {
                 val genNodesToVisitOnStartLink: Gen<VisitedNodesOnLink> = generateVisitedNodesOnLink()
                 val genNodesToVisitOnEndLink: Gen<VisitedNodesOnLink> = generateVisitedNodesOnLink()
 
-                // Generate via node IDs that are not overlapping with nodes of terminus links.
-                val genViaNodeIds: Gen<List<InfrastructureNodeId>> =
-                    generateViaNodeIdsNotOverlappingWithTerminusLinks(genNodesToVisitOnStartLink,
-                                                                      genNodesToVisitOnEndLink)
+                val genVisitedNodes: Gen<VisitNodesOnMultipleLinks> = genNodesToVisitOnStartLink
+                    .flatMap { nodesToVisitOnStartLink ->
+                        genNodesToVisitOnEndLink
+                            .flatMap { nodesToVisitOnEndLink ->
 
-                qt().forAll(genNodesToVisitOnStartLink,
-                            genViaNodeIds,
-                            genNodesToVisitOnEndLink)
-                    .checkAssert { someNodesToVisitOnStartLink,
-                                   viaNodeIds,
-                                   someNodesToVisitOnEndLink ->
+                                val nodeIdsToExclude: List<InfrastructureNodeId> =
+                                    nodesToVisitOnStartLink.toListOfNodeIds() + nodesToVisitOnEndLink.toListOfNodeIds()
 
-                        val nodesToVisit = VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                                     viaNodeIds,
-                                                                     someNodesToVisitOnEndLink)
+                                // Generate via node IDs that are not overlapping with nodes of terminus links.
+                                generateViaNodeIds(allowEmpty = false, excludedNodeIds = nodeIdsToExclude.toSet())
+                                    .map { viaNodeIds ->
+
+                                        VisitNodesOnMultipleLinks(nodesToVisitOnStartLink,
+                                                                  viaNodeIds,
+                                                                  nodesToVisitOnEndLink)
+                                    }
+                            }
+                    }
+
+                qt().forAll(genVisitedNodes)
+                    .checkAssert { nodesToVisit ->
 
                         val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
 
+                        val (someNodesToVisitOnStartLink, viaNodeIds, someNodesToVisitOnEndLink) = nodesToVisit
                         val reducedViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(viaNodeIds)
 
                         assertThat(result.nodeIdSequences)
@@ -722,23 +729,6 @@ class NodeSequenceAlternativesCreatorTest {
                     lists()
                         .of(genNodeId)
                         .ofSize(numberOfNodes)
-                }
-        }
-
-        fun generateViaNodeIdsNotOverlappingWithTerminusLinks(genNodesToVisitOnStartLink: Gen<VisitedNodesOnLink>,
-                                                              genNodesToVisitOnEndLink: Gen<VisitedNodesOnLink>)
-            : Gen<List<InfrastructureNodeId>> {
-
-            return genNodesToVisitOnStartLink
-                .flatMap { nodesToVisitOnStartLink ->
-                    genNodesToVisitOnEndLink
-                        .flatMap { nodesToVisitOnEndLink ->
-
-                            val nodeIdsToExclude: List<InfrastructureNodeId> =
-                                nodesToVisitOnStartLink.toListOfNodeIds() + nodesToVisitOnEndLink.toListOfNodeIds()
-
-                            generateViaNodeIds(allowEmpty = false, excludedNodeIds = nodeIdsToExclude.toSet())
-                        }
                 }
         }
 
