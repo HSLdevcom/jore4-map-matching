@@ -10,8 +10,8 @@ interface ILinkRepository {
      * Find the closest link for every given point within the given distance.
      *
      * @param points list of points for which link matches are to be found
-     * @param vehicleType vehicle type constraint for link matches. A resulting
-     * link must be safely traversable by the given vehicle type.
+     * @param vehicleType vehicle type constraint for link matches. Resulting
+     * links must be safely traversable by the given vehicle type.
      * @param distanceInMeters the distance in meters within which the matches
      * are required to be found
      *
@@ -27,4 +27,31 @@ interface ILinkRepository {
                          vehicleType: VehicleType,
                          distanceInMeters: Double)
         : Map<Int, SnapPointToLinkDTO>
+
+    /**
+     * Find multiple closest links for every given point within the given
+     * distance. The maximum number of links returned per point is limited by a
+     * parameter.
+     *
+     * @param points list of points for which link matches are to be found
+     * @param vehicleType vehicle type constraint for link matches. Resulting
+     * links must be safely traversable by the given vehicle type.
+     * @param distanceInMeters the distance in meters within which the matches
+     * are required to be found
+     * @param limit the maximum amount of closest links returned for given
+     * points
+     *
+     * @return one-based index of the closest link matches for the given
+     * points as [Map]. For each resolved list of closest links an entry is
+     * added to the result map. Entry key is derived as one-based index for
+     * point appearing in the parameter list. If the closest link for a point
+     * could not be found, no entry for the index of the point is added to
+     * the result map. The result map contains at most the same amount of
+     * entries as there are points in the parameter list.
+     */
+    fun findNClosestLinks(points: List<Point<G2D>>,
+                          vehicleType: VehicleType,
+                          distanceInMeters: Double,
+                          limit: Int)
+        : Map<Int, SnapPointToLinksDTO>
 }

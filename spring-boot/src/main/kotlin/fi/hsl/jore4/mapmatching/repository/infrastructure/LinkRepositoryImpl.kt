@@ -18,14 +18,14 @@ import java.sql.ResultSet
 @Repository
 class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : ILinkRepository {
 
-    private data class ClosestLinkResult(val pointSeqNum: Int,
-                                         val infrastructureLinkId: InfrastructureLinkId,
-                                         val trafficFlowDirectionType: TrafficFlowDirectionType,
-                                         val closestDistance: Double,
-                                         val closestPointFractionalMeasure: Double,
-                                         val linkLength: Double,
-                                         val startNodeId: InfrastructureNodeId,
-                                         val endNodeId: InfrastructureNodeId)
+    private data class LinkResultItem(val pointSeqNum: Int,
+                                      val infrastructureLinkId: InfrastructureLinkId,
+                                      val trafficFlowDirectionType: TrafficFlowDirectionType,
+                                      val closestDistance: Double,
+                                      val closestPointFractionalMeasure: Double,
+                                      val linkLength: Double,
+                                      val startNodeId: InfrastructureNodeId,
+                                      val endNodeId: InfrastructureNodeId)
 
     @Transactional(readOnly = true)
     override fun findClosestLinks(points: List<Point<G2D>>,
@@ -36,39 +36,9 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             return emptyMap()
         }
 
-        // List of points is transformed to binary MultiPoint format (for compact representation).
-        val ewkb: ByteArray = toEwkb(mkMultiPoint(points))
+        val resultItems: List<LinkResultItem> = findClosestLinksInternal(points, vehicleType, distanceInMeters, 1)
 
-        val params = MapSqlParameterSource()
-            .addValue("ewkb", ewkb)
-            .addValue("vehicleType", vehicleType.value)
-            .addValue("distance", distanceInMeters)
-
-        val resultItems: List<ClosestLinkResult> =
-            jdbcTemplate.query(FIND_CLOSEST_LINKS_SQL, params) { rs: ResultSet, _: Int ->
-                val pointSeqNum = rs.getInt("seq")
-
-                val infrastructureLinkId = rs.getLong("infrastructure_link_id")
-                val startNodeId = rs.getLong("start_node_id")
-                val endNodeId = rs.getLong("end_node_id")
-
-                val trafficFlowDirectionType = rs.getInt("traffic_flow_direction_type")
-                val linkLength = rs.getDouble("infrastructure_link_len2d")
-
-                val closestDistance = rs.getDouble("closest_distance")
-                val closestPointFractionalMeasure = rs.getDouble("fractional_measure")
-
-                ClosestLinkResult(pointSeqNum,
-                                  InfrastructureLinkId(infrastructureLinkId),
-                                  TrafficFlowDirectionType.from(trafficFlowDirectionType),
-                                  closestDistance,
-                                  closestPointFractionalMeasure,
-                                  linkLength,
-                                  InfrastructureNodeId(startNodeId),
-                                  InfrastructureNodeId(endNodeId))
-            }
-
-        return resultItems.associateBy(ClosestLinkResult::pointSeqNum, valueTransform = {
+        return resultItems.associateBy(LinkResultItem::pointSeqNum, valueTransform = {
             val pointIndex = it.pointSeqNum - 1
             val point = points[pointIndex]
 
@@ -82,6 +52,78 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                                 it.startNodeId,
                                                 it.endNodeId))
         })
+    }
+
+    @Transactional(readOnly = true)
+    override fun findNClosestLinks(points: List<Point<G2D>>,
+                                   vehicleType: VehicleType,
+                                   distanceInMeters: Double,
+                                   limit: Int)
+        : Map<Int, SnapPointToLinksDTO> {
+
+        if (points.isEmpty()) {
+            return emptyMap()
+        }
+
+        val resultItems: List<LinkResultItem> = findClosestLinksInternal(points, vehicleType, distanceInMeters, limit)
+
+        return resultItems
+            .groupBy(LinkResultItem::pointSeqNum, valueTransform = {
+                SnappedLinkState(it.infrastructureLinkId,
+                                 it.closestDistance,
+                                 it.closestPointFractionalMeasure,
+                                 it.trafficFlowDirectionType,
+                                 it.linkLength,
+                                 it.startNodeId,
+                                 it.endNodeId)
+            })
+            .mapValues { entry ->
+                val pointSeqNum = entry.key
+                val point = points[pointSeqNum - 1]
+
+                val closestLinks: List<SnappedLinkState> = entry.value.sortedBy(SnappedLinkState::closestDistance)
+
+                SnapPointToLinksDTO(point, distanceInMeters, limit, closestLinks)
+            }
+    }
+
+    private fun findClosestLinksInternal(points: List<Point<G2D>>,
+                                         vehicleType: VehicleType,
+                                         distanceInMeters: Double,
+                                         limit: Int)
+        : List<LinkResultItem> {
+
+        // List of points is transformed to binary MultiPoint format (for compact representation).
+        val ewkb: ByteArray = toEwkb(mkMultiPoint(points))
+
+        val params = MapSqlParameterSource()
+            .addValue("ewkb", ewkb)
+            .addValue("vehicleType", vehicleType.value)
+            .addValue("distance", distanceInMeters)
+            .addValue("limit", limit)
+
+        return jdbcTemplate.query(FIND_CLOSEST_LINKS_SQL, params) { rs: ResultSet, _: Int ->
+            val pointSeqNum = rs.getInt("seq")
+
+            val infrastructureLinkId = rs.getLong("infrastructure_link_id")
+            val startNodeId = rs.getLong("start_node_id")
+            val endNodeId = rs.getLong("end_node_id")
+
+            val trafficFlowDirectionType = rs.getInt("traffic_flow_direction_type")
+            val linkLength = rs.getDouble("infrastructure_link_len2d")
+
+            val closestDistance = rs.getDouble("closest_distance")
+            val closestPointFractionalMeasure = rs.getDouble("fractional_measure")
+
+            LinkResultItem(pointSeqNum,
+                           InfrastructureLinkId(infrastructureLinkId),
+                           TrafficFlowDirectionType.from(trafficFlowDirectionType),
+                           closestDistance,
+                           closestPointFractionalMeasure,
+                           linkLength,
+                           InfrastructureNodeId(startNodeId),
+                           InfrastructureNodeId(endNodeId))
+        }
     }
 
     companion object {
@@ -112,7 +154,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 WHERE ST_DWithin(point.geom, link.geom, :distance)
                     AND safe.vehicle_type = :vehicleType
                 ORDER BY distance
-                LIMIT 1
+                LIMIT :limit
             ) closest_link
             INNER JOIN routing.infrastructure_link link
                 ON link.infrastructure_link_id = closest_link.infrastructure_link_id
@@ -121,7 +163,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                     ST_LineLocatePoint(link.geom, point.geom) AS fractional_measure,
                     ST_Length(link.geom) AS infrastructure_link_len2d
             ) closest_link_aux
-            ORDER BY seq ASC;
+            ORDER BY seq, closest_distance;
             """.trimIndent()
     }
 }

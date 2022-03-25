@@ -2,11 +2,10 @@ package fi.hsl.jore4.mapmatching.service.routing
 
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
-import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.CreateNodeSequenceCombinations
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidates
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
 import org.geolatte.geom.G2D
@@ -24,9 +23,11 @@ object RoutingServiceHelper {
     }
 
     /**
-     * @throws [IllegalArgumentException] if a route could not be resolved
+     * @throws [IllegalArgumentException] if [snaps] is empty
      */
-    internal fun createNodeSequenceCandidates(snaps: Collection<SnapPointToLinkDTO>): NodeSequenceCandidates {
+    internal fun createNodeSequenceCandidates(snaps: Collection<SnapPointToLinkDTO>)
+        : NodeSequenceCandidatesBetweenSnappedLinks {
+
         val links: List<SnappedLinkState> = snaps.map(SnapPointToLinkDTO::link)
 
         require(links.isNotEmpty()) { "Must have at least one infrastructure link" }
@@ -36,10 +37,13 @@ object RoutingServiceHelper {
             else -> links.drop(1).dropLast(1).map(HasInfrastructureNodeId::getInfrastructureNodeId)
         }
 
-        val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(links.first(), viaNodeIds, links.last())
+        val snappedStartLink: SnappedLinkState = links.first()
+        val snappedEndLink: SnappedLinkState = links.last()
 
-        val nodeIdSequences: List<NodeIdSequence> = CreateNodeSequenceCombinations.create(nodesToVisit)
+        val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(snappedStartLink, viaNodeIds, snappedEndLink)
 
-        return NodeSequenceCandidates(nodeIdSequences)
+        return NodeSequenceCandidatesBetweenSnappedLinks(snappedStartLink,
+                                                         snappedEndLink,
+                                                         CreateNodeSequenceCombinations.create(nodesToVisit))
     }
 }

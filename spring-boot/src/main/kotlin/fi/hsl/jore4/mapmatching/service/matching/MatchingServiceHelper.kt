@@ -1,11 +1,9 @@
 package fi.hsl.jore4.mapmatching.service.matching
 
-import fi.hsl.jore4.mapmatching.Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS
 import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
@@ -62,31 +60,5 @@ object MatchingServiceHelper {
                 null
             }
         }
-    }
-
-    /**
-     * @throws [IllegalStateException]
-     */
-    internal fun getTerminusLinkOrThrowException(linkSearchResult: SnapPointToLinkDTO?,
-                                                 terminusType: TerminusType,
-                                                 routePointLocation: Point<G2D>,
-                                                 vehicleType: VehicleType,
-                                                 linkQueryDistance: Double)
-        : SnappedLinkState {
-
-        return linkSearchResult
-            ?.let { snap ->
-                snap.link
-                    .withSnappedToTerminusNode(SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
-                    .also { link: SnappedLinkState ->
-                        LOGGER.debug {
-                            "Resolved infrastructureLinkId=${link.infrastructureLinkId} as route $terminusType link " +
-                                "by finding the closest link to point=$routePointLocation"
-                        }
-                    }
-            }
-            ?: throw IllegalStateException(
-                "Could not find infrastructure link within $linkQueryDistance meter distance from route $terminusType "
-                    + "point ($routePointLocation) while applying vehicle type constraint '$vehicleType'")
     }
 }
