@@ -1,16 +1,25 @@
 package fi.hsl.jore4.mapmatching.service.matching.test
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
+import org.geolatte.geom.G2D
+import org.geolatte.geom.json.GeoJsonFeature
+import org.geolatte.geom.json.GeoJsonFeatureCollection
 import org.nield.kotlinstatistics.standardDeviation
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.io.File
 import java.util.SortedMap
 import kotlin.math.abs
 
 private val LOGGER = KotlinLogging.logger {}
 
 @Component
-class MapMatchingBulkTestResultsPublisherImpl : IMapMatchingBulkTestResultsPublisher {
+class MapMatchingBulkTestResultsPublisherImpl @Autowired constructor(val objectMapper: ObjectMapper,
+                                                                     @Value("\${test.output.dir}") val outputDir: String)
+    : IMapMatchingBulkTestResultsPublisher {
 
     override fun publishMatchResultsForRoutesAndStopToStopSegments(routeResults: List<MatchResult>,
                                                                    stopToStopSegmentResults: List<SegmentMatchResult>) {
@@ -46,6 +55,9 @@ class MapMatchingBulkTestResultsPublisherImpl : IMapMatchingBulkTestResultsPubli
 
             "Worst $limit successful route matches: $worstResults"
         }
+
+        val outputFile: File = writeGeoJsonToFile(getFailedRoutesAsGeoJson(failed), "failed_routes.geojson")
+        LOGGER.info("Wrote failed routes to file: ${outputFile.absolutePath}")
     }
 
     fun publishStopToStopSegmentMatchResults(results: List<SegmentMatchResult>) {
@@ -63,6 +75,18 @@ class MapMatchingBulkTestResultsPublisherImpl : IMapMatchingBulkTestResultsPubli
 
             "$limit most referenced failed stop-to-stop segments: $mostReferencedFailedSegments"
         }
+
+        val outputFile: File =
+            writeGeoJsonToFile(getFailedSegmentsAsGeoJson(failed), "failed_stop-to-stop_segments.geojson")
+        LOGGER.info("Wrote failed stop-to-stop segments to file: ${outputFile.absolutePath}")
+    }
+
+    private fun writeGeoJsonToFile(features: GeoJsonFeatureCollection<G2D, String>, filename: String): File {
+        val geojson: String = objectMapper.writeValueAsString(features)
+
+        val outputFile = File(outputDir, filename)
+        outputFile.writeText(geojson)
+        return outputFile
     }
 
     companion object {
@@ -87,6 +111,20 @@ class MapMatchingBulkTestResultsPublisherImpl : IMapMatchingBulkTestResultsPubli
             val failed: List<SegmentMatchFailure> = results.mapNotNull { if (it is SegmentMatchFailure) it else null }
 
             return succeeded to failed
+        }
+
+        private fun getFailedRoutesAsGeoJson(failed: List<RouteMatchFailure>): GeoJsonFeatureCollection<G2D, String> {
+            return GeoJsonFeatureCollection(failed.map {
+                GeoJsonFeature(it.sourceRouteGeometry, it.routeId, emptyMap())
+            })
+        }
+
+        private fun getFailedSegmentsAsGeoJson(failed: List<SegmentMatchFailure>): GeoJsonFeatureCollection<G2D, String> {
+            return GeoJsonFeatureCollection(failed.map {
+                GeoJsonFeature(it.sourceRouteGeometry,
+                               it.routeId,
+                               mapOf("referencingRoutes" to it.referencingRoutes))
+            })
         }
 
         private fun getBestMatchResults(results: List<SuccessfulMatchResult>, limit: Int)
