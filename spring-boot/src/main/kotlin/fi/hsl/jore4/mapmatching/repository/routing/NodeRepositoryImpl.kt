@@ -1,5 +1,6 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.NodeProximity
@@ -20,7 +21,9 @@ import java.sql.ResultSet
 @Repository
 class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : INodeRepository {
 
-    override fun findNClosestNodes(points: List<Point<G2D>>, vehicleType: VehicleType, distanceInMeters: Double)
+    override fun findNClosestNodes(points: List<Point<G2D>>,
+                                   vehicleType: VehicleType,
+                                   distanceInMeters: Double)
         : Map<Int, SnapPointToNodesDTO> {
 
         if (points.isEmpty()) {
@@ -59,41 +62,37 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             }
     }
 
-    override fun resolveNodeSequence(nodeIdSequences: Iterable<NodeIdSequence>,
-                                     vehicleType: VehicleType,
-                                     bufferAreaRestriction: BufferAreaRestriction?)
-        : NodeIdSequence? {
+    override fun resolveBestNodeSequences(nodeSequenceCandidates: List<NodeSequenceCandidate>,
+                                          vehicleType: VehicleType,
+                                          bufferAreaRestriction: BufferAreaRestriction?)
+        : Map<Pair<InfrastructureLinkId, InfrastructureLinkId>, NodeIdSequence> {
 
-        // There are at most four sequences of infrastructure network node identifiers that can be iterated over.
-        val iter: Iterator<NodeIdSequence> = nodeIdSequences.iterator()
+        val numCandidates: Int = nodeSequenceCandidates.size
 
-        if (!iter.hasNext()) {
-            return null
+        if (numCandidates == 0) {
+            return emptyMap()
         }
 
-        val seq1: NodeIdSequence = iter.next()
-        val seq2: NodeIdSequence? = if (iter.hasNext()) iter.next() else null
-        val seq3: NodeIdSequence? = if (iter.hasNext()) iter.next() else null
-        val seq4: NodeIdSequence? = if (iter.hasNext()) iter.next() else null
-
-        require(!iter.hasNext()) { "Maximum of 4 node sequences exceeded" }
-
         val query: String = bufferAreaRestriction
-            ?.run { getQueryForResolvingBestNodeSequenceOf4(idsOfCandidatesForTerminusLink?.size ?: 0) }
-            ?: getQueryForResolvingBestNodeSequenceOf4(null)
+            ?.run { getQueryForResolvingBestNodeSequences(numCandidates, idsOfCandidatesForTerminusLink?.size ?: 0) }
+            ?: getQueryForResolvingBestNodeSequences(numCandidates, null)
 
         val preparedStatementCreator = PreparedStatementCreator { conn ->
             val pstmt: PreparedStatement = conn.prepareStatement(query)
 
-            // Setting array parameters can only be done through a java.sql.Connection object.
-            pstmt.setArray(1, toSqlArray(seq1, conn))
-            pstmt.setArray(2, toSqlArray(seq2, conn))
-            pstmt.setArray(3, toSqlArray(seq3, conn))
-            pstmt.setArray(4, toSqlArray(seq4, conn))
+            var paramIndex = 1
 
-            pstmt.setString(5, vehicleType.value)
+            nodeSequenceCandidates.withIndex().forEach { (index, nodeIdSeq) ->
 
-            var paramIndex = 6
+                pstmt.setInt(paramIndex++, index + 1)
+                pstmt.setLong(paramIndex++, nodeIdSeq.startLinkId.value)
+                pstmt.setLong(paramIndex++, nodeIdSeq.endLinkId.value)
+
+                // Setting array parameters can only be done through a java.sql.Connection object.
+                pstmt.setArray(paramIndex++, toSqlArray(nodeIdSeq.nodeIdSequence, conn))
+            }
+
+            pstmt.setString(paramIndex++, vehicleType.value)
 
             // Set additional parameters if restricting infrastructure links with a buffer area.
             bufferAreaRestriction?.run {
@@ -107,12 +106,23 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             pstmt
         }
 
-        val result: List<InfrastructureNodeId> =
-            jdbcTemplate.jdbcOperations.query(preparedStatementCreator) { rs: ResultSet, _: Int ->
-                InfrastructureNodeId(rs.getLong("node_id"))
+        return jdbcTemplate.jdbcOperations
+            .query(preparedStatementCreator) { rs: ResultSet, _: Int ->
+                Triple(rs.getLong("start_link_id"),
+                       rs.getLong("end_link_id"),
+                       InfrastructureNodeId(rs.getLong("node_id")))
             }
+            .groupBy(
+                keySelector = { it.first to it.second },
+                valueTransform = { it.third }
+            )
+            .mapKeys { entry ->
+                val startLinkId = InfrastructureLinkId(entry.key.first)
+                val endLinkId = InfrastructureLinkId(entry.key.second)
 
-        return if (result.isNotEmpty()) NodeIdSequence(result) else null
+                startLinkId to endLinkId
+            }
+            .mapValues { NodeIdSequence(it.value) }
     }
 
     companion object {
@@ -150,8 +160,11 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
          * there exist SQL ARRAY parameters that cannot be set via named
          * variables in Spring JDBC templates.
          */
-        private fun getQueryForResolvingBestNodeSequenceOf4(terminusLinkCountWhenBufferAreaRestrictionEnabled: Int?)
+        private fun getQueryForResolvingBestNodeSequences(numberOfSequenceCandidates: Int,
+                                                          terminusLinkCountWhenBufferAreaRestrictionEnabled: Int?)
             : String {
+
+            require(numberOfSequenceCandidates in 1..100) { "numberOfSequenceCandidates must be in range 1..100" }
 
             // The produced SQL query is enclosed in quotes and passed as parameter to
             // pgr_dijkstraVia() function. '?' is used as a bind variable placeholder. Actual
@@ -161,36 +174,36 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                     ?.let(QueryHelper::getVehicleTypeAndBufferAreaConstrainedLinksQuery)
                     ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
-            // Using "dummy_id" in SQL in order to be able to extract the (unknown amount of) node IDs as multi-row
-            // JDBC result set. An alternative choice would be to return an SQL array yielding a result set containing
-            // only a single row, which is more cumbersome to handle in JVM code.
+            fun createUnionSubquery(numberOfSequenceCandidates: Int): String = (1..numberOfSequenceCandidates)
+                .joinToString(
+                    transform = {
+                        "SELECT ? AS node_seq_id, ? AS start_link_id, ? AS end_link_id, ?::bigint[] AS node_arr"
+                    },
+                    // Indent in separator should match the main query string below in order to have
+                    // properly formatted SQL result.
+                    separator = "\n                        UNION "
+                )
+
             return """
-                SELECT DISTINCT ON (dummy_id) unnest(node_arr) AS node_id
+                SELECT start_link_id, end_link_id, unnest(node_arr) AS node_id
                 FROM (
-                    SELECT _node_seq.*
+                    SELECT DISTINCT ON (start_link_id, end_link_id) start_link_id, end_link_id, node_arr
                     FROM (
-                        SELECT 1 AS node_seq_id, ?::bigint[] AS node_arr
-                        UNION SELECT 2, ?::bigint[]
-                        UNION SELECT 3, ?::bigint[]
-                        UNION SELECT 4, ?::bigint[]
-                    ) _node_seq
-                    WHERE cardinality(_node_seq.node_arr) > 0
-                ) node_seq
-                CROSS JOIN (
-                    SELECT 1 AS dummy_id
-                ) terminus_links
-                CROSS JOIN LATERAL (
-                    SELECT max(pgr.route_agg_cost) AS route_agg_cost
-                    FROM pgr_dijkstraVia(
-                        $linkSelectionQueryForPgrDijkstra,
-                        node_seq.node_arr,
-                        directed := true,
-                        strict := true,
-                        U_turn_on_edge := true
-                    ) pgr
-                    GROUP BY node_seq_id
-                ) route_overview
-                ORDER BY dummy_id, route_agg_cost;
+                        ${createUnionSubquery(numberOfSequenceCandidates)}
+                    ) node_seq
+                    CROSS JOIN LATERAL (
+                        SELECT max(pgr.route_agg_cost) AS route_agg_cost
+                        FROM pgr_dijkstraVia(
+                            $linkSelectionQueryForPgrDijkstra,
+                            node_seq.node_arr,
+                            directed := true,
+                            strict := true,
+                            U_turn_on_edge := true
+                        ) pgr
+                        GROUP BY node_seq_id
+                    ) route_overview
+                    ORDER BY start_link_id, end_link_id, route_agg_cost
+                ) res;
                 """.trimIndent()
         }
 

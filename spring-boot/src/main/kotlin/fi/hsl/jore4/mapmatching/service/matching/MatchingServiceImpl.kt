@@ -1,5 +1,9 @@
 package fi.hsl.jore4.mapmatching.service.matching
 
+import arrow.core.Either
+import arrow.core.Either.Left
+import arrow.core.Either.Right
+import fi.hsl.jore4.mapmatching.Constants
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
@@ -8,12 +12,13 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
+import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType.END
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType.START
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.IStopRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.PublicTransportStopMatchParameters
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinksDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
@@ -23,13 +28,15 @@ import fi.hsl.jore4.mapmatching.repository.routing.SnapPointToNodesDTO
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
-import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.getTerminusLinkOrThrowException
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.resolveTerminusLinkIfStopPoint
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.validateInputForRouteMatching
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.service.node.CreateNodeSequenceCombinations
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidates
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionFailed
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionResult
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionSucceeded
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
@@ -40,6 +47,7 @@ import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.Collections
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -51,13 +59,13 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                  val routingService: IRoutingServiceInternal)
     : IMatchingService {
 
-    internal data class InfrastructureLinksOnRoute(val startLink: SnappedLinkState,
-                                                   val endLink: SnappedLinkState,
-                                                   val linksIndexedByRoutePointOrdering: Map<Int, SnappedLinkState>)
+    internal data class InfrastructureLinksOnRoute(val startLinkCandidates: List<SnappedLinkState>,
+                                                   val endLinkCandidates: List<SnappedLinkState>,
+                                                   val viaLinksIndexedByRoutePointOrdering: Map<Int, SnappedLinkState>)
 
-    internal data class PreProcessingResult(val startLink: SnappedLinkState,
-                                            val endLink: SnappedLinkState,
-                                            val nodeSequenceCandidates: NodeSequenceCandidates)
+    internal data class PreProcessingResult(val startLinkCandidates: List<SnappedLinkState>,
+                                            val endLinkCandidates: List<SnappedLinkState>,
+                                            val viaNodeHolders: List<Either<SnappedLinkState, NodeProximity>>)
 
     @Transactional(readOnly = true)
     override fun findMatchForPublicTransportRoute(routeGeometry: LineString<G2D>,
@@ -70,62 +78,79 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             return RoutingResponse.invalidValue(validationError)
         }
 
-        val (startLink: SnappedLinkState,
-            endLink: SnappedLinkState,
-            nodeSequenceCandidates: NodeSequenceCandidates) = try {
+        val (startLinkCandidates: List<SnappedLinkState>,
+            endLinkCandidates: List<SnappedLinkState>,
+            viaNodeResolvers: List<Either<SnappedLinkState, NodeProximity>>) = try {
 
-            findTerminusLinksAndNodeSequenceCandidates(routePoints,
-                                                       vehicleType,
-                                                       matchingParameters.terminusLinkQueryDistance,
-                                                       matchingParameters.maxStopLocationDeviation,
-                                                       matchingParameters.roadJunctionMatching)
+            findTerminusLinkCandidatesAndViaNodes(routePoints,
+                                                  vehicleType,
+                                                  matchingParameters.terminusLinkQueryDistance,
+                                                  matchingParameters.maxStopLocationDeviation,
+                                                  matchingParameters.roadJunctionMatching)
         } catch (ex: RuntimeException) {
-            val errMessage: String = ex.message ?: "Could not resolve node sequence alternatives"
+            val errMessage: String = ex.message ?: "Could not resolve terminus link candidates and via nodes"
             LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
 
-        if (!nodeSequenceCandidates.isRoutePossible()) {
-            return RoutingResponse.noSegment("Cannot produce route based on single infrastructure node")
-        }
-
-        val bufferAreaRestriction = BufferAreaRestriction(routeGeometry,
-                                                          matchingParameters.bufferRadiusInMeters,
-                                                          setOf(startLink.infrastructureLinkId,
-                                                                endLink.infrastructureLinkId))
-
-        val nodeIdSeq: NodeIdSequence = try {
-            resolveNetworkNodeIds(nodeSequenceCandidates, vehicleType, bufferAreaRestriction)
+        val nodeSequenceCandidates: List<NodeSequenceCandidatesBetweenSnappedLinks> = try {
+            resolveNodeSequenceCandidates(startLinkCandidates, endLinkCandidates, viaNodeResolvers)
         } catch (ex: RuntimeException) {
-            val errMessage: String = ex.message ?: "Failure while resolving infrastructure network nodes"
+            val errMessage: String = ex.message ?: "Could not resolve node sequence candidates"
             LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
 
-        val route: RouteDTO = routingService.findRoute(nodeIdSeq,
-                                                       vehicleType,
-                                                       startLink.closestPointFractionalMeasure,
-                                                       endLink.closestPointFractionalMeasure,
-                                                       bufferAreaRestriction)
+        val nodeSeqResult: NodeSequenceResolutionResult =
+            nodeService.resolveNodeIdSequence(nodeSequenceCandidates,
+                                              vehicleType,
+                                              BufferAreaRestriction(routeGeometry,
+                                                                    matchingParameters.bufferRadiusInMeters))
 
-        return RoutingResponseCreator.create(route)
+        return when (nodeSeqResult) {
+            is NodeSequenceResolutionSucceeded -> {
+
+                val nodeIdSequence: NodeIdSequence = nodeSeqResult.nodeIdSequence
+
+                LOGGER.debug { "Resolved node ID sequence: $nodeIdSequence" }
+
+                val startLink: SnappedLinkState = nodeSeqResult.startLink
+                val endLink: SnappedLinkState = nodeSeqResult.endLink
+
+                val route: RouteDTO =
+                    routingService.findRoute(nodeIdSequence,
+                                             vehicleType,
+                                             startLink.closestPointFractionalMeasure,
+                                             endLink.closestPointFractionalMeasure,
+                                             BufferAreaRestriction(routeGeometry,
+                                                                   matchingParameters.bufferRadiusInMeters,
+                                                                   setOf(startLink.infrastructureLinkId,
+                                                                         endLink.infrastructureLinkId)))
+
+                RoutingResponseCreator.create(route)
+            }
+            is NodeSequenceResolutionFailed -> {
+                LOGGER.warn(nodeSeqResult.message)
+                RoutingResponse.noSegment(nodeSeqResult.message)
+            }
+        }
     }
 
     /**
-     * @throws [IllegalStateException] in case a sequence of infrastructure node identifiers could not be resolved
+     * @throws [IllegalStateException]
      */
-    internal fun findTerminusLinksAndNodeSequenceCandidates(routePoints: List<RoutePoint>,
-                                                            vehicleType: VehicleType,
-                                                            terminusLinkQueryDistance: Double,
-                                                            maxStopLocationDeviation: Double,
-                                                            junctionMatchingParams: JunctionMatchingParameters?)
+    internal fun findTerminusLinkCandidatesAndViaNodes(routePoints: List<RoutePoint>,
+                                                       vehicleType: VehicleType,
+                                                       terminusLinkQueryDistance: Double,
+                                                       maxStopLocationDeviation: Double,
+                                                       junctionMatchingParams: JunctionMatchingParameters?)
         : PreProcessingResult {
 
         // Resolve infrastructure links to visit on route derived from the given route points.
         val (
-            firstLink: SnappedLinkState,
-            lastLink: SnappedLinkState,
-            fromRoutePointIndexToInfrastructureLink: Map<Int, SnappedLinkState?>
+            startLinkCandidates: List<SnappedLinkState>,
+            endLinkCandidates: List<SnappedLinkState>,
+            fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedLinkState?>
         ) = findInfrastructureLinksOnRoute(routePoints,
                                            vehicleType,
                                            terminusLinkQueryDistance,
@@ -136,27 +161,20 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             ?.let { getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(routePoints, vehicleType, it) }
             ?: emptyMap()
 
-        val viaNodeIds: List<InfrastructureNodeId> = routePoints
+        val viaNodeResolvers: List<Either<SnappedLinkState, NodeProximity>> = routePoints
             .withIndex()
             .drop(1)
             .dropLast(1)
             .mapNotNull { (routePointIndex: Int, routePoint: RoutePoint) ->
 
                 when (routePoint) {
-                    is RouteStopPoint -> fromRoutePointIndexToInfrastructureLink[routePointIndex]
-                    is RouteJunctionPoint -> fromRoutePointIndexToRoadJunctionNode[routePointIndex]
+                    is RouteStopPoint -> fromRouteStopPointIndexToInfrastructureLink[routePointIndex]?.let(::Left)
+                    is RouteJunctionPoint -> fromRoutePointIndexToRoadJunctionNode[routePointIndex]?.let(::Right)
                     else -> null
                 }
             }
-            .map(HasInfrastructureNodeId::getInfrastructureNodeId)
 
-        val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(firstLink, viaNodeIds, lastLink)
-
-        val nodeIdSequences: List<NodeIdSequence> = CreateNodeSequenceCombinations.create(nodesToVisit)
-
-        return PreProcessingResult(firstLink,
-                                   lastLink,
-                                   NodeSequenceCandidates(nodeIdSequences))
+        return PreProcessingResult(startLinkCandidates, endLinkCandidates, viaNodeResolvers)
     }
 
     /**
@@ -205,65 +223,100 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             }"
         }
 
-        val fromRoutePointIndexToInfrastructureLink: Map<Int, SnappedLinkState> =
+        val fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedLinkState> =
             fromRoutePointIndexToMatchedStopNationalId.mapValues { (_, stopNationalId: Int) ->
                 fromStopNationalIdToInfrastructureLink[stopNationalId]!!
             }
 
-        val (startLink: SnappedLinkState, endLink: SnappedLinkState) =
-            resolveTerminusLinksOfRoute(routePoints.first(),
-                                        routePoints.last(),
-                                        fromStopNationalIdToInfrastructureLink,
-                                        vehicleType,
-                                        terminusLinkQueryDistance)
+        val (startLinkCandidates: List<SnappedLinkState>, endLinkCandidates: List<SnappedLinkState>) =
+            findTerminusLinkCandidates(routePoints.first(),
+                                       routePoints.last(),
+                                       fromStopNationalIdToInfrastructureLink,
+                                       vehicleType,
+                                       terminusLinkQueryDistance)
 
-        return InfrastructureLinksOnRoute(startLink, endLink, fromRoutePointIndexToInfrastructureLink)
+        return InfrastructureLinksOnRoute(startLinkCandidates,
+                                          endLinkCandidates,
+                                          fromRouteStopPointIndexToInfrastructureLink)
     }
 
     /**
      * @throws [IllegalStateException]
      */
-    internal fun resolveTerminusLinksOfRoute(routeStartPoint: RoutePoint,
-                                             routeEndPoint: RoutePoint,
-                                             fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>,
-                                             vehicleType: VehicleType,
-                                             linkQueryDistance: Double)
-        : Pair<SnappedLinkState, SnappedLinkState> {
+    internal fun findTerminusLinkCandidates(routeStartPoint: RoutePoint,
+                                            routeEndPoint: RoutePoint,
+                                            fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>,
+                                            vehicleType: VehicleType,
+                                            linkQueryDistance: Double)
+        : Pair<List<SnappedLinkState>, List<SnappedLinkState>> {
 
-        val snappedLinkFromStartStop: SnappedLinkState? =
-            resolveTerminusLinkIfStopPoint(routeStartPoint, START, fromStopNationalIdToInfrastructureLink)
+        // If start link can be resolved via stop point matching, then only single candidate is returned.
+        val singletonStartLinkCandidate: List<SnappedLinkState>? =
+            resolveTerminusLinkIfStopPoint(routeStartPoint,
+                                           START,
+                                           fromStopNationalIdToInfrastructureLink)
+                ?.let(Collections::singletonList)
 
-        val snappedLinkFromEndStop: SnappedLinkState? =
-            resolveTerminusLinkIfStopPoint(routeEndPoint, END, fromStopNationalIdToInfrastructureLink)
+        // If end link can be resolved via stop point matching, then only single candidate is returned.
+        val singletonEndLinkCandidate: List<SnappedLinkState>? =
+            resolveTerminusLinkIfStopPoint(routeEndPoint,
+                                           END,
+                                           fromStopNationalIdToInfrastructureLink)
+                ?.let(Collections::singletonList)
 
-        if (snappedLinkFromStartStop != null && snappedLinkFromEndStop != null) {
-            return snappedLinkFromStartStop to snappedLinkFromEndStop
+        if (singletonStartLinkCandidate != null && singletonEndLinkCandidate != null) {
+            return singletonStartLinkCandidate to singletonEndLinkCandidate
         }
+
+        // If either terminus link could not be resolved via stop matching, then multiple terminus
+        // link candidates are retrieved by closest link search for affected endpoints of route.
 
         val routeStartLocation: Point<G2D> = routeStartPoint.location
         val routeEndLocation: Point<G2D> = routeEndPoint.location
 
-        // linkSearchResults is one-based index
-        val linkSearchResults: Map<Int, SnapPointToLinkDTO> =
-            linkRepository.findClosestLinks(listOf(routeStartLocation, routeEndLocation),
-                                            vehicleType,
-                                            linkQueryDistance)
+        // findNClosestLinks returns one-based index
+        val linkSearchResults: Map<Int, SnapPointToLinksDTO> =
+            linkRepository.findNClosestLinks(listOf(routeStartLocation, routeEndLocation),
+                                             vehicleType,
+                                             linkQueryDistance,
+                                             5) // limit candidates to 5 closest links
 
-        val startLink: SnappedLinkState =
-            snappedLinkFromStartStop ?: getTerminusLinkOrThrowException(linkSearchResults[1],
-                                                                        START,
-                                                                        routeStartLocation,
-                                                                        vehicleType,
-                                                                        linkQueryDistance)
+        val startLinkCandidates: List<SnappedLinkState> = singletonStartLinkCandidate
+            ?: trimTerminusLinkCandidatesToEndpointsOrThrowException(linkSearchResults[1]?.closestLinks,
+                                                                     START,
+                                                                     routeStartLocation,
+                                                                     vehicleType,
+                                                                     linkQueryDistance)
 
-        val endLink: SnappedLinkState =
-            snappedLinkFromEndStop ?: getTerminusLinkOrThrowException(linkSearchResults[2],
-                                                                      END,
-                                                                      routeEndLocation,
-                                                                      vehicleType,
-                                                                      linkQueryDistance)
+        val endLinkCandidates: List<SnappedLinkState> = singletonEndLinkCandidate
+            ?: trimTerminusLinkCandidatesToEndpointsOrThrowException(linkSearchResults[2]?.closestLinks,
+                                                                     END,
+                                                                     routeEndLocation,
+                                                                     vehicleType,
+                                                                     linkQueryDistance)
 
-        return startLink to endLink
+        return startLinkCandidates to endLinkCandidates
+    }
+
+    /**
+     * @throws [IllegalStateException]
+     */
+    internal fun trimTerminusLinkCandidatesToEndpointsOrThrowException(linkSearchResults: List<SnappedLinkState>?,
+                                                                       terminusType: TerminusType,
+                                                                       routePointLocation: Point<G2D>,
+                                                                       vehicleType: VehicleType,
+                                                                       linkQueryDistance: Double)
+        : List<SnappedLinkState> {
+
+        return linkSearchResults
+            ?.let { snappedLinks ->
+                snappedLinks.map {
+                    it.withSnappedToTerminusNode(Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
+                }
+            }
+            ?: throw IllegalStateException(
+                "Could not find infrastructure links within $linkQueryDistance meter distance from route $terminusType "
+                    + "point ($routePointLocation) while applying vehicle type constraint '$vehicleType'")
     }
 
     internal fun getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(
@@ -320,20 +373,28 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             .toMap()
     }
 
-    /**
-     * @throws [IllegalStateException]
-     */
-    internal fun resolveNetworkNodeIds(nodeSequenceCandidates: NodeSequenceCandidates,
-                                       vehicleType: VehicleType,
-                                       bufferAreaRestriction: BufferAreaRestriction)
-        : NodeIdSequence {
+    // It is expected that startLinkCandidates and endLinkCandidates are sorted in desired preference order.
+    internal fun resolveNodeSequenceCandidates(startLinkCandidates: List<SnappedLinkState>,
+                                               endLinkCandidates: List<SnappedLinkState>,
+                                               viaNodeHolders: List<Either<SnappedLinkState, NodeProximity>>)
+        : List<NodeSequenceCandidatesBetweenSnappedLinks> {
 
-        return nodeService
-            .resolveNodeIdSequence(nodeSequenceCandidates, vehicleType, bufferAreaRestriction)
-            .also { nodeIdSeq: NodeIdSequence ->
-                LOGGER.debug {
-                    "Resolved node resolution params ${nodeSequenceCandidates.prettyPrint()} to nodes $nodeIdSeq"
+        val viaNodeIds: List<InfrastructureNodeId> = viaNodeHolders.map { either ->
+            either.fold(HasInfrastructureNodeId::getInfrastructureNodeId,
+                        HasInfrastructureNodeId::getInfrastructureNodeId)
+        }
+
+        return startLinkCandidates
+            .flatMap { startLink ->
+                endLinkCandidates.map { endLink ->
+
+                    val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(startLink, viaNodeIds, endLink)
+
+                    NodeSequenceCandidatesBetweenSnappedLinks(startLink,
+                                                              endLink,
+                                                              CreateNodeSequenceCombinations.create(nodesToVisit))
                 }
             }
+            .filter(NodeSequenceCandidatesBetweenSnappedLinks::isRoutePossible)
     }
 }

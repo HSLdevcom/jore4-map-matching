@@ -10,7 +10,10 @@ import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidates
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionFailed
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionResult
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionSucceeded
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeSequenceCandidates
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
@@ -50,23 +53,25 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
         }
 
-        val nodeIdSeq: NodeIdSequence = try {
-            resolveNetworkNodeIds(closestLinks, vehicleType)
-        } catch (ex: Exception) {
-            val errMessage: String = ex.message ?: "Failure while resolving infrastructure network nodes"
-            LOGGER.warn(errMessage)
-            return RoutingResponse.noSegment(errMessage)
+        return when (val nodeSeqRes: NodeSequenceResolutionResult = resolveNetworkNodeIds(closestLinks, vehicleType)) {
+            is NodeSequenceResolutionSucceeded -> {
+
+                val nodeIdSequence: NodeIdSequence = nodeSeqRes.nodeIdSequence
+
+                LOGGER.debug { "Resolved node ID sequence: $nodeIdSequence" }
+
+                val route: RouteDTO = routingServiceInternal.findRoute(nodeIdSequence,
+                                                                       vehicleType,
+                                                                       nodeSeqRes.startLink.closestPointFractionalMeasure,
+                                                                       nodeSeqRes.endLink.closestPointFractionalMeasure)
+
+                return RoutingResponseCreator.create(route)
+            }
+            is NodeSequenceResolutionFailed -> {
+                LOGGER.warn(nodeSeqRes.message)
+                RoutingResponse.noSegment(nodeSeqRes.message)
+            }
         }
-
-        val snapToStartLink: SnapPointToLinkDTO = closestLinks.first()
-        val snapToEndLink: SnapPointToLinkDTO = closestLinks.last()
-
-        val route: RouteDTO = routingServiceInternal.findRoute(nodeIdSeq,
-                                                               vehicleType,
-                                                               snapToStartLink.link.closestPointFractionalMeasure,
-                                                               snapToEndLink.link.closestPointFractionalMeasure)
-
-        return RoutingResponseCreator.create(route)
     }
 
     private fun findClosestInfrastructureLinks(points: List<Point<G2D>>,
@@ -109,20 +114,15 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
      */
     private fun resolveNetworkNodeIds(closestLinks: Collection<SnapPointToLinkDTO>,
                                       vehicleType: VehicleType)
-        : NodeIdSequence {
+        : NodeSequenceResolutionResult {
 
-        val nodeSequenceCandidates: NodeSequenceCandidates = createNodeSequenceCandidates(closestLinks)
+        val nodeSequenceCandidates: NodeSequenceCandidatesBetweenSnappedLinks =
+            createNodeSequenceCandidates(closestLinks)
 
         require(nodeSequenceCandidates.isRoutePossible()) {
             "Cannot produce route based on single infrastructure node"
         }
 
-        return nodeService
-            .resolveNodeIdSequence(nodeSequenceCandidates, vehicleType)
-            .also { nodeIdSeq: NodeIdSequence ->
-                LOGGER.debug {
-                    "Resolved node resolution params ${nodeSequenceCandidates.prettyPrint()} to nodes $nodeIdSeq"
-                }
-            }
+        return nodeService.resolveNodeIdSequence(listOf(nodeSequenceCandidates), vehicleType)
     }
 }

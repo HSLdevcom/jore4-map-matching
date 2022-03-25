@@ -28,6 +28,7 @@
         <surefire-plugin.version>2.22.2</surefire-plugin.version>
 
         <!-- Library versions -->
+        <arrow-core.version>1.0.0</arrow-core.version>
         <geolatte.version>1.8.2</geolatte.version>
         <kotlin-logging-jvm.version>2.1.21</kotlin-logging-jvm.version>
         <quicktheories.version>0.26</quicktheories.version>
@@ -532,6 +533,12 @@
             <groupId>org.geolatte</groupId>
             <artifactId>geolatte-geojson</artifactId>
             <version>${geolatte.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-core</artifactId>
+            <version>${arrow-core.version}</version>
         </dependency>
 
         <dependency>
