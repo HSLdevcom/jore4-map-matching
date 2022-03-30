@@ -28,8 +28,8 @@ import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.resolveTe
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.validateInputForRouteMatching
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidates
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
@@ -57,7 +57,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
     internal data class PreProcessingResult(val startLink: SnappedLinkState,
                                             val endLink: SnappedLinkState,
-                                            val nodeSequenceAlternatives: NodeSequenceAlternatives)
+                                            val nodeSequenceCandidates: NodeSequenceCandidates)
 
     @Transactional(readOnly = true)
     override fun findMatchForPublicTransportRoute(routeGeometry: LineString<G2D>,
@@ -72,20 +72,20 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         val (startLink: SnappedLinkState,
             endLink: SnappedLinkState,
-            nodeSequenceAlternatives: NodeSequenceAlternatives) = try {
+            nodeSequenceCandidates: NodeSequenceCandidates) = try {
 
-            findTerminusLinksAndNodeSequenceAlternatives(routePoints,
-                                                         vehicleType,
-                                                         matchingParameters.terminusLinkQueryDistance,
-                                                         matchingParameters.maxStopLocationDeviation,
-                                                         matchingParameters.roadJunctionMatching)
+            findTerminusLinksAndNodeSequenceCandidates(routePoints,
+                                                       vehicleType,
+                                                       matchingParameters.terminusLinkQueryDistance,
+                                                       matchingParameters.maxStopLocationDeviation,
+                                                       matchingParameters.roadJunctionMatching)
         } catch (ex: RuntimeException) {
             val errMessage: String = ex.message ?: "Could not resolve node sequence alternatives"
             LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
 
-        if (!nodeSequenceAlternatives.isRoutePossible()) {
+        if (!nodeSequenceCandidates.isRoutePossible()) {
             return RoutingResponse.noSegment("Cannot produce route based on single infrastructure node")
         }
 
@@ -95,7 +95,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                           endLink.infrastructureLinkId)
 
         val nodeIdSeq: NodeIdSequence = try {
-            resolveNetworkNodeIds(nodeSequenceAlternatives, vehicleType, bufferAreaRestriction)
+            resolveNetworkNodeIds(nodeSequenceCandidates, vehicleType, bufferAreaRestriction)
         } catch (ex: RuntimeException) {
             val errMessage: String = ex.message ?: "Failure while resolving infrastructure network nodes"
             LOGGER.warn(errMessage)
@@ -114,11 +114,11 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     /**
      * @throws [IllegalStateException] in case a sequence of infrastructure node identifiers could not be resolved
      */
-    internal fun findTerminusLinksAndNodeSequenceAlternatives(routePoints: List<RoutePoint>,
-                                                              vehicleType: VehicleType,
-                                                              terminusLinkQueryDistance: Double,
-                                                              maxStopLocationDeviation: Double,
-                                                              junctionMatchingParams: JunctionMatchingParameters?)
+    internal fun findTerminusLinksAndNodeSequenceCandidates(routePoints: List<RoutePoint>,
+                                                            vehicleType: VehicleType,
+                                                            terminusLinkQueryDistance: Double,
+                                                            maxStopLocationDeviation: Double,
+                                                            junctionMatchingParams: JunctionMatchingParameters?)
         : PreProcessingResult {
 
         // Resolve infrastructure links to visit on route derived from the given route points.
@@ -152,9 +152,11 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(firstLink, viaNodeIds, lastLink)
 
+        val nodeIdSequences: List<NodeIdSequence> = NodeSequenceAlternativesCreator.create(nodesToVisit)
+
         return PreProcessingResult(firstLink,
                                    lastLink,
-                                   NodeSequenceAlternativesCreator.create(nodesToVisit))
+                                   NodeSequenceCandidates(nodeIdSequences))
     }
 
     /**
@@ -321,16 +323,16 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     /**
      * @throws [IllegalStateException]
      */
-    internal fun resolveNetworkNodeIds(nodeSequenceAlternatives: NodeSequenceAlternatives,
+    internal fun resolveNetworkNodeIds(nodeSequenceCandidates: NodeSequenceCandidates,
                                        vehicleType: VehicleType,
                                        bufferAreaRestriction: BufferAreaRestriction)
         : NodeIdSequence {
 
         return nodeService
-            .resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType, bufferAreaRestriction)
+            .resolveNodeIdSequence(nodeSequenceCandidates, vehicleType, bufferAreaRestriction)
             .also { nodeIdSeq: NodeIdSequence ->
                 LOGGER.debug {
-                    "Resolved node resolution params ${nodeSequenceAlternatives.prettyPrint()} to nodes $nodeIdSeq"
+                    "Resolved node resolution params ${nodeSequenceCandidates.prettyPrint()} to nodes $nodeIdSeq"
                 }
             }
     }

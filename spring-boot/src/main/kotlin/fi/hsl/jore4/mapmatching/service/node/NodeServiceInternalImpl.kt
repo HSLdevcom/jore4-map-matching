@@ -16,26 +16,26 @@ private val LOGGER = KotlinLogging.logger {}
 class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRepository) : INodeServiceInternal {
 
     @Transactional(readOnly = true, noRollbackFor = [IllegalStateException::class])
-    override fun resolveNodeIdSequence(nodeSequenceAlternatives: NodeSequenceAlternatives,
+    override fun resolveNodeIdSequence(nodeSequenceCandidates: NodeSequenceCandidates,
                                        vehicleType: VehicleType,
                                        bufferAreaRestriction: BufferAreaRestriction?)
         : NodeIdSequence {
 
-        val nodeIdSequences: List<NodeIdSequence> = nodeSequenceAlternatives.nodeIdSequences
+        val nodeIdSequences: List<NodeIdSequence> = nodeSequenceCandidates.nodeIdSequences
 
         if (nodeIdSequences.size == 1) {
             return nodeIdSequences.first()
         }
 
         LOGGER.debug {
-            "Resolving best node identifier sequence among alternatives: ${joinToLogString(nodeIdSequences)}"
+            "Resolving best node identifier sequence among candidates: ${joinToLogString(nodeIdSequences)}"
         }
 
         return nodeRepository.resolveNodeSequence(nodeIdSequences,
                                                   vehicleType,
                                                   bufferAreaRestriction)
             ?: throw IllegalStateException(
-                "Could not resolve node identifier sequence from ${nodeSequenceAlternatives.prettyPrint()}"
+                "Could not resolve node identifier sequence from ${nodeSequenceCandidates.prettyPrint()}"
             )
     }
 }

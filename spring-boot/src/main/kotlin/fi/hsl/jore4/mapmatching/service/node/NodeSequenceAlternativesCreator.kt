@@ -7,17 +7,13 @@ import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplica
 object NodeSequenceAlternativesCreator {
 
     /**
-     * Produce [NodeSequenceAlternatives] object containing possible sequences
-     * of infrastructure network node identifiers based on given parameters.
+     * Produce list of [NodeIdSequence] objects that contains possible sequences of infrastructure
+     * network node identifiers resolved from parameter.
      */
-    fun create(nodesToVisit: VisitedNodes): NodeSequenceAlternatives {
-        val nodeIdSequences: List<NodeIdSequence> = when (nodesToVisit) {
-            is VisitedNodesOnLink -> nodesToVisit.toListOfNodeIdSequences()
+    fun create(nodesToVisit: VisitedNodes): List<NodeIdSequence> = when (nodesToVisit) {
+        is VisitedNodesOnLink -> nodesToVisit.toListOfNodeIdSequences()
 
-            is VisitNodesOnMultipleLinks -> toListOfNodeIdSequences(nodesToVisit)
-        }
-
-        return NodeSequenceAlternatives(nodeIdSequences)
+        is VisitNodesOnMultipleLinks -> toListOfNodeIdSequences(nodesToVisit)
     }
 
     private fun toListOfNodeIdSequences(nodesToVisit: VisitNodesOnMultipleLinks): List<NodeIdSequence> {

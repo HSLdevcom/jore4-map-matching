@@ -4,21 +4,22 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 
 /**
- * Models alternative sequences of infrastructure network node identifiers
- * between infrastructure links at route start and end points. The variance
- * between sequences stems from whether the start and/or end link need to be
- * traversed forwards or backwards which we cannot know in advance in case of
- * bidirectional links. Therefore, we need to test which way produces the
- * shortest route while preserving both terminus links in the route.
+ * Models candidate sequences of infrastructure network node identifiers from
+ * which the best needs to be resolved. The node sequences are between certain
+ * infrastructure links at route start and end points. Variance between
+ * sequences stems from whether the terminus links need to be traversed forwards
+ * or backwards which we cannot predict in advance in case of bidirectional
+ * links. Therefore, we need to test which way produces the shortest route while
+ * preserving both terminus links as part of the route.
  *
  * @property nodeIdSequences list of infrastructure network node identifier
- * sequences from which the best needs to be resolved. Each sequence starts with
- * endpoint nodes of the start link and ends with the nodes associated with the
- * route's end link. The list contains at most four sequences of node
- * identifiers depending on whether direction of traversal on terminus links can
- * be determined based on the interim nodes.
+ * sequences. Each sequence starts with one or both endpoint nodes of the start
+ * link and ends with one or both nodes associated with the route's end link.
+ * The list may contain at most four sequences of node identifiers depending on
+ * whether the directions of traversal on terminus links can be determined by
+ * interim nodes.
  */
-data class NodeSequenceAlternatives(val nodeIdSequences: List<NodeIdSequence>) {
+data class NodeSequenceCandidates(val nodeIdSequences: List<NodeIdSequence>) {
 
     init {
         require(nodeIdSequences.isNotEmpty()) { "At least one node ID sequence must be provided" }

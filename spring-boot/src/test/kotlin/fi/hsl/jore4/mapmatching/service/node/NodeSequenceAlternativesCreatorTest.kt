@@ -34,7 +34,6 @@ class NodeSequenceAlternativesCreatorTest {
                     val nodesToVisit = VisitSingleNode(nodeId)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSize(1)
                 }
@@ -48,7 +47,6 @@ class NodeSequenceAlternativesCreatorTest {
                     val nodesToVisit = VisitSingleNode(nodeId)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .isEqualTo(
                             listOf(
@@ -72,7 +70,6 @@ class NodeSequenceAlternativesCreatorTest {
                     val nodesToVisit = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSize(1)
                 }
@@ -86,7 +83,6 @@ class NodeSequenceAlternativesCreatorTest {
                     val nodesToVisit = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .isEqualTo(
                             listOf(
@@ -110,7 +106,6 @@ class NodeSequenceAlternativesCreatorTest {
                     val nodesToVisit = VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSize(2)
                 }
@@ -124,7 +119,6 @@ class NodeSequenceAlternativesCreatorTest {
                     val nodesToVisit = VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .isEqualTo(
                             listOf(
@@ -159,7 +153,6 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  someNodesToVisitOnEndLink)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSizeGreaterThanOrEqualTo(1)
                         .hasSizeLessThanOrEqualTo(4)
@@ -179,9 +172,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  viaNodeIds,
                                                                  someNodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.size >= 1
                         }
@@ -201,9 +192,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  viaNodeIds,
                                                                  someNodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             val listOfNodeIds: List<InfrastructureNodeId> = nodeIdSeq.list
 
@@ -243,12 +232,10 @@ class NodeSequenceAlternativesCreatorTest {
                 qt().forAll(genVisitedNodes)
                     .checkAssert { nodesToVisit ->
 
-                        val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
                         val (someNodesToVisitOnStartLink, viaNodeIds, someNodesToVisitOnEndLink) = nodesToVisit
                         val reducedViaNodeIds: List<InfrastructureNodeId> = filterOutConsecutiveDuplicates(viaNodeIds)
 
-                        assertThat(result.nodeIdSequences)
+                        assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                             .allMatch { nodeIdSeq ->
 
                                 val actualViaNodeIds: List<InfrastructureNodeId> =
@@ -279,7 +266,6 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  someNodesToVisitOnEndLink)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSizeLessThanOrEqualTo(2)
                 }
@@ -293,9 +279,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  viaNodeIds,
                                                                  someNodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.list.first() == singleNodeIdOnStartLink
                         }
@@ -320,7 +304,6 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  VisitSingleNode(singleNodeIdOnEndLink))
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSizeLessThanOrEqualTo(2)
                 }
@@ -334,9 +317,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  viaNodeIds,
                                                                  VisitSingleNode(singleNodeIdOnEndLink))
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.list.last() == singleNodeIdOnEndLink
                         }
@@ -362,7 +343,6 @@ class NodeSequenceAlternativesCreatorTest {
                                                   someNodesToVisitOnEndLink)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSizeLessThanOrEqualTo(2)
                 }
@@ -377,9 +357,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                   viaNodeIds,
                                                   someNodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.size >= 2
                         }
@@ -396,9 +374,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  viaNodeIds,
                                                                  someNodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.list.take(2) == nodesToVisitOnStartLink.toListOfNodeIds()
                         }
@@ -424,7 +400,6 @@ class NodeSequenceAlternativesCreatorTest {
                                                   VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId))
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSizeLessThanOrEqualTo(2)
                 }
@@ -439,9 +414,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                   viaNodeIds,
                                                   VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId))
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.size >= 2
                         }
@@ -458,9 +431,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  viaNodeIds,
                                                                  nodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.list.takeLast(2) == nodesToVisitOnEndLink.toListOfNodeIds()
                         }
@@ -486,7 +457,6 @@ class NodeSequenceAlternativesCreatorTest {
                                                   someNodesToVisitOnEndLink)
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSizeGreaterThanOrEqualTo(2)
                 }
@@ -501,9 +471,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                   viaNodeIds,
                                                   someNodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.size >= 2
                         }
@@ -520,9 +488,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  viaNodeIds,
                                                                  someNodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             val expectedNodeIds: List<InfrastructureNodeId> = nodesToVisitOnStartLink.toListOfNodeIds()
 
@@ -552,7 +518,6 @@ class NodeSequenceAlternativesCreatorTest {
                                                   VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId))
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSizeGreaterThanOrEqualTo(2)
                 }
@@ -567,9 +532,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                   viaNodeIds,
                                                   VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId))
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.size >= 2
                         }
@@ -586,9 +549,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                  viaNodeIds,
                                                                  nodesToVisitOnEndLink)
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             val expectedNodeIds: List<InfrastructureNodeId> = nodesToVisitOnEndLink.toListOfNodeIds()
 
@@ -618,7 +579,6 @@ class NodeSequenceAlternativesCreatorTest {
                                                   VisitNodesOfSingleLinkBidirectionally(startNodeId2, endNodeId2))
 
                     assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
-                        .extracting(NodeSequenceAlternatives::nodeIdSequences)
                         .asList()
                         .hasSize(4)
                 }
@@ -633,9 +593,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                   viaNodeIds,
                                                   VisitNodesOfSingleLinkBidirectionally(startNodeId2, endNodeId2))
 
-                    val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                    assertThat(result.nodeIdSequences)
+                    assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
                             nodeIdSeq.size >= 3
                         }
@@ -677,9 +635,7 @@ class NodeSequenceAlternativesCreatorTest {
                                                                      viaNodeIds,
                                                                      nodesToVisitOnendLink)
 
-                        val result: NodeSequenceAlternatives = NodeSequenceAlternativesCreator.create(nodesToVisit)
-
-                        assertThat(result.nodeIdSequences)
+                        assertThat(NodeSequenceAlternativesCreator.create(nodesToVisit))
                             .allMatch { nodeIdSeq ->
                                 nodeIdSeq.size >= 4
                             }

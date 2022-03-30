@@ -10,8 +10,8 @@ import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeSequenceAlternatives
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidates
+import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeSequenceCandidates
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
@@ -111,17 +111,17 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
                                       vehicleType: VehicleType)
         : NodeIdSequence {
 
-        val nodeSequenceAlternatives: NodeSequenceAlternatives = createNodeSequenceAlternatives(closestLinks)
+        val nodeSequenceCandidates: NodeSequenceCandidates = createNodeSequenceCandidates(closestLinks)
 
-        require(nodeSequenceAlternatives.isRoutePossible()) {
+        require(nodeSequenceCandidates.isRoutePossible()) {
             "Cannot produce route based on single infrastructure node"
         }
 
         return nodeService
-            .resolveNodeIdSequence(nodeSequenceAlternatives, vehicleType)
+            .resolveNodeIdSequence(nodeSequenceCandidates, vehicleType)
             .also { nodeIdSeq: NodeIdSequence ->
                 LOGGER.debug {
-                    "Resolved node resolution params ${nodeSequenceAlternatives.prettyPrint()} to nodes $nodeIdSeq"
+                    "Resolved node resolution params ${nodeSequenceCandidates.prettyPrint()} to nodes $nodeIdSeq"
                 }
             }
     }

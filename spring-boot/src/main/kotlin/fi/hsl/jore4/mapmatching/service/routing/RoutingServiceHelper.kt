@@ -2,10 +2,11 @@ package fi.hsl.jore4.mapmatching.service.routing
 
 import fi.hsl.jore4.mapmatching.model.HasInfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternatives
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidates
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
 import org.geolatte.geom.G2D
@@ -25,7 +26,7 @@ object RoutingServiceHelper {
     /**
      * @throws [IllegalArgumentException] if a route could not be resolved
      */
-    internal fun createNodeSequenceAlternatives(snaps: Collection<SnapPointToLinkDTO>): NodeSequenceAlternatives {
+    internal fun createNodeSequenceCandidates(snaps: Collection<SnapPointToLinkDTO>): NodeSequenceCandidates {
         val links: List<SnappedLinkState> = snaps.map(SnapPointToLinkDTO::link)
 
         require(links.isNotEmpty()) { "Must have at least one infrastructure link" }
@@ -37,6 +38,8 @@ object RoutingServiceHelper {
 
         val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(links.first(), viaNodeIds, links.last())
 
-        return NodeSequenceAlternativesCreator.create(nodesToVisit)
+        val nodeIdSequences: List<NodeIdSequence> = NodeSequenceAlternativesCreator.create(nodesToVisit)
+
+        return NodeSequenceCandidates(nodeIdSequences)
     }
 }

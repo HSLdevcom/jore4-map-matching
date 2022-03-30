@@ -8,9 +8,9 @@ interface INodeServiceInternal {
 
     /**
      * Resolves an optimal sequence of identifiers for infrastructure network
-     * nodes from the options provided by [nodeSequenceAlternatives] object.
+     * nodes from the given [nodeSequenceCandidates].
      *
-     * @param nodeSequenceAlternatives provides node sequence alternatives from
+     * @param nodeSequenceCandidates provides node sequence candidates from
      * which the best needs to be resolved
      * @param vehicleType vehicle type constraint to be applied while resolving
      * optimal node sequence. Only those infrastructure links should be
@@ -22,7 +22,7 @@ interface INodeServiceInternal {
      * @throws [IllegalStateException] if node identifier sequence could not be
      * resolved
      */
-    fun resolveNodeIdSequence(nodeSequenceAlternatives: NodeSequenceAlternatives,
+    fun resolveNodeIdSequence(nodeSequenceCandidates: NodeSequenceCandidates,
                               vehicleType: VehicleType,
                               bufferAreaRestriction: BufferAreaRestriction? = null)
         : NodeIdSequence
