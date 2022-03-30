@@ -24,7 +24,7 @@ class QueryHelperTest {
                   l.reverse_cost
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
-                ON s.infrastructure_link_id = l.infrastructure_link_id
+                  ON s.infrastructure_link_id = l.infrastructure_link_id
                 WHERE s.vehicle_type = ''' || ? || ''''""".trimIndent())
         }
 
@@ -41,7 +41,7 @@ class QueryHelperTest {
                   l.reverse_cost
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
-                ON s.infrastructure_link_id = l.infrastructure_link_id
+                  ON s.infrastructure_link_id = l.infrastructure_link_id
                 WHERE s.vehicle_type = ''' || :vehicleType || ''''""".trimIndent())
         }
     }
@@ -63,12 +63,12 @@ class QueryHelperTest {
                   l.reverse_cost
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
-                ON s.infrastructure_link_id = l.infrastructure_link_id
+                  ON s.infrastructure_link_id = l.infrastructure_link_id
                 WHERE s.vehicle_type = ''' || ? || '''
-                AND (
-                  l.infrastructure_link_id IN (''' || ? || ''', ''' || ? || ''')
-                  OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || ? || '''), 3067), ''' || ? || '''), l.geom)
-                )'""".trimIndent())
+                  AND (
+                    l.infrastructure_link_id IN (''' || ? || ''',''' || ? || ''')
+                    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || ? || '''), 3067), ''' || ? || '''), l.geom)
+                  )'""".trimIndent())
         }
 
         @Test
@@ -87,12 +87,12 @@ class QueryHelperTest {
                   l.reverse_cost
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
-                ON s.infrastructure_link_id = l.infrastructure_link_id
+                  ON s.infrastructure_link_id = l.infrastructure_link_id
                 WHERE s.vehicle_type = ''' || :vehicleType || '''
-                AND (
-                  l.infrastructure_link_id IN (''' || :startLinkId || ''', ''' || :endLinkId || ''')
-                  OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || :lineStringEwkb || '''), 3067), ''' || :bufferRadius || '''), l.geom)
-                )'""".trimIndent())
+                  AND (
+                    l.infrastructure_link_id IN (''' || :startLinkId || ''',''' || :endLinkId || ''')
+                    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || :lineStringEwkb || '''), 3067), ''' || :bufferRadius || '''), l.geom)
+                  )'""".trimIndent())
         }
     }
 }

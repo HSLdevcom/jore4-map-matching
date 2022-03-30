@@ -80,7 +80,7 @@ object QueryHelper {
           l.reverse_cost
         FROM routing.infrastructure_link l
         INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
-        ON s.infrastructure_link_id = l.infrastructure_link_id
+          ON s.infrastructure_link_id = l.infrastructure_link_id
         WHERE s.vehicle_type = $vehicleTypeParameter""".trimIndent()
 
     private fun getVehicleTypeAndBufferAreaConstrainedLinksQueryInternal(vehicleTypeParameter: String,
@@ -90,8 +90,8 @@ object QueryHelper {
                                                                          bufferRadiusVariable: String): String =
         getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter) + """
 
-            AND (
-              l.infrastructure_link_id IN ($startLinkIdParameter, $endLinkIdParameter)
-              OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB($lineStringEwkbVariable), 3067), $bufferRadiusVariable), l.geom)
-            )""".trimIndent()
+        |  AND (
+        |    l.infrastructure_link_id IN ($startLinkIdParameter,$endLinkIdParameter)
+        |    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB($lineStringEwkbVariable), 3067), $bufferRadiusVariable), l.geom)
+        |  )""".trimMargin()
 }
