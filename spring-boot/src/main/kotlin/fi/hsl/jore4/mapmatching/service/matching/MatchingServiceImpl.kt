@@ -85,6 +85,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             findTerminusLinkCandidatesAndViaNodes(routePoints,
                                                   vehicleType,
                                                   matchingParameters.terminusLinkQueryDistance,
+                                                  matchingParameters.terminusLinkQueryLimit,
                                                   matchingParameters.maxStopLocationDeviation,
                                                   matchingParameters.roadJunctionMatching)
         } catch (ex: RuntimeException) {
@@ -142,6 +143,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     internal fun findTerminusLinkCandidatesAndViaNodes(routePoints: List<RoutePoint>,
                                                        vehicleType: VehicleType,
                                                        terminusLinkQueryDistance: Double,
+                                                       terminusLinkQueryLimit: Int,
                                                        maxStopLocationDeviation: Double,
                                                        junctionMatchingParams: JunctionMatchingParameters?)
         : PreProcessingResult {
@@ -154,6 +156,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         ) = findInfrastructureLinksOnRoute(routePoints,
                                            vehicleType,
                                            terminusLinkQueryDistance,
+                                           terminusLinkQueryLimit,
                                            maxStopLocationDeviation)
 
         // Resolve infrastructure network nodes to visit on route derived from the given route points.
@@ -183,6 +186,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     internal fun findInfrastructureLinksOnRoute(routePoints: List<RoutePoint>,
                                                 vehicleType: VehicleType,
                                                 terminusLinkQueryDistance: Double,
+                                                terminusLinkQueryLimit: Int,
                                                 maxStopLocationDeviation: Double)
         : InfrastructureLinksOnRoute {
 
@@ -231,9 +235,10 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val (startLinkCandidates: List<SnappedLinkState>, endLinkCandidates: List<SnappedLinkState>) =
             findTerminusLinkCandidates(routePoints.first(),
                                        routePoints.last(),
-                                       fromStopNationalIdToInfrastructureLink,
+                                       terminusLinkQueryDistance,
+                                       terminusLinkQueryLimit,
                                        vehicleType,
-                                       terminusLinkQueryDistance)
+                                       fromStopNationalIdToInfrastructureLink)
 
         return InfrastructureLinksOnRoute(startLinkCandidates,
                                           endLinkCandidates,
@@ -245,9 +250,10 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
      */
     internal fun findTerminusLinkCandidates(routeStartPoint: RoutePoint,
                                             routeEndPoint: RoutePoint,
-                                            fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>,
+                                            linkQueryDistance: Double,
+                                            linkQueryLimit: Int,
                                             vehicleType: VehicleType,
-                                            linkQueryDistance: Double)
+                                            fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>)
         : Pair<List<SnappedLinkState>, List<SnappedLinkState>> {
 
         // If start link can be resolved via stop point matching, then only single candidate is returned.
@@ -279,7 +285,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             linkRepository.findNClosestLinks(listOf(routeStartLocation, routeEndLocation),
                                              vehicleType,
                                              linkQueryDistance,
-                                             5) // limit candidates to 5 closest links
+                                             linkQueryLimit) // limit number of the closest links considered as terminus link candidates
 
         val startLinkCandidates: List<SnappedLinkState> = singletonStartLinkCandidate
             ?: trimTerminusLinkCandidatesToEndpointsOrThrowException(linkSearchResults[1]?.closestLinks,
