@@ -62,10 +62,10 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
 
                 val bufferAreaRestrictionWithTerminusLinkIds: BufferAreaRestriction? =
                     bufferAreaRestriction?.run {
-                        BufferAreaRestriction(lineGeometry,
-                                              bufferRadiusInMeters,
-                                              setOf(candidatesBetweenTwoLinks.startLink.infrastructureLinkId,
-                                                    candidatesBetweenTwoLinks.endLink.infrastructureLinkId))
+                        BufferAreaRestriction.from(lineGeometry,
+                                                   bufferRadiusInMeters,
+                                                   candidatesBetweenTwoLinks.startLink,
+                                                   candidatesBetweenTwoLinks.endLink)
                     }
 
                 nodeRepository

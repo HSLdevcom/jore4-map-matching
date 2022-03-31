@@ -39,6 +39,7 @@ import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionResult
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionSucceeded
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toPoint
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
 import org.geolatte.geom.G2D
@@ -47,7 +48,6 @@ import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.Collections
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -82,7 +82,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             endLinkCandidates: List<SnappedLinkState>,
             viaNodeResolvers: List<Either<SnappedLinkState, NodeProximity>>) = try {
 
-            findTerminusLinkCandidatesAndViaNodes(routePoints,
+            findTerminusLinkCandidatesAndViaNodes(routeGeometry,
+                                                  routePoints,
                                                   vehicleType,
                                                   matchingParameters.terminusLinkQueryDistance,
                                                   matchingParameters.terminusLinkQueryLimit,
@@ -123,10 +124,10 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                              vehicleType,
                                              startLink.closestPointFractionalMeasure,
                                              endLink.closestPointFractionalMeasure,
-                                             BufferAreaRestriction(routeGeometry,
-                                                                   matchingParameters.bufferRadiusInMeters,
-                                                                   setOf(startLink.infrastructureLinkId,
-                                                                         endLink.infrastructureLinkId)))
+                                             BufferAreaRestriction.from(routeGeometry,
+                                                                        matchingParameters.bufferRadiusInMeters,
+                                                                        startLink,
+                                                                        endLink))
 
                 RoutingResponseCreator.create(route)
             }
@@ -140,7 +141,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     /**
      * @throws [IllegalStateException]
      */
-    internal fun findTerminusLinkCandidatesAndViaNodes(routePoints: List<RoutePoint>,
+    internal fun findTerminusLinkCandidatesAndViaNodes(routeGeometry: LineString<G2D>,
+                                                       routePoints: List<RoutePoint>,
                                                        vehicleType: VehicleType,
                                                        terminusLinkQueryDistance: Double,
                                                        terminusLinkQueryLimit: Int,
@@ -148,12 +150,13 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                        junctionMatchingParams: JunctionMatchingParameters?)
         : PreProcessingResult {
 
-        // Resolve infrastructure links to visit on route derived from the given route points.
+        // Resolve infrastructure links to visit on route derived from the given geometry and route points.
         val (
             startLinkCandidates: List<SnappedLinkState>,
             endLinkCandidates: List<SnappedLinkState>,
             fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedLinkState?>
-        ) = findInfrastructureLinksOnRoute(routePoints,
+        ) = findInfrastructureLinksOnRoute(routeGeometry,
+                                           routePoints,
                                            vehicleType,
                                            terminusLinkQueryDistance,
                                            terminusLinkQueryLimit,
@@ -183,7 +186,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     /**
      * @throws [IllegalStateException]
      */
-    internal fun findInfrastructureLinksOnRoute(routePoints: List<RoutePoint>,
+    internal fun findInfrastructureLinksOnRoute(routeGeometry: LineString<G2D>,
+                                                routePoints: List<RoutePoint>,
                                                 vehicleType: VehicleType,
                                                 terminusLinkQueryDistance: Double,
                                                 terminusLinkQueryLimit: Int,
@@ -196,7 +200,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                     is RouteStopPoint -> routePoint.nationalId?.let { nationalId ->
 
                         // Prefer projected location because it is expected to be closer to
-                        // public transport stop location within Digiroad.
+                        // public transport stop location when compared to Digiroad locations.
                         val sourceLocation: Point<G2D> = routePoint.projectedLocation ?: routePoint.location
 
                         index to PublicTransportStopMatchParameters(nationalId, sourceLocation)
@@ -227,18 +231,28 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             }"
         }
 
-        val fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedLinkState> =
-            fromRoutePointIndexToMatchedStopNationalId.mapValues { (_, stopNationalId: Int) ->
-                fromStopNationalIdToInfrastructureLink[stopNationalId]!!
+        fun getRouteTerminusPoint(routePoint: RoutePoint, terminusType: TerminusType): RouteTerminusPoint {
+            val location: Point<G2D> =
+                toPoint(if (terminusType == START) routeGeometry.startPosition else routeGeometry.endPosition)
+
+            return when (routePoint) {
+                is RouteStopPoint -> RouteTerminusPoint(location, terminusType, true, routePoint.nationalId)
+                else -> RouteTerminusPoint(location, terminusType, false, null)
             }
+        }
 
         val (startLinkCandidates: List<SnappedLinkState>, endLinkCandidates: List<SnappedLinkState>) =
-            findTerminusLinkCandidates(routePoints.first(),
-                                       routePoints.last(),
+            findTerminusLinkCandidates(getRouteTerminusPoint(routePoints.first(), START),
+                                       getRouteTerminusPoint(routePoints.last(), END),
                                        terminusLinkQueryDistance,
                                        terminusLinkQueryLimit,
                                        vehicleType,
                                        fromStopNationalIdToInfrastructureLink)
+
+        val fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedLinkState> =
+            fromRoutePointIndexToMatchedStopNationalId.mapValues { (_, stopNationalId: Int) ->
+                fromStopNationalIdToInfrastructureLink[stopNationalId]!!
+            }
 
         return InfrastructureLinksOnRoute(startLinkCandidates,
                                           endLinkCandidates,
@@ -248,81 +262,70 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     /**
      * @throws [IllegalStateException]
      */
-    internal fun findTerminusLinkCandidates(routeStartPoint: RoutePoint,
-                                            routeEndPoint: RoutePoint,
+    internal fun findTerminusLinkCandidates(routeStartPoint: RouteTerminusPoint,
+                                            routeEndPoint: RouteTerminusPoint,
                                             linkQueryDistance: Double,
                                             linkQueryLimit: Int,
                                             vehicleType: VehicleType,
                                             fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>)
         : Pair<List<SnappedLinkState>, List<SnappedLinkState>> {
 
-        // If start link can be resolved via stop point matching, then only single candidate is returned.
-        val singletonStartLinkCandidate: List<SnappedLinkState>? =
-            resolveTerminusLinkIfStopPoint(routeStartPoint,
-                                           START,
-                                           fromStopNationalIdToInfrastructureLink)
-                ?.let(Collections::singletonList)
-
-        // If end link can be resolved via stop point matching, then only single candidate is returned.
-        val singletonEndLinkCandidate: List<SnappedLinkState>? =
-            resolveTerminusLinkIfStopPoint(routeEndPoint,
-                                           END,
-                                           fromStopNationalIdToInfrastructureLink)
-                ?.let(Collections::singletonList)
-
-        if (singletonStartLinkCandidate != null && singletonEndLinkCandidate != null) {
-            return singletonStartLinkCandidate to singletonEndLinkCandidate
-        }
-
-        // If either terminus link could not be resolved via stop matching, then multiple terminus
-        // link candidates are retrieved by closest link search for affected endpoints of route.
-
         val routeStartLocation: Point<G2D> = routeStartPoint.location
         val routeEndLocation: Point<G2D> = routeEndPoint.location
 
-        // findNClosestLinks returns one-based index
+        // `findNClosestLinks` returns one-based index.
+        // The number of closest links considered as terminus link candidates is limited by `linkQueryLimit`.
         val linkSearchResults: Map<Int, SnapPointToLinksDTO> =
             linkRepository.findNClosestLinks(listOf(routeStartLocation, routeEndLocation),
                                              vehicleType,
                                              linkQueryDistance,
-                                             linkQueryLimit) // limit number of the closest links considered as terminus link candidates
+                                             linkQueryLimit)
 
-        val startLinkCandidates: List<SnappedLinkState> = singletonStartLinkCandidate
-            ?: trimTerminusLinkCandidatesToEndpointsOrThrowException(linkSearchResults[1]?.closestLinks,
-                                                                     START,
-                                                                     routeStartLocation,
-                                                                     vehicleType,
-                                                                     linkQueryDistance)
+        fun getExceptionIfCandidatesNotFound(routeTerminusPoint: RouteTerminusPoint) =
+            IllegalStateException(
+                "Could not find infrastructure links within $linkQueryDistance meter distance from route " +
+                    "${routeTerminusPoint.terminusType} point (${routeTerminusPoint.location}) while applying " +
+                    "vehicle type constraint '$vehicleType'")
 
-        val endLinkCandidates: List<SnappedLinkState> = singletonEndLinkCandidate
-            ?: trimTerminusLinkCandidatesToEndpointsOrThrowException(linkSearchResults[2]?.closestLinks,
-                                                                     END,
-                                                                     routeEndLocation,
-                                                                     vehicleType,
-                                                                     linkQueryDistance)
+        val startLinkCandidates: List<SnappedLinkState> = linkSearchResults[1]?.closestLinks
+            ?: throw getExceptionIfCandidatesNotFound(routeStartPoint)
 
-        return startLinkCandidates to endLinkCandidates
-    }
+        val endLinkCandidates: List<SnappedLinkState> = linkSearchResults[2]?.closestLinks
+            ?: throw getExceptionIfCandidatesNotFound(routeEndPoint)
 
-    /**
-     * @throws [IllegalStateException]
-     */
-    internal fun trimTerminusLinkCandidatesToEndpointsOrThrowException(linkSearchResults: List<SnappedLinkState>?,
-                                                                       terminusType: TerminusType,
-                                                                       routePointLocation: Point<G2D>,
-                                                                       vehicleType: VehicleType,
-                                                                       linkQueryDistance: Double)
-        : List<SnappedLinkState> {
+        fun sortLinkCandidatesAndTrimSnapPoint(terminusLinkCandidates: List<SnappedLinkState>,
+                                               routeTerminusPoint: RouteTerminusPoint)
+            : List<SnappedLinkState> {
 
-        return linkSearchResults
-            ?.let { snappedLinks ->
-                snappedLinks.map {
-                    it.withSnappedToTerminusNode(Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
+            val snappedLinkFromStop: SnappedLinkState? =
+                resolveTerminusLinkIfStopPoint(routeTerminusPoint, fromStopNationalIdToInfrastructureLink)
+
+            val sortedLinkCandidates: List<SnappedLinkState> = when (snappedLinkFromStop) {
+                null -> terminusLinkCandidates
+                else -> {
+                    // `otherCandidates` should be in same order than original `terminusLinkCandidates`.
+                    val (stopMatchedLinkCandidate, otherCandidates) = terminusLinkCandidates.partition {
+                        it.infrastructureLinkId == snappedLinkFromStop.infrastructureLinkId
+                    }
+
+                    // Prioritise the link candidate along which the given public transport stop resides.
+                    stopMatchedLinkCandidate + otherCandidates
                 }
             }
-            ?: throw IllegalStateException(
-                "Could not find infrastructure links within $linkQueryDistance meter distance from route $terminusType "
-                    + "point ($routePointLocation) while applying vehicle type constraint '$vehicleType'")
+
+            return sortedLinkCandidates.map {
+                // Move snap point to link endpoint if within given threshold distance.
+                it.withSnappedToTerminusNode(Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
+            }
+        }
+
+        val trimmedStartLinkCandidates: List<SnappedLinkState> =
+            sortLinkCandidatesAndTrimSnapPoint(startLinkCandidates, routeStartPoint)
+
+        val trimmedEndLinkCandidates: List<SnappedLinkState> =
+            sortLinkCandidatesAndTrimSnapPoint(endLinkCandidates, routeEndPoint)
+
+        return trimmedStartLinkCandidates to trimmedEndLinkCandidates
     }
 
     internal fun getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(

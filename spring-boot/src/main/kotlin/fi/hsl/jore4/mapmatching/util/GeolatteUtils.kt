@@ -5,6 +5,7 @@ import fi.hsl.jore4.mapmatching.model.LatLng
 import org.geolatte.geom.ByteBuffer
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Geometries.mkLineString
+import org.geolatte.geom.Geometries.mkPoint
 import org.geolatte.geom.Geometry
 import org.geolatte.geom.GeometryType
 import org.geolatte.geom.LineString
@@ -14,6 +15,8 @@ import org.geolatte.geom.codec.Wkb
 import org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84
 
 object GeolatteUtils {
+
+    fun toPoint(position: G2D): Point<G2D> = mkPoint(position, WGS84)
 
     fun toPoints(coords: List<LatLng>): List<Point<G2D>> = coords.map(LatLng::toGeolattePoint)
 

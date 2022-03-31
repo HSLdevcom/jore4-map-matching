@@ -73,9 +73,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             return emptyMap()
         }
 
-        val query: String = bufferAreaRestriction
-            ?.run { getQueryForResolvingBestNodeSequences(numCandidates, idsOfCandidatesForTerminusLink?.size ?: 0) }
-            ?: getQueryForResolvingBestNodeSequences(numCandidates, null)
+        val query: String = getQueryForResolvingBestNodeSequences(numCandidates, bufferAreaRestriction)
 
         val preparedStatementCreator = PreparedStatementCreator { conn ->
             val pstmt: PreparedStatement = conn.prepareStatement(query)
@@ -96,8 +94,15 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
             // Set additional parameters if restricting infrastructure links with a buffer area.
             bufferAreaRestriction?.run {
-                idsOfCandidatesForTerminusLink?.forEach {
-                    pstmt.setLong(paramIndex++, it.value)
+                explicitLinkReferences?.run {
+                    idsOfCandidatesForTerminusLinks.forEach {
+                        pstmt.setLong(paramIndex++, it.value)
+                    }
+                    repeat(2) { // node IDs need to be set twice, separately for start and end nodes
+                        idsOfCandidatesForTerminusNodes.forEach {
+                            pstmt.setLong(paramIndex++, it.value)
+                        }
+                    }
                 }
                 pstmt.setBytes(paramIndex++, toEwkb(lineGeometry))
                 pstmt.setDouble(paramIndex++, bufferRadiusInMeters)
@@ -161,7 +166,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
          * variables in Spring JDBC templates.
          */
         private fun getQueryForResolvingBestNodeSequences(numberOfSequenceCandidates: Int,
-                                                          terminusLinkCountWhenBufferAreaRestrictionEnabled: Int?)
+                                                          bufferAreaRestriction: BufferAreaRestriction?)
             : String {
 
             require(numberOfSequenceCandidates in 1..100) { "numberOfSequenceCandidates must be in range 1..100" }
@@ -169,10 +174,17 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             // The produced SQL query is enclosed in quotes and passed as parameter to
             // pgr_dijkstraVia() function. '?' is used as a bind variable placeholder. Actual
             // variable binding is left to occur within initialisation of PreparedStatement.
-            val linkSelectionQueryForPgrDijkstra: String =
-                terminusLinkCountWhenBufferAreaRestrictionEnabled
-                    ?.let(QueryHelper::getVehicleTypeAndBufferAreaConstrainedLinksQuery)
-                    ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
+            val linkSelectionQueryForPgrDijkstra: String = bufferAreaRestriction
+                ?.run {
+                    explicitLinkReferences
+                        ?.run {
+                            QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+                                idsOfCandidatesForTerminusLinks.size,
+                                idsOfCandidatesForTerminusNodes.size)
+                        }
+                        ?: QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
+                }
+                ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
             fun createUnionSubquery(numberOfSequenceCandidates: Int): String = (1..numberOfSequenceCandidates)
                 .joinToString(
