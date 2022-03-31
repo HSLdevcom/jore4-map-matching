@@ -91,8 +91,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         val bufferAreaRestriction = BufferAreaRestriction(routeGeometry,
                                                           matchingParameters.bufferRadiusInMeters,
-                                                          startLink.infrastructureLinkId,
-                                                          endLink.infrastructureLinkId)
+                                                          setOf(startLink.infrastructureLinkId,
+                                                                endLink.infrastructureLinkId))
 
         val nodeIdSeq: NodeIdSequence = try {
             resolveNetworkNodeIds(nodeSequenceCandidates, vehicleType, bufferAreaRestriction)

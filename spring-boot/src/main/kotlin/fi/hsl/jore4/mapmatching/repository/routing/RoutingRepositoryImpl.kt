@@ -50,8 +50,9 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
 
             // Set additional parameters if restricting infrastructure links with a buffer area.
             bufferAreaRestriction?.run {
-                pstmt.setLong(paramIndex++, infrastructureLinkIdAtStart.value)
-                pstmt.setLong(paramIndex++, infrastructureLinkIdAtEnd.value)
+                idsOfCandidatesForTerminusLink?.forEach {
+                    pstmt.setLong(paramIndex++, it.value)
+                }
                 pstmt.setBytes(paramIndex++, toEwkb(lineGeometry))
                 pstmt.setDouble(paramIndex++, bufferRadiusInMeters)
             }
@@ -65,9 +66,9 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             pstmt.setDouble(paramIndex++, fractionalEndLocationOnLastLink)
         }
 
-        val restrictionWithBufferArea: Boolean = bufferAreaRestriction != null
-
-        val queryString: String = getQueryForFindingRouteViaNodes(restrictionWithBufferArea)
+        val queryString: String = bufferAreaRestriction
+            ?.run { getQueryForFindingRouteViaNodes(idsOfCandidatesForTerminusLink?.size ?: 0) }
+            ?: getQueryForFindingRouteViaNodes(null)
 
         val queryResults: Map<Boolean, List<RouteLinkDTO>> = jdbcTemplate.jdbcOperations
             .queryForStream(queryString, parameterSetter) { rs: ResultSet, _: Int ->
@@ -118,21 +119,21 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     }
 
     companion object {
+
         /**
          * The generated query uses '?' placeholder for bind variables since
          * there exist SQL ARRAY parameters that cannot be set via named
          * variables in Spring JDBC templates.
          */
-        private fun getQueryForFindingRouteViaNodes(restrictWithBufferArea: Boolean): String {
+        private fun getQueryForFindingRouteViaNodes(terminusLinkCountWhenBufferAreaRestrictionEnabled: Int?): String {
             // The produced SQL query is enclosed in quotes and passed as
             // parameter to pgr_dijkstraVia() function. '?' is used as a bind
             // variable placeholder. Actual variable binding is left to occur
             // within initialisation of PreparedStatement.
             val linkSelectionQueryForPgrDijkstra: String =
-                if (restrictWithBufferArea)
-                    QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery()
-                else
-                    QueryHelper.getVehicleTypeConstrainedLinksQuery()
+                terminusLinkCountWhenBufferAreaRestrictionEnabled
+                    ?.let(QueryHelper::getVehicleTypeAndBufferAreaConstrainedLinksQuery)
+                    ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
             return """
                 WITH route_link AS (

@@ -78,8 +78,9 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
         require(!iter.hasNext()) { "Maximum of 4 node sequences exceeded" }
 
-        val restrictWithBufferArea: Boolean = bufferAreaRestriction != null
-        val query: String = getQueryForResolvingBestNodeSequenceOf4(restrictWithBufferArea)
+        val query: String = bufferAreaRestriction
+            ?.run { getQueryForResolvingBestNodeSequenceOf4(idsOfCandidatesForTerminusLink?.size ?: 0) }
+            ?: getQueryForResolvingBestNodeSequenceOf4(null)
 
         val preparedStatementCreator = PreparedStatementCreator { conn ->
             val pstmt: PreparedStatement = conn.prepareStatement(query)
@@ -92,13 +93,15 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
             pstmt.setString(5, vehicleType.value)
 
-            // Set additional parameters if restricting infrastructure links
-            // with a buffer area.
+            var paramIndex = 6
+
+            // Set additional parameters if restricting infrastructure links with a buffer area.
             bufferAreaRestriction?.run {
-                pstmt.setLong(6, infrastructureLinkIdAtStart.value)
-                pstmt.setLong(7, infrastructureLinkIdAtEnd.value)
-                pstmt.setBytes(8, toEwkb(lineGeometry))
-                pstmt.setDouble(9, bufferRadiusInMeters)
+                idsOfCandidatesForTerminusLink?.forEach {
+                    pstmt.setLong(paramIndex++, it.value)
+                }
+                pstmt.setBytes(paramIndex++, toEwkb(lineGeometry))
+                pstmt.setDouble(paramIndex++, bufferRadiusInMeters)
             }
 
             pstmt
@@ -113,6 +116,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     }
 
     companion object {
+
         private val FIND_N_CLOSEST_NODES_SQL = """
             SELECT
                 path[1] AS point_seq,
@@ -146,16 +150,16 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
          * there exist SQL ARRAY parameters that cannot be set via named
          * variables in Spring JDBC templates.
          */
-        private fun getQueryForResolvingBestNodeSequenceOf4(restrictWithBufferArea: Boolean): String {
-            // The produced SQL query is enclosed in quotes and passed as
-            // parameter to pgr_dijkstraVia() function. '?' is used as a bind
-            // variable placeholder. Actual variable binding is left to occur
-            // within initialisation of PreparedStatement.
+        private fun getQueryForResolvingBestNodeSequenceOf4(terminusLinkCountWhenBufferAreaRestrictionEnabled: Int?)
+            : String {
+
+            // The produced SQL query is enclosed in quotes and passed as parameter to
+            // pgr_dijkstraVia() function. '?' is used as a bind variable placeholder. Actual
+            // variable binding is left to occur within initialisation of PreparedStatement.
             val linkSelectionQueryForPgrDijkstra: String =
-                if (restrictWithBufferArea)
-                    QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery()
-                else
-                    QueryHelper.getVehicleTypeConstrainedLinksQuery()
+                terminusLinkCountWhenBufferAreaRestrictionEnabled
+                    ?.let(QueryHelper::getVehicleTypeAndBufferAreaConstrainedLinksQuery)
+                    ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
             // Using "dummy_id" in SQL in order to be able to extract the (unknown amount of) node IDs as multi-row
             // JDBC result set. An alternative choice would be to return an SQL array yielding a result set containing
