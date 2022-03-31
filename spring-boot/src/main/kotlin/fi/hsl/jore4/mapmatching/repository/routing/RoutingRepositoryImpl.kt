@@ -50,8 +50,15 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
 
             // Set additional parameters if restricting infrastructure links with a buffer area.
             bufferAreaRestriction?.run {
-                idsOfCandidatesForTerminusLink?.forEach {
-                    pstmt.setLong(paramIndex++, it.value)
+                explicitLinkReferences?.run {
+                    idsOfCandidatesForTerminusLinks.forEach {
+                        pstmt.setLong(paramIndex++, it.value)
+                    }
+                    repeat(2) { // node IDs need to be set twice, separately for start and end nodes
+                        idsOfCandidatesForTerminusNodes.forEach {
+                            pstmt.setLong(paramIndex++, it.value)
+                        }
+                    }
                 }
                 pstmt.setBytes(paramIndex++, toEwkb(lineGeometry))
                 pstmt.setDouble(paramIndex++, bufferRadiusInMeters)
@@ -66,9 +73,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             pstmt.setDouble(paramIndex++, fractionalEndLocationOnLastLink)
         }
 
-        val queryString: String = bufferAreaRestriction
-            ?.run { getQueryForFindingRouteViaNodes(idsOfCandidatesForTerminusLink?.size ?: 0) }
-            ?: getQueryForFindingRouteViaNodes(null)
+        val queryString: String = getQueryForFindingRouteViaNodes(bufferAreaRestriction)
 
         val queryResults: Map<Boolean, List<RouteLinkDTO>> = jdbcTemplate.jdbcOperations
             .queryForStream(queryString, parameterSetter) { rs: ResultSet, _: Int ->
@@ -125,15 +130,22 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          * there exist SQL ARRAY parameters that cannot be set via named
          * variables in Spring JDBC templates.
          */
-        private fun getQueryForFindingRouteViaNodes(terminusLinkCountWhenBufferAreaRestrictionEnabled: Int?): String {
+        private fun getQueryForFindingRouteViaNodes(bufferAreaRestriction: BufferAreaRestriction?): String {
             // The produced SQL query is enclosed in quotes and passed as
             // parameter to pgr_dijkstraVia() function. '?' is used as a bind
             // variable placeholder. Actual variable binding is left to occur
             // within initialisation of PreparedStatement.
-            val linkSelectionQueryForPgrDijkstra: String =
-                terminusLinkCountWhenBufferAreaRestrictionEnabled
-                    ?.let(QueryHelper::getVehicleTypeAndBufferAreaConstrainedLinksQuery)
-                    ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
+            val linkSelectionQueryForPgrDijkstra: String = bufferAreaRestriction
+                ?.run {
+                    explicitLinkReferences
+                        ?.run {
+                            QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+                                idsOfCandidatesForTerminusLinks.size,
+                                idsOfCandidatesForTerminusNodes.size)
+                        }
+                        ?: QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
+                }
+                ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
 
             return """
                 WITH route_link AS (

@@ -70,6 +70,15 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
 
     override fun getInfrastructureNodeId() = closerNodeId
 
+    fun findSnappedNode(): InfrastructureNodeId? {
+        return if (isSnappedToStartNode)
+            startNodeId
+        else if (isSnappedToEndNode)
+            endNodeId
+        else
+            null
+    }
+
     fun hasNode(nodeId: InfrastructureNodeId) = startNodeId == nodeId || endNodeId == nodeId
 
     fun hasSharedNode(that: SnappedLinkState) = hasNode(that.startNodeId) || hasNode(that.endNodeId)
@@ -85,7 +94,8 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
             if (distanceFromStartOfLink.isWithinTolerance(0.0, thresholdDistanceOfSnappingToLinkEndpointInMeters))
                 0.0
             else if (distanceFromStartOfLink.isWithinTolerance(infrastructureLinkLength,
-                                                               thresholdDistanceOfSnappingToLinkEndpointInMeters))
+                                                               thresholdDistanceOfSnappingToLinkEndpointInMeters)
+            )
                 1.0
             else
                 closestPointFractionalMeasure

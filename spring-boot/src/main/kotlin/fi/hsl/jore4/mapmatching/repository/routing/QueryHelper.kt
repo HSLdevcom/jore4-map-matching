@@ -39,41 +39,68 @@ object QueryHelper {
     /**
      * Generates an SQL query that fetches infrastructure links associated with
      * a specific vehicle type and either (1) coinciding with the geometrical
-     * "buffer area" or (2) matching with the given terminus link identifiers.
+     * "buffer area" or (2) matching with the given terminus link identifiers or
+     * (3) whose endpoint nodes match with the given terminus node identifiers.
      * The generated query is enclosed in quotes and intended to be passed as
      * string parameter to pgr_dijkstraVia SQL function.
      *
      * @param numberOfTerminusLinkIds the number of placeholders to generate for
      * terminus link identifiers
+     * @param numberOfTerminusNodeIds the number of placeholders to generate for
+     * terminus node identifiers
      *
      * @return an SQL query enclosed in quotes as [java.lang.String]
      */
-    fun getVehicleTypeAndBufferAreaConstrainedLinksQuery(numberOfTerminusLinkIds: Int): String {
+    fun getVehicleTypeAndBufferAreaConstrainedLinksQuery(numberOfTerminusLinkIds: Int,
+                                                         numberOfTerminusNodeIds: Int)
+        : String {
+
         require(numberOfTerminusLinkIds >= 0) { "numberOfTerminusLinkIds must be non-negative" }
+        require(numberOfTerminusNodeIds >= 0) { "numberOfTerminusNodeIds must be non-negative" }
 
         // Using SQL string concatenation in order to be able to inject a bind
         // variable placeholders into the query. This way we enable assigning the
         // actual values through PreparedStatement variable binding.
 
-        return when (numberOfTerminusLinkIds) {
-            0 -> "'${
+        fun getPlaceholdersConcatenated(numberOfPlaceholders: Int): String {
+            return CharArray(numberOfPlaceholders) { '?' }.joinToString(prefix = "''' || ",
+                                                                        separator = " || ''',''' || ",
+                                                                        postfix = " || '''")
+        }
+
+        return if (numberOfTerminusLinkIds > 0) {
+            val quotedLinkIdsParam = getPlaceholdersConcatenated(numberOfTerminusLinkIds)
+
+            if (numberOfTerminusNodeIds > 0)
+                "'${
+                    getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusLinksAndNodes(
+                        UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
+                        quotedLinkIdsParam,
+                        getPlaceholdersConcatenated(numberOfTerminusNodeIds),
+                        UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
+                        UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
+                }'"
+            else
+                "'${
+                    getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusLinks(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
+                                                                                      quotedLinkIdsParam,
+                                                                                      UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
+                                                                                      UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
+                }'"
+        } else if (numberOfTerminusNodeIds > 0)
+            "'${
+                getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusNodes(
+                    UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
+                    getPlaceholdersConcatenated(numberOfTerminusNodeIds),
+                    UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
+                    UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
+            }'"
+        else
+            "'${
                 getVehicleTypeAndBufferAreaConstrainedLinksQueryInternal(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
                                                                          UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
                                                                          UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
             }'"
-            else -> {
-                val quotedLinkIdsParam = CharArray(numberOfTerminusLinkIds) { '?' }.joinToString(prefix = "''' || ",
-                                                                                                 separator = " || ''',''' || ",
-                                                                                                 postfix = " || '''")
-
-                "'${
-                    getVehicleTypeAndBufferAreaConstrainedLinksQueryInternal(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
-                                                                             quotedLinkIdsParam,
-                                                                             UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
-                                                                             UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
-                }'"
-            }
-        }
     }
 
     /**
@@ -81,13 +108,16 @@ object QueryHelper {
      * a specific vehicle type and either (1) coinciding with the geometrical
      * "buffer area" derived from parameters [lineStringEwkbVariableName] and
      * [bufferRadiusVariableName] or (2) matching with terminus links identified
-     * by [terminusLinkIdsVariableName]. The generated query is enclosed in
-     * quotes and intended to be passed as string parameter to pgr_dijkstraVia
-     * SQL function.
+     * by [terminusLinkIdsVariableName] or (3) whose endpoint nodes match with
+     * terminus node identifiers identified by [terminusNodeIdsVariableName].
+     * The generated query is enclosed in quotes and intended to be passed as
+     * string parameter to pgr_dijkstraVia SQL function.
      *
      * @param vehicleTypeVariableName the variable name for vehicle type
-     * @param terminusLinkIdsVariableName the variable name for the list of
-     * terminus link identifiers
+     * @param terminusLinkIdsVariableName the optional variable name for the
+     * list of terminus link identifiers
+     * @param terminusNodeIdsVariableName the optional variable name for the
+     * list of terminus node identifiers
      * @param lineStringEwkbVariableName the variable name for the LineString
      * geometry that is expanded in all directions to form a polygon
      * @param bufferRadiusVariableName the variable name for the distance with
@@ -96,19 +126,47 @@ object QueryHelper {
      * @return an SQL query enclosed in quotes as [java.lang.String]
      */
     fun getVehicleTypeAndBufferAreaConstrainedLinksQuery(vehicleTypeVariableName: String,
-                                                         terminusLinkIdsVariableName: String,
+                                                         terminusLinkIdsVariableName: String? = null,
+                                                         terminusNodeIdsVariableName: String? = null,
                                                          lineStringEwkbVariableName: String,
                                                          bufferRadiusVariableName: String): String {
 
         // Using SQL string concatenation in order to be able to inject a bind
         // variable placeholders into the query. This way we enable assigning the
         // actual values through PreparedStatement variable binding.
-        return "'${
-            getVehicleTypeAndBufferAreaConstrainedLinksQueryInternal("''' || :$vehicleTypeVariableName || '''",
-                                                                     "''' || :$terminusLinkIdsVariableName || '''",
-                                                                     "''' || :$lineStringEwkbVariableName || '''",
-                                                                     "''' || :$bufferRadiusVariableName || '''")
-        }'"
+
+        return if (terminusLinkIdsVariableName != null) {
+            if (terminusNodeIdsVariableName != null)
+                "'${
+                    getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusLinksAndNodes(
+                        "''' || :$vehicleTypeVariableName || '''",
+                        "''' || :$terminusLinkIdsVariableName || '''",
+                        "''' || :$terminusNodeIdsVariableName || '''",
+                        "''' || :$lineStringEwkbVariableName || '''",
+                        "''' || :$bufferRadiusVariableName || '''")
+                }'"
+            else
+                "'${
+                    getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusLinks(
+                        "''' || :$vehicleTypeVariableName || '''",
+                        "''' || :$terminusLinkIdsVariableName || '''",
+                        "''' || :$lineStringEwkbVariableName || '''",
+                        "''' || :$bufferRadiusVariableName || '''")
+                }'"
+        } else if (terminusNodeIdsVariableName != null)
+            "'${
+                getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusNodes(
+                    "''' || :$vehicleTypeVariableName || '''",
+                    "''' || :$terminusNodeIdsVariableName || '''",
+                    "''' || :$lineStringEwkbVariableName || '''",
+                    "''' || :$bufferRadiusVariableName || '''")
+            }'"
+        else
+            "'${
+                getVehicleTypeAndBufferAreaConstrainedLinksQueryInternal("''' || :$vehicleTypeVariableName || '''",
+                                                                         "''' || :$lineStringEwkbVariableName || '''",
+                                                                         "''' || :$bufferRadiusVariableName || '''")
+            }'"
     }
 
     private fun getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter: String): String = """
@@ -129,14 +187,40 @@ object QueryHelper {
 
         |  AND ${getBufferAreaRestriction(lineStringEwkbParameter, bufferRadiusParameter)}""".trimMargin()
 
-    private fun getVehicleTypeAndBufferAreaConstrainedLinksQueryInternal(vehicleTypeParameter: String,
-                                                                         terminusLinkIdsParameter: String,
-                                                                         lineStringEwkbParameter: String,
-                                                                         bufferRadiusParameter: String): String =
+    private fun getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusLinks(vehicleTypeParameter: String,
+                                                                                  terminusLinkIdsParameter: String,
+                                                                                  lineStringEwkbParameter: String,
+                                                                                  bufferRadiusParameter: String): String =
         getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter) + """
 
         |  AND (
         |    l.infrastructure_link_id IN ($terminusLinkIdsParameter)
+        |    OR ${getBufferAreaRestriction(lineStringEwkbParameter, bufferRadiusParameter)}
+        |  )""".trimMargin()
+
+    private fun getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusNodes(vehicleTypeParameter: String,
+                                                                                  terminusNodeIdsParameter: String,
+                                                                                  lineStringEwkbParameter: String,
+                                                                                  bufferRadiusParameter: String): String =
+        getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter) + """
+
+        |  AND (
+        |    l.start_node_id IN ($terminusNodeIdsParameter)
+        |    OR l.end_node_id IN ($terminusNodeIdsParameter)
+        |    OR ${getBufferAreaRestriction(lineStringEwkbParameter, bufferRadiusParameter)}
+        |  )""".trimMargin()
+
+    private fun getVehicleTypeAndBufferAreaConstrainedLinksQueryWithTerminusLinksAndNodes(vehicleTypeParameter: String,
+                                                                                          terminusLinkIdsParameter: String,
+                                                                                          terminusNodeIdsParameter: String,
+                                                                                          lineStringEwkbParameter: String,
+                                                                                          bufferRadiusParameter: String): String =
+        getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter) + """
+
+        |  AND (
+        |    l.infrastructure_link_id IN ($terminusLinkIdsParameter)
+        |    OR l.start_node_id IN ($terminusNodeIdsParameter)
+        |    OR l.end_node_id IN ($terminusNodeIdsParameter)
         |    OR ${getBufferAreaRestriction(lineStringEwkbParameter, bufferRadiusParameter)}
         |  )""".trimMargin()
 

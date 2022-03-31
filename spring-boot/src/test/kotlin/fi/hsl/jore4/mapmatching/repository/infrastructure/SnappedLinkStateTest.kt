@@ -3,6 +3,7 @@ package fi.hsl.jore4.mapmatching.repository.infrastructure
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.AT_END
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.AT_MIDPOINT
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.AT_START
+import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.BETWEEN_ENDPOINTS_EXCLUSIVE
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.CLOSE_TO_END
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.CLOSE_TO_START
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.NOT_AT_END
@@ -67,6 +68,44 @@ class SnappedLinkStateTest {
                 .checkAssert { snap: SnappedLinkState ->
 
                     assertThat(snap.isSnappedToEndNode).isEqualTo(false)
+                }
+        }
+    }
+
+    @Nested
+    @DisplayName("findSnappedNode")
+    inner class FindSnappedNode {
+
+        @Test
+        @DisplayName("When projected closest point is within snap-to-endpoint distance to link start")
+        fun whenClosestPointWithinSnapDistanceToLinkStart() {
+            qt().forAll(SnappedLinkStateGenerator.snapLink(hasDiscreteEndpoints = true,
+                                                           AT_START))
+                .checkAssert { snap: SnappedLinkState ->
+
+                    assertThat(snap.findSnappedNode()).isEqualTo(snap.startNodeId)
+                }
+        }
+
+        @Test
+        @DisplayName("When projected closest point is within snap-to-endpoint distance to link end")
+        fun whenClosestPointWithinSnapDistanceToLinkEnd() {
+            qt().forAll(SnappedLinkStateGenerator.snapLink(hasDiscreteEndpoints = true,
+                                                           AT_END))
+                .checkAssert { snap: SnappedLinkState ->
+
+                    assertThat(snap.findSnappedNode()).isEqualTo(snap.endNodeId)
+                }
+        }
+
+        @Test
+        @DisplayName("When projected closest point is outside a snap-to-endpoint distance from link endpoints")
+        fun whenClosestPointOutsideOfSnapDistanceFromLinkEndpoints() {
+            qt().forAll(SnappedLinkStateGenerator.snapLink(hasDiscreteEndpoints = true,
+                                                           BETWEEN_ENDPOINTS_EXCLUSIVE))
+                .checkAssert { snap: SnappedLinkState ->
+
+                    assertThat(snap.findSnappedNode()).isNull()
                 }
         }
     }
