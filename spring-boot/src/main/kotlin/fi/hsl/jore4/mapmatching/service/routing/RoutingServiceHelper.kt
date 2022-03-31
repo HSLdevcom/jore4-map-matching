@@ -5,7 +5,7 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
+import fi.hsl.jore4.mapmatching.service.node.CreateNodeSequenceCombinations
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidates
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
@@ -38,7 +38,7 @@ object RoutingServiceHelper {
 
         val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(links.first(), viaNodeIds, links.last())
 
-        val nodeIdSequences: List<NodeIdSequence> = NodeSequenceAlternativesCreator.create(nodesToVisit)
+        val nodeIdSequences: List<NodeIdSequence> = CreateNodeSequenceCombinations.create(nodesToVisit)
 
         return NodeSequenceCandidates(nodeIdSequences)
     }

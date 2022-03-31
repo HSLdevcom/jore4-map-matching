@@ -27,8 +27,8 @@ import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.getTermin
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.resolveTerminusLinkIfStopPoint
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.validateInputForRouteMatching
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
+import fi.hsl.jore4.mapmatching.service.node.CreateNodeSequenceCombinations
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceAlternativesCreator
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidates
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodes
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolver
@@ -152,7 +152,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(firstLink, viaNodeIds, lastLink)
 
-        val nodeIdSequences: List<NodeIdSequence> = NodeSequenceAlternativesCreator.create(nodesToVisit)
+        val nodeIdSequences: List<NodeIdSequence> = CreateNodeSequenceCombinations.create(nodesToVisit)
 
         return PreProcessingResult(firstLink,
                                    lastLink,
