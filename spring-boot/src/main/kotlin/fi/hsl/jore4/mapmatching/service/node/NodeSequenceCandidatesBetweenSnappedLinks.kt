@@ -2,6 +2,8 @@ package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Models candidate sequences of infrastructure network nodes related to a pair
@@ -33,7 +35,8 @@ import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
  */
 data class NodeSequenceCandidatesBetweenSnappedLinks(val startLink: SnappedLinkState,
                                                      val endLink: SnappedLinkState,
-                                                     val nodeIdSequences: List<NodeIdSequence>) {
+                                                     val nodeIdSequences: List<NodeIdSequence>)
+    : Comparable<NodeSequenceCandidatesBetweenSnappedLinks> {
 
     init {
         require(nodeIdSequences.isNotEmpty()) { "At least one node ID sequence must be provided" }
@@ -56,4 +59,21 @@ data class NodeSequenceCandidatesBetweenSnappedLinks(val startLink: SnappedLinkS
      * formed.
      */
     fun isRoutePossible(): Boolean = nodeIdSequences.size > 1 || nodeIdSequences.first().size > 1
+
+    private fun getDistanceToCloserTerminusLink(): Double = min(startLink.closestDistance, endLink.closestDistance)
+
+    private fun getDistanceToFurtherTerminusLink(): Double = max(startLink.closestDistance, endLink.closestDistance)
+
+    // sorting node sequence candidates by closest distances to terminus links
+    override fun compareTo(other: NodeSequenceCandidatesBetweenSnappedLinks): Int {
+        val closestDistanceToTerminusLink1: Double = getDistanceToCloserTerminusLink()
+        val closestDistanceToTerminusLink2: Double = other.getDistanceToCloserTerminusLink()
+
+        if (closestDistanceToTerminusLink1 < closestDistanceToTerminusLink2)
+            return -1
+        else if (closestDistanceToTerminusLink1 > closestDistanceToTerminusLink2)
+            return 1
+
+        return getDistanceToFurtherTerminusLink().compareTo(other.getDistanceToFurtherTerminusLink())
+    }
 }
