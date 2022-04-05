@@ -392,15 +392,33 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                         HasInfrastructureNodeId::getInfrastructureNodeId)
         }
 
+        val hashCodesOfNodeSequences: MutableSet<Int> = mutableSetOf()
+
         return startLinkCandidates.candidates
             .flatMap { startLink ->
-                endLinkCandidates.candidates.map { endLink ->
+                endLinkCandidates.candidates.mapNotNull { endLink ->
 
                     val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(startLink, viaNodeIds, endLink)
 
-                    NodeSequenceCandidatesBetweenSnappedLinks(startLink,
-                                                              endLink,
-                                                              CreateNodeSequenceCombinations.create(nodesToVisit))
+                    // Filter out duplicate node sequences that are already encountered within
+                    // previously processed pairs of terminus links. Duplicates may exist in case
+                    // multiple links are snapped to their endpoint nodes. This optimisation
+                    // eventually avoids unnecessary expensive SQL queries.
+
+                    val nodeSequenceCombinations: List<NodeIdSequence> = CreateNodeSequenceCombinations
+                        .create(nodesToVisit)
+                        .filter { nodeIdSeq: NodeIdSequence ->
+                            // Add hashcode of node sequence into set as side effect. Return false
+                            // if the hashcode already exists in the set.
+                            hashCodesOfNodeSequences.add(nodeIdSeq.list.hashCode())
+                        }
+
+                    if (nodeSequenceCombinations.isNotEmpty())
+                        NodeSequenceCandidatesBetweenSnappedLinks(startLink,
+                                                                  endLink,
+                                                                  nodeSequenceCombinations)
+                    else
+                        null
                 }
             }
             .filter(NodeSequenceCandidatesBetweenSnappedLinks::isRoutePossible)
