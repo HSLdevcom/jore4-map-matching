@@ -15,24 +15,36 @@ import java.io.File
 object GeoPackageUtils {
     fun createGeoPackage(
         file: File,
-        failedStopToStopSegments: List<SegmentMatchFailure>
+        failedSegments: List<SegmentMatchFailure>
     ): GeoPackage {
         val geoPkg = GeoPackage(file)
         geoPkg.init()
 
-        val featureType: SimpleFeatureType = createFeatureTypeForFailedStopToStopSegments()
+        try {
+            failedSegments.forEach { segment ->
+                val featureTypeName: String = segment.routeId
+                val featureType: SimpleFeatureType = createFeatureTypeForFailedSegment(featureTypeName)
 
-        val entry = FeatureEntry()
-        entry.description = "Failed stop-to-stop segments"
-        geoPkg.add(entry, createFeatureCollection(failedStopToStopSegments, featureType))
-        geoPkg.createSpatialIndex(entry)
+                val entry = FeatureEntry()
+                entry.identifier = segment.routeId
+                entry.description = "Failed segment within map-matching"
 
-        return geoPkg
+                geoPkg.add(entry, createFeatureCollection(segment, featureType))
+
+                // Not sure, if this is really needed.
+                geoPkg.createSpatialIndex(entry)
+            }
+
+            return geoPkg
+        } catch (ex: Exception) {
+            geoPkg.close()
+            throw ex
+        }
     }
 
-    private fun createFeatureTypeForFailedStopToStopSegments(): SimpleFeatureType {
+    private fun createFeatureTypeForFailedSegment(name: String): SimpleFeatureType {
         val builder = SimpleFeatureTypeBuilder()
-        builder.name = "FailedStopToStopSegment"
+        builder.name = name
         builder.crs = DefaultGeographicCRS.WGS84
 
         builder.add("geometry", LineString::class.java)
@@ -41,19 +53,19 @@ object GeoPackageUtils {
         builder.add("endStopId", String::class.java)
         builder.add("numberOfGeometryPoints", Integer::class.java)
         builder.add("numberOfRoutePoints", Integer::class.java)
-        builder.add("numberOfReferencingRoutes", Integer::class.java)
-        builder.add("referencingRoutes", String::class.java)
+        builder.add("numberOfRoutesPassingThrough", Integer::class.java)
+        builder.add("routesPassingThrough", String::class.java)
 
         return builder.buildFeatureType()
     }
 
     private fun createFeatureCollection(
-        failedSegments: List<SegmentMatchFailure>,
+        failedSegment: SegmentMatchFailure,
         featureType: SimpleFeatureType
     ): ListFeatureCollection {
-        val features: List<SimpleFeature> = failedSegments.map { createFeature(it, featureType) }
+        val feature: SimpleFeature = createFeature(failedSegment, featureType)
 
-        return ListFeatureCollection(featureType, features)
+        return ListFeatureCollection(featureType, feature)
     }
 
     private fun createFeature(
@@ -63,14 +75,16 @@ object GeoPackageUtils {
         val builder = SimpleFeatureBuilder(type)
 
         failedSegment.run {
-            builder.add(JTS.to(sourceRouteGeometry))
+            val lineString: LineString = JTS.to(sourceRouteGeometry)
+
+            builder.add(lineString)
             builder.add(sourceRouteLength)
             builder.add(startStopId)
             builder.add(endStopId)
             builder.add(sourceRouteGeometry.numPositions)
             builder.add(numberOfRoutePoints)
             builder.add(referencingRoutes.size)
-            builder.add(referencingRoutes.joinToString(separator = ","))
+            builder.add(referencingRoutes.joinToString(separator = " "))
         }
 
         return builder.buildFeature(failedSegment.routeId)
