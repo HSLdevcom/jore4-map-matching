@@ -91,7 +91,8 @@ data class SuccessfulRouteMatchResult(
 data class RouteMatchFailure(
     override val routeId: String,
     override val sourceRouteGeometry: LineString<G2D>,
-    override val sourceRouteLength: Double
+    override val sourceRouteLength: Double,
+    val bufferRadius: BufferRadius
 ) : MatchResult {
     override val matchFound = false
 }
@@ -114,6 +115,7 @@ data class SegmentMatchFailure(
     override val routeId: String,
     override val sourceRouteGeometry: LineString<G2D>,
     override val sourceRouteLength: Double,
+    val bufferRadius: BufferRadius,
     override val startStopId: String,
     override val endStopId: String,
     override val numberOfRoutePoints: Int,
