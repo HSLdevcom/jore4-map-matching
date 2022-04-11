@@ -106,6 +106,7 @@ class MapMatchingBulkTester @Autowired constructor(val csvParser: IPublicTranspo
                 is RouteMatchFailure -> SegmentMatchFailure(segmentId,
                                                             geometry,
                                                             result.sourceRouteLength,
+                                                            result.bufferRadius,
                                                             segment.startStopId,
                                                             segment.endStopId,
                                                             numRoutePoints,
@@ -149,7 +150,10 @@ class MapMatchingBulkTester @Autowired constructor(val csvParser: IPublicTranspo
         }
 
         return when (lengthsOfMatchedRoutes.size) {
-            0 -> RouteMatchFailure(routeId, geometry, lengthOfSourceRoute)
+            0 -> RouteMatchFailure(routeId,
+                                   geometry,
+                                   lengthOfSourceRoute,
+                                   BufferRadius(sortedBufferRadiuses.last()))
             else -> SuccessfulRouteMatchResult(routeId,
                                                geometry,
                                                lengthOfSourceRoute,
