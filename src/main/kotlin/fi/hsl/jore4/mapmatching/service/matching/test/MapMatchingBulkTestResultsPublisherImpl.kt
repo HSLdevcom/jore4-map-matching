@@ -73,7 +73,7 @@ class MapMatchingBulkTestResultsPublisherImpl(
             "Worst $limit successful route matches: $worstResults"
         }
 
-        val outputFile: File = writeGeoJsonToFile(getFailedRoutesAsGeoJson(failed), "failed_routes.geojson")
+        val outputFile: File = writeGeoJsonToFile(getFailedRoutesAsGeoJson(failed), FILENAME_FAILED_ROUTES_GEOJSON)
         LOGGER.info { "Wrote failed routes to file: ${outputFile.absolutePath}" }
     }
 
@@ -94,11 +94,29 @@ class MapMatchingBulkTestResultsPublisherImpl(
             "$limit most referenced failed stop-to-stop segments: $mostReferencedFailedSegments"
         }
 
-        val outputFile: File =
-            writeGeoJsonToFile(getFailedSegmentsAsGeoJson(failed), "failed_stop-to-stop_segments.geojson")
-        LOGGER.info { "Wrote failed stop-to-stop segments to file: ${outputFile.absolutePath}" }
+        val geojsonFile: File =
+            writeGeoJsonToFile(getFailedSegmentsAsGeoJson(failed), FILENAME_FAILED_SEGMENTS_GEOJSON)
+        LOGGER.info { "Wrote failed stop-to-stop segments to GeoJSON file: ${geojsonFile.absolutePath}" }
 
-        createGeoPackage(failed)
+        val failedSegmentsGeoPackageFile = File(outputDir, FILENAME_FAILED_SEGMENTS_GPKG)
+        failedSegmentsGeoPackageFile.delete()
+        GeoPackageUtils.createGeoPackage(failedSegmentsGeoPackageFile, failed, false)
+
+        LOGGER.info {
+            "Wrote failed stop-to-stop segments to GeoPackage file: ${
+                failedSegmentsGeoPackageFile.absolutePath
+            }"
+        }
+
+        val failureBuffersGeoPackageFile = File(outputDir, FILENAME_FAILED_SEGMENT_BUFFERS_GPKG)
+        failureBuffersGeoPackageFile.delete()
+        GeoPackageUtils.createGeoPackage(failureBuffersGeoPackageFile, failed, true)
+
+        LOGGER.info {
+            "Wrote failed stop-to-stop segment buffers to GeoPackage file: ${
+                failureBuffersGeoPackageFile.absolutePath
+            }"
+        }
     }
 
     private fun writeGeoJsonToFile(
@@ -113,6 +131,12 @@ class MapMatchingBulkTestResultsPublisherImpl(
     }
 
     companion object {
+        private const val FILENAME_FAILED_ROUTES_GEOJSON = "failed_routes.geojson"
+        private const val FILENAME_FAILED_SEGMENTS_GEOJSON = "failed_segments.geojson"
+
+        private const val FILENAME_FAILED_SEGMENTS_GPKG = "failed_segments.gpkg"
+        private const val FILENAME_FAILED_SEGMENT_BUFFERS_GPKG = "failed_segment_buffers.gpkg"
+
         private fun partitionBySuccess(
             results: List<MatchResult>
         ): Pair<List<SuccessfulRouteMatchResult>, List<RouteMatchFailure>> {
@@ -322,11 +346,6 @@ class MapMatchingBulkTestResultsPublisherImpl(
                     }"
                 }
             }
-        }
-
-        private fun createGeoPackage(matchResults: List<SegmentMatchFailure>) {
-            val file = File.createTempFile("geopkg", "db", File("target"))
-            GeoPackageUtils.createGeoPackage(file, matchResults)
         }
     }
 }
