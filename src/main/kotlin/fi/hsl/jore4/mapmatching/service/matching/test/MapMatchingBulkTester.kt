@@ -129,6 +129,7 @@ class MapMatchingBulkTester(
                         segmentId,
                         geometry,
                         result.sourceRouteLength,
+                        result.bufferRadius,
                         segment.startStopId,
                         segment.endStopId,
                         numRoutePoints,
@@ -178,7 +179,13 @@ class MapMatchingBulkTester(
         }
 
         return when (lengthsOfMatchedRoutes.size) {
-            0 -> RouteMatchFailure(routeId, geometry, lengthOfSourceRoute)
+            0 ->
+                RouteMatchFailure(
+                    routeId,
+                    geometry,
+                    lengthOfSourceRoute,
+                    BufferRadius(sortedBufferRadiuses.last())
+                )
             else ->
                 SuccessfulRouteMatchResult(
                     routeId,
