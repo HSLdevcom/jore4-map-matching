@@ -4,6 +4,7 @@ import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.nield.kotlinstatistics.standardDeviation
 import org.springframework.stereotype.Component
+import java.util.SortedMap
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -34,6 +35,7 @@ class MapMatchingBulkTestResultsPublisherImpl : IMapMatchingBulkTestResultsPubli
         val (succeeded, failed) = partitionBySuccess(results)
 
         printBasicStatistics(succeeded, failed, "Route")
+        printBufferStatistics(succeeded, "Route")
 
         LOGGER.info {
             val limit = 10
@@ -68,6 +70,7 @@ class MapMatchingBulkTestResultsPublisherImpl : IMapMatchingBulkTestResultsPubli
         val (succeeded, failed) = partitionSegmentsBySuccess(results)
 
         printBasicStatistics(succeeded, failed, "Stop-to-stop segment")
+        printBufferStatistics(succeeded, "Stop-to-stop segment")
 
         LOGGER.info {
             val limit = 20
@@ -197,6 +200,94 @@ class MapMatchingBulkTestResultsPublisherImpl : IMapMatchingBulkTestResultsPubli
                 } %, standard deviation: ${
                     roundTo2Digits(absLengthDiffPercentages.standardDeviation())
                 } %"
+            }
+        }
+
+        private fun <SUCCESSFUL : SuccessfulMatchResult> printBufferStatistics(
+            succeeded: List<SUCCESSFUL>,
+            resultSetName: String
+        ) {
+            val bufferRadiusSet: MutableSet<BufferRadius> = mutableSetOf()
+
+            succeeded.forEach {
+                bufferRadiusSet.addAll(it.details.lengthsOfMatchResults.keys)
+            }
+
+            val bufferRadiusList: List<BufferRadius> = bufferRadiusSet.toList().sorted()
+
+            if (bufferRadiusList.size < 2) {
+                return
+            }
+
+            val lowestBufferRadiusAppearanceCounts: SortedMap<BufferRadius, Int> =
+                bufferRadiusList
+                    .associateWith { bufferRadius ->
+                        succeeded.count { it.getLowestBufferRadius() == bufferRadius }
+                    }.toSortedMap()
+
+            LOGGER.info {
+                "$resultSetName matches with different buffer radius values: ${
+                    joinToLogString(lowestBufferRadiusAppearanceCounts.entries) { (bufferRadius, matchCount) ->
+                        "$bufferRadius m: $matchCount pcs"
+                    }
+                }"
+            }
+
+            val lengthComparisons: List<SortedMap<BufferRadius, Double>> =
+                (0 until bufferRadiusList.size - 1)
+                    .mapNotNull { firstBufferRadiusIndex ->
+                        val remainingBufferRadiusValues: List<BufferRadius> =
+                            bufferRadiusList.drop(
+                                firstBufferRadiusIndex
+                            )
+
+                        val lowestBufferRadius: BufferRadius = remainingBufferRadiusValues.first()
+
+                        val filteredList: List<SUCCESSFUL> =
+                            succeeded.filter { it.getLowestBufferRadius() == lowestBufferRadius }
+
+                        when (filteredList.size) {
+                            0 -> null
+                            else -> {
+                                remainingBufferRadiusValues.associateWith { bufferRadius ->
+                                    val lengthDifferencesOfMatchedRoutes: List<Double> =
+                                        filteredList
+                                            .mapNotNull { match ->
+                                                val lengthOfMatchedRoute: Double? =
+                                                    match.details.lengthsOfMatchResults[bufferRadius]
+
+                                                lengthOfMatchedRoute?.let {
+                                                    // Return absolute length difference.
+                                                    abs(lengthOfMatchedRoute - match.sourceRouteLength)
+                                                } ?: run {
+                                                    LOGGER.warn {
+                                                        "The length of match result not available for route: ${match.routeId}"
+                                                    }
+                                                    null
+                                                }
+                                            }
+
+                                    // Return average of all differences.
+                                    lengthDifferencesOfMatchedRoutes.average()
+                                }
+                            }
+                        }
+                    }.map { it.toSortedMap() }
+
+            if (lengthComparisons.isNotEmpty()) {
+                LOGGER.info {
+                    "$resultSetName match length differences compared with regard to buffer radius: ${
+                        joinToLogString(lengthComparisons) { mapOfDifferences ->
+                            mapOfDifferences.entries.joinToString(
+                                prefix = "[",
+                                transform = { (bufferRadius, avgDiff) ->
+                                    "$bufferRadius: ${roundTo2Digits(avgDiff)}"
+                                },
+                                postfix = "]"
+                            )
+                        }
+                    }"
+                }
             }
         }
     }
