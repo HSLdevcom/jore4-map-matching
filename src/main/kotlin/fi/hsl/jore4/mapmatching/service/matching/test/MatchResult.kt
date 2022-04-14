@@ -16,6 +16,8 @@ sealed interface MatchResult {
 interface SuccessfulMatchResult : MatchResult {
     val details: MatchDetails
 
+    fun getLowestBufferRadius(): BufferRadius = details.getBufferRadiusOfFirstMatch()
+
     fun getLengthOfFirstMatch(): Double = details.getLengthOfFirstMatch()
 
     fun getLengthOfClosestMatch(): Double = details.getLengthOfClosestMatch(sourceRouteLength)
@@ -49,7 +51,8 @@ value class BufferRadius(
 }
 
 data class MatchDetails(
-    val lengthsOfMatchResults: SortedMap<BufferRadius, Double>
+    val lengthsOfMatchResults: SortedMap<BufferRadius, Double>,
+    val unsuccessfulBufferRadiuses: Set<BufferRadius>
 ) {
     init {
         require(lengthsOfMatchResults.isNotEmpty()) { "lengthsOfMatchResults must not be empty" }
