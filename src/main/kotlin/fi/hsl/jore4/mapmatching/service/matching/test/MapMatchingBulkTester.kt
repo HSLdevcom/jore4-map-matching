@@ -59,20 +59,26 @@ class MapMatchingBulkTester(
             "Number of discarded routes within resolution of stop-to-stop segments: ${discardedRoutes.size}"
         }
 
-        val routeMatchResults: List<MatchResult> = matchRoutes(sourceRoutes)
-        val segmentMatchResults: List<SegmentMatchResult> = matchStopToStopSegments(stopToStopSegments)
+        val routeMatchResults: List<MatchResult> = matchRoutes(sourceRoutes, DEFAULT_ROUTE_MATCH_RADIUS_VALUES)
+        val segmentMatchResults: List<SegmentMatchResult> =
+            matchStopToStopSegments(stopToStopSegments, DEFAULT_SEGMENT_MATCH_RADIUS_VALUES)
 
         return routeMatchResults to segmentMatchResults
     }
 
-    private fun matchRoutes(routes: List<PublicTransportRoute>): List<MatchResult> =
+    private fun matchRoutes(
+        routes: List<PublicTransportRoute>,
+        bufferRadiuses: Set<Double>
+    ): List<MatchResult> =
         routes.map { (routeId, routeGeometry, routePoints) ->
             LOGGER.info { "Starting to match route:    $routeId" }
 
-            val result: MatchResult = matchRoute(routeId, routeGeometry, routePoints)
+            val result: MatchResult = matchRoute(routeId, routeGeometry, routePoints, bufferRadiuses)
 
-            if (result.matchFound) {
-                LOGGER.info { "Successfully matched route: $routeId" }
+            if (result is SuccessfulMatchResult) {
+                LOGGER.info {
+                    "Successfully matched route: $routeId (with bufferRadius=${result.getLowestBufferRadius()})"
+                }
             } else {
                 LOGGER.info { "Failed to match route:      $routeId" }
             }
@@ -80,16 +86,23 @@ class MapMatchingBulkTester(
             result
         }
 
-    private fun matchStopToStopSegments(segments: List<StopToStopSegment>): List<SegmentMatchResult> =
+    private fun matchStopToStopSegments(
+        segments: List<StopToStopSegment>,
+        bufferRadiuses: Set<Double>
+    ): List<SegmentMatchResult> =
         segments.map { segment ->
             val (segmentId, geometry, routePoints, referencingRoutes) = segment
 
             LOGGER.info { "Starting to match stop-to-stop segment:    $segmentId" }
 
-            val result: MatchResult = matchRoute(segmentId, geometry, routePoints)
+            val result: MatchResult = matchRoute(segmentId, geometry, routePoints, bufferRadiuses)
 
-            if (result.matchFound) {
-                LOGGER.info { "Successfully matched stop-to-stop segment: $segmentId" }
+            if (result is SuccessfulMatchResult) {
+                LOGGER.info {
+                    "Successfully matched stop-to-stop segment: $segmentId (with bufferRadius=${
+                        result.getLowestBufferRadius()
+                    })"
+                }
             } else {
                 LOGGER.info { "Failed to match stop-to-stop segment:      $segmentId" }
             }
@@ -109,7 +122,7 @@ class MapMatchingBulkTester(
                         referencingRoutes
                     )
 
-                else ->
+                is RouteMatchFailure ->
                     SegmentMatchFailure(
                         segmentId,
                         geometry,
@@ -119,46 +132,67 @@ class MapMatchingBulkTester(
                         numRoutePoints,
                         referencingRoutes
                     )
+
+                else -> throw IllegalStateException("Unknown segment match result type")
             }
         }
 
     private fun matchRoute(
         routeId: String,
         geometry: LineString<G2D>,
-        routePoints: List<RoutePoint>
+        routePoints: List<RoutePoint>,
+        bufferRadiuses: Set<Double>
     ): MatchResult {
-        val matchingParams: PublicTransportRouteMatchingParameters = getMatchingParameters(50.0)
-
-        val response: RoutingResponse =
-            matchingService.findMatchForPublicTransportRoute(
-                routeId,
-                geometry,
-                routePoints,
-                GENERIC_BUS,
-                matchingParams
-            )
+        val sortedBufferRadiuses: List<Double> = bufferRadiuses.sorted()
 
         val lengthOfSourceRoute: Double = length(geometry)
 
-        return when (response) {
-            is RoutingResponse.RoutingSuccessDTO -> {
+        val lengthsOfMatchedRoutes: MutableList<Pair<BufferRadius, Double>> = mutableListOf()
+        val unsuccessfulBufferRadiuses: MutableSet<BufferRadius> = mutableSetOf()
+
+        sortedBufferRadiuses.forEach { radius ->
+            val matchingParams: PublicTransportRouteMatchingParameters = getMatchingParameters(radius)
+
+            val response: RoutingResponse =
+                matchingService.findMatchForPublicTransportRoute(
+                    routeId,
+                    geometry,
+                    routePoints,
+                    GENERIC_BUS,
+                    matchingParams
+                )
+
+            val bufferRadius = BufferRadius(radius)
+
+            if (response is RoutingResponse.RoutingSuccessDTO) {
+                val resultGeometry: LineString<G2D> = response.routes[0].geometry
+                val lengthOfMatchedRoute: Double = length(resultGeometry)
+
+                lengthsOfMatchedRoutes.add(bufferRadius to lengthOfMatchedRoute)
+            } else {
+                unsuccessfulBufferRadiuses.add(bufferRadius)
+            }
+        }
+
+        return when (lengthsOfMatchedRoutes.size) {
+            0 -> RouteMatchFailure(routeId, geometry, lengthOfSourceRoute)
+            else ->
                 SuccessfulRouteMatchResult(
                     routeId,
                     geometry,
                     lengthOfSourceRoute,
-                    createMatchDetails(
-                        response,
-                        geometry,
-                        matchingParams.bufferRadiusInMeters
+                    MatchDetails(
+                        lengthsOfMatchedRoutes.toMap().toSortedMap(),
+                        unsuccessfulBufferRadiuses
                     )
                 )
-            }
-
-            else -> RouteMatchFailure(routeId, geometry, lengthOfSourceRoute)
         }
     }
 
     companion object {
+        private val DEFAULT_ROUTE_MATCH_RADIUS_VALUES: Set<Double> = setOf(55.0)
+        private val DEFAULT_SEGMENT_MATCH_RADIUS_VALUES: Set<Double> = setOf(40.0, 50.0, 90.0)
+
         private fun getMatchingParameters(bufferRadius: Double): PublicTransportRouteMatchingParameters {
             val roadJunctionMatchingParams =
                 JunctionMatchingParameters(matchDistance = 5.0, clearingDistance = 30.0)
@@ -170,20 +204,6 @@ class MapMatchingBulkTester(
                 maxStopLocationDeviation = 80.0,
                 fallbackToViaNodesAlgorithm = true,
                 roadJunctionMatching = roadJunctionMatchingParams
-            )
-        }
-
-        private fun createMatchDetails(
-            routingResponse: RoutingResponse.RoutingSuccessDTO,
-            sourceGeometry: LineString<G2D>,
-            bufferRadius: Double
-        ): MatchDetails {
-            val resultGeometry: LineString<G2D> = routingResponse.routes[0].geometry
-
-            return MatchDetails(
-                mapOf(
-                    BufferRadius(bufferRadius) to length(resultGeometry)
-                ).toSortedMap()
             )
         }
     }
