@@ -79,7 +79,7 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
         private const val TRANSPORTATION_MODE_PARAM = "{transportationMode:[a-zA-Z-_]+}"
         private const val VEHICLE_TYPE_PARAM = "{vehicleTypeParam:[a-zA-Z-_]+}"
 
-        private const val DEFAULT_BUFFER_RADIUS_IN_METERS: Double = 50.0
+        private const val DEFAULT_BUFFER_RADIUS_IN_METERS: Double = 55.0
         private const val DEFAULT_TERMINUS_LINK_QUERY_DISTANCE: Double = 50.0
         private const val DEFAULT_TERMINUS_LINK_QUERY_LIMIT: Int = 5
         private const val DEFAULT_MAX_STOP_LOCATION_DEVIATION: Double = 80.0
