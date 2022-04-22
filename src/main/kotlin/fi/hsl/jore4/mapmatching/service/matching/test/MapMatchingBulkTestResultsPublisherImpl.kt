@@ -113,25 +113,7 @@ class MapMatchingBulkTestResultsPublisherImpl(
             writeGeoJsonToFile(getFailedSegmentsAsGeoJson(failed), FILENAME_FAILED_SEGMENTS_GEOJSON)
         LOGGER.info { "Wrote failed stop-to-stop segments to GeoJSON file: ${geojsonFile.absolutePath}" }
 
-        val failedSegmentsGeoPackageFile = File(outputDir, FILENAME_FAILED_SEGMENTS_GPKG)
-        failedSegmentsGeoPackageFile.delete()
-        GeoPackageUtils.createGeoPackage(failedSegmentsGeoPackageFile, failed, false)
-
-        LOGGER.info {
-            "Wrote failed stop-to-stop segments to GeoPackage file: ${
-                failedSegmentsGeoPackageFile.absolutePath
-            }"
-        }
-
-        val failureBuffersGeoPackageFile = File(outputDir, FILENAME_FAILED_SEGMENT_BUFFERS_GPKG)
-        failureBuffersGeoPackageFile.delete()
-        GeoPackageUtils.createGeoPackage(failureBuffersGeoPackageFile, failed, true)
-
-        LOGGER.info {
-            "Wrote failed stop-to-stop segment buffers to GeoPackage file: ${
-                failureBuffersGeoPackageFile.absolutePath
-            }"
-        }
+        writeGeoPackageFilesForFailedSegments(failed, getSegmentMatchFailuresOnLowerBufferRadius(succeeded))
     }
 
     private fun writeGeoJsonToFile(
@@ -145,12 +127,76 @@ class MapMatchingBulkTestResultsPublisherImpl(
         return outputFile
     }
 
+    private fun writeGeoPackageFilesForFailedSegments(
+        primaryFailures: List<SegmentMatchFailure>,
+        secondaryFailures: SortedMap<BufferRadius, List<SegmentMatchFailure>>
+    ) {
+        writeGeoPackageFileForFailedSegments(
+            primaryFailures,
+            getGeoPackageFilenameForFailedSegments(),
+            getGeoPackageFilenameForFailedSegmentBuffers()
+        )
+
+        secondaryFailures.entries.forEach { (bufferRadius, segmentMatchFailures) ->
+
+            if (segmentMatchFailures.isNotEmpty()) {
+                writeGeoPackageFileForFailedSegments(
+                    segmentMatchFailures,
+                    getGeoPackageFilenameForFailedSegments(bufferRadius),
+                    getGeoPackageFilenameForFailedSegmentBuffers(bufferRadius)
+                )
+            }
+        }
+    }
+
+    private fun writeGeoPackageFileForFailedSegments(
+        failed: List<SegmentMatchFailure>,
+        segmentsFilename: String,
+        segmentBuffersFilename: String
+    ) {
+        var failedSegmentsGeoPackageFile = File(outputDir, segmentsFilename)
+
+        if (failedSegmentsGeoPackageFile.exists()) {
+            failedSegmentsGeoPackageFile.renameTo(File(outputDir, "$segmentsFilename.bak"))
+            failedSegmentsGeoPackageFile = File(outputDir, segmentsFilename)
+        }
+
+        GeoPackageUtils.createGeoPackage(failedSegmentsGeoPackageFile, failed, false)
+
+        LOGGER.info {
+            "Wrote failed stop-to-stop segments to GeoPackage file: ${
+                failedSegmentsGeoPackageFile.absolutePath
+            }"
+        }
+
+        var failureBuffersGeoPackageFile = File(outputDir, segmentBuffersFilename)
+        if (failureBuffersGeoPackageFile.exists()) {
+            failureBuffersGeoPackageFile.renameTo(File(outputDir, "$segmentBuffersFilename.bak"))
+            failureBuffersGeoPackageFile = File(outputDir, segmentBuffersFilename)
+        }
+
+        GeoPackageUtils.createGeoPackage(failureBuffersGeoPackageFile, failed, true)
+
+        LOGGER.info {
+            "Wrote failed stop-to-stop segment buffers to GeoPackage file: ${
+                failureBuffersGeoPackageFile.absolutePath
+            }"
+        }
+    }
+
     companion object {
         private const val FILENAME_FAILED_ROUTES_GEOJSON = "failed_routes.geojson"
         private const val FILENAME_FAILED_SEGMENTS_GEOJSON = "failed_segments.geojson"
 
-        private const val FILENAME_FAILED_SEGMENTS_GPKG = "failed_segments.gpkg"
-        private const val FILENAME_FAILED_SEGMENT_BUFFERS_GPKG = "failed_segment_buffers.gpkg"
+        private fun getGeoPackageFilenameForFailedSegments(bufferRadius: BufferRadius? = null): String =
+            bufferRadius
+                ?.let { "failed_segments_${it.value}.gpkg" }
+                ?: "failed_segments.gpkg"
+
+        private fun getGeoPackageFilenameForFailedSegmentBuffers(bufferRadius: BufferRadius? = null): String =
+            bufferRadius
+                ?.let { "failed_segment_buffers_${it.value}.gpkg" }
+                ?: "failed_segment_buffers.gpkg"
 
         private fun partitionBySuccess(
             results: List<MatchResult>
@@ -221,6 +267,49 @@ class MapMatchingBulkTestResultsPublisherImpl(
                 .take(limit)
 
         private fun roundTo2Digits(n: Double): Double = (n * 100).roundToInt() / 100.0
+
+        private fun getSegmentMatchFailuresOnLowerBufferRadius(
+            succeeded: List<SuccessfulSegmentMatchResult>
+        ): SortedMap<BufferRadius, List<SegmentMatchFailure>> {
+            val allUnsuccessfulBufferRadiuses: MutableSet<BufferRadius> = mutableSetOf()
+
+            succeeded.forEach {
+                allUnsuccessfulBufferRadiuses.addAll(it.details.unsuccessfulBufferRadiuses)
+            }
+
+            val alreadyProcessedSegmentIds: MutableSet<String> = mutableSetOf()
+            val failedSegmentsByRadius: MutableMap<BufferRadius, MutableList<SegmentMatchFailure>> = mutableMapOf()
+
+            allUnsuccessfulBufferRadiuses
+                .sortedDescending()
+                .forEach { bufferRadius ->
+
+                    succeeded
+                        .filter { bufferRadius in it.details.unsuccessfulBufferRadiuses }
+                        .filter { it.routeId !in alreadyProcessedSegmentIds }
+                        .forEach { matchResult ->
+
+                            failedSegmentsByRadius
+                                .getOrPut(bufferRadius) { mutableListOf() }
+                                .add(
+                                    SegmentMatchFailure(
+                                        matchResult.routeId,
+                                        matchResult.sourceRouteGeometry,
+                                        matchResult.sourceRouteLength,
+                                        bufferRadius,
+                                        matchResult.startStopId,
+                                        matchResult.endStopId,
+                                        matchResult.numberOfRoutePoints,
+                                        matchResult.referencingRoutes
+                                    )
+                                )
+
+                            alreadyProcessedSegmentIds.add(matchResult.routeId)
+                        }
+                }
+
+            return failedSegmentsByRadius.toSortedMap()
+        }
 
         private fun getRoutesNotMatchedEvenThoughAllSegmentsMatched(
             routeResults: List<MatchResult>,
