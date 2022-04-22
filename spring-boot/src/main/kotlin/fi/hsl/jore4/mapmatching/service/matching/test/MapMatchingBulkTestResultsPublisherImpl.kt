@@ -80,17 +80,7 @@ class MapMatchingBulkTestResultsPublisherImpl @Autowired constructor(val objectM
             writeGeoJsonToFile(getFailedSegmentsAsGeoJson(failed), "failed_segments.geojson")
         LOGGER.info("Wrote failed stop-to-stop segments to GeoJSON file: {}", geojsonFile.absolutePath)
 
-        val failedSegmentsGeoPackageFile = File(outputDir, "failed_segments.gpkg")
-        failedSegmentsGeoPackageFile.delete()
-        GeoPackageUtils.createGeoPackage(failedSegmentsGeoPackageFile, failed, false)
-        LOGGER.info("Wrote failed stop-to-stop segments to GeoPackage file: {}",
-                    failedSegmentsGeoPackageFile.absolutePath)
-
-        val failureBuffersGeoPackageFile = File(outputDir, "failed_segment_buffers.gpkg")
-        failureBuffersGeoPackageFile.delete()
-        GeoPackageUtils.createGeoPackage(failureBuffersGeoPackageFile, failed, true)
-        LOGGER.info("Wrote failed stop-to-stop segment buffers to GeoPackage file: {}",
-                    failureBuffersGeoPackageFile.absolutePath)
+        writeGeoPackageFilesForFailedSegments(failed, getSegmentMatchFailuresOnLowerBufferRadius(succeeded))
     }
 
     private fun writeGeoJsonToFile(features: GeoJsonFeatureCollection<G2D, String>, filename: String): File {
@@ -99,6 +89,40 @@ class MapMatchingBulkTestResultsPublisherImpl @Autowired constructor(val objectM
         val outputFile = File(outputDir, filename)
         outputFile.writeText(geojson)
         return outputFile
+    }
+
+    private fun writeGeoPackageFilesForFailedSegments(primaryFailures: List<SegmentMatchFailure>,
+                                                      secondaryFailures: SortedMap<BufferRadius, List<SegmentMatchFailure>>) {
+
+        writeGeoPackageFileForFailedSegments(primaryFailures, "failed_segments.gpkg", "failed_segment_buffers.gpkg")
+
+        secondaryFailures.entries.forEach { (bufferRadius, segmentMatchFailures) ->
+
+            if (segmentMatchFailures.isNotEmpty()) {
+
+                writeGeoPackageFileForFailedSegments(segmentMatchFailures,
+                                                     "failed_segments_${bufferRadius.value}.gpkg",
+                                                     "failed_segment_buffers_${bufferRadius.value}.gpkg")
+            }
+        }
+    }
+
+    private fun writeGeoPackageFileForFailedSegments(failed: List<SegmentMatchFailure>,
+                                                     filename: String,
+                                                     bufferFilename: String) {
+
+        val failedSegmentsGeoPackageFile = File(outputDir, filename)
+        failedSegmentsGeoPackageFile.delete()
+        GeoPackageUtils.createGeoPackage(failedSegmentsGeoPackageFile, failed, false)
+        LOGGER.info("Wrote failed stop-to-stop segments to GeoPackage file: {}",
+                    failedSegmentsGeoPackageFile.absolutePath)
+
+        val failureBuffersGeoPackageFile = File(outputDir, bufferFilename)
+        failureBuffersGeoPackageFile.delete()
+        GeoPackageUtils.createGeoPackage(failureBuffersGeoPackageFile, failed, true)
+        LOGGER.info("Wrote failed stop-to-stop segment buffers to GeoPackage file: {}",
+                    failureBuffersGeoPackageFile.absolutePath)
+
     }
 
     companion object {
@@ -162,6 +186,45 @@ class MapMatchingBulkTestResultsPublisherImpl @Autowired constructor(val objectM
                 .filterIsInstance(SegmentMatchFailure::class.java)
                 .sortedByDescending { it.referencingRoutes.size }
                 .take(limit)
+        }
+
+        private fun getSegmentMatchFailuresOnLowerBufferRadius(succeeded: List<SuccessfulSegmentMatchResult>)
+            : SortedMap<BufferRadius, List<SegmentMatchFailure>> {
+
+            val allUnsuccessfulBufferRadiuses: MutableSet<BufferRadius> = mutableSetOf()
+
+            succeeded.forEach {
+                allUnsuccessfulBufferRadiuses.addAll(it.details.unsuccessfulBufferRadiuses)
+            }
+
+            val alreadyProcessedSegmentIds: MutableSet<String> = mutableSetOf()
+            val failedSegmentsByRadius: MutableMap<BufferRadius, MutableList<SegmentMatchFailure>> = mutableMapOf()
+
+            allUnsuccessfulBufferRadiuses
+                .sortedDescending()
+                .forEach { bufferRadius ->
+
+                    succeeded
+                        .filter { bufferRadius in it.details.unsuccessfulBufferRadiuses }
+                        .filter { it.routeId !in alreadyProcessedSegmentIds }
+                        .forEach { matchResult ->
+
+                            failedSegmentsByRadius
+                                .getOrPut(bufferRadius) { mutableListOf() }
+                                .add(SegmentMatchFailure(matchResult.routeId,
+                                                         matchResult.sourceRouteGeometry,
+                                                         matchResult.sourceRouteLength,
+                                                         bufferRadius,
+                                                         matchResult.startStopId,
+                                                         matchResult.endStopId,
+                                                         matchResult.numberOfRoutePoints,
+                                                         matchResult.referencingRoutes))
+
+                            alreadyProcessedSegmentIds.add(matchResult.routeId)
+                        }
+                }
+
+            return failedSegmentsByRadius.toSortedMap()
         }
 
         private fun getRoutesNotMatchedEvenThoughAllSegmentsMatched(routeResults: List<MatchResult>,
