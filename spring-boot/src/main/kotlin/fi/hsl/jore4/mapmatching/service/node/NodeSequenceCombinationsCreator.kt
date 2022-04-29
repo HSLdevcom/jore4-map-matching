@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 
-object CreateNodeSequenceCombinations {
+object NodeSequenceCombinationsCreator {
 
     /**
      * Produce list of [NodeIdSequence] objects that contains possible sequences of infrastructure

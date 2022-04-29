@@ -32,9 +32,9 @@ import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.resolveTerminusLinkIfStopPoint
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.validateInputForRouteMatching
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
-import fi.hsl.jore4.mapmatching.service.node.CreateNodeSequenceCombinations
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
+import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCombinationsCreator
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionFailed
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionResult
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionSucceeded
@@ -405,7 +405,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                     // multiple links are snapped to their endpoint nodes. This optimisation
                     // eventually avoids unnecessary expensive SQL queries.
 
-                    val nodeSequenceCombinations: List<NodeIdSequence> = CreateNodeSequenceCombinations
+                    val nodeSequenceCombinations: List<NodeIdSequence> = NodeSequenceCombinationsCreator
                         .create(nodesToVisit)
                         .filter { nodeIdSeq: NodeIdSequence ->
                             // Add hashcode of node sequence into set as side effect. Return false
