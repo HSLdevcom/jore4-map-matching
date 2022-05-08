@@ -108,4 +108,36 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
                                 startNodeId,
                                 endNodeId)
     }
+
+    /**
+     * This method is used in map-matching public transport routes. If a snap point lies at either
+     * endpoint of a link, then the link may not be included in the route response depending on the
+     * direction of travel from the snapped node. In order to make sure that a link associated with
+     * a terminus stop point is included in a map-matched route, snap point needs to be moved a bit
+     * inwards.
+     */
+    fun moveSnapPointInwardsIfLocatedAtEndpoint(inwardsOffsetInMeters: Double): SnappedLinkState {
+        require(inwardsOffsetInMeters < infrastructureLinkLength) {
+            "inwardsOffsetInMeters must be less than length of infrastructure link ($infrastructureLinkLength): $inwardsOffsetInMeters"
+        }
+
+        val overriddenClosestPointFractionalMeasure: Double? =
+            if (isSnappedToStartNode)
+                inwardsOffsetInMeters / infrastructureLinkLength
+            else if (isSnappedToEndNode)
+                1.0 - (inwardsOffsetInMeters / infrastructureLinkLength)
+            else
+                null
+
+        return when (overriddenClosestPointFractionalMeasure) {
+            null -> this
+            else -> SnappedLinkState(infrastructureLinkId,
+                                     closestDistance,
+                                     overriddenClosestPointFractionalMeasure,
+                                     trafficFlowDirectionType,
+                                     infrastructureLinkLength,
+                                     startNodeId,
+                                     endNodeId)
+        }
+    }
 }
