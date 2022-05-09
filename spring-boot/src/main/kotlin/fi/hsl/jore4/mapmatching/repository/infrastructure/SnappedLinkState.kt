@@ -90,23 +90,16 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
     fun withSnappedToTerminusNode(thresholdDistanceOfSnappingToLinkEndpointInMeters: Double): SnappedLinkState {
         val distanceFromStartOfLink: Double = closestPointFractionalMeasure * infrastructureLinkLength
 
-        val closestPointFractionalMeasurePossiblySnappedToEndpoint: Double =
-            if (distanceFromStartOfLink.isWithinTolerance(0.0, thresholdDistanceOfSnappingToLinkEndpointInMeters))
-                0.0
-            else if (distanceFromStartOfLink.isWithinTolerance(infrastructureLinkLength,
-                                                               thresholdDistanceOfSnappingToLinkEndpointInMeters)
-            )
-                1.0
-            else
-                closestPointFractionalMeasure
-
-        return SnappedLinkState(infrastructureLinkId,
-                                closestDistance,
-                                closestPointFractionalMeasurePossiblySnappedToEndpoint,
-                                trafficFlowDirectionType,
-                                infrastructureLinkLength,
-                                startNodeId,
-                                endNodeId)
+        return if (distanceFromStartOfLink.isWithinTolerance(0.0,
+                                                             thresholdDistanceOfSnappingToLinkEndpointInMeters)
+        )
+            withClosestPointFractionalMeasure(0.0)
+        else if (distanceFromStartOfLink.isWithinTolerance(infrastructureLinkLength,
+                                                           thresholdDistanceOfSnappingToLinkEndpointInMeters)
+        )
+            withClosestPointFractionalMeasure(1.0)
+        else
+            this
     }
 
     /**
@@ -129,15 +122,17 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
             else
                 null
 
-        return when (overriddenClosestPointFractionalMeasure) {
-            null -> this
-            else -> SnappedLinkState(infrastructureLinkId,
-                                     closestDistance,
-                                     overriddenClosestPointFractionalMeasure,
-                                     trafficFlowDirectionType,
-                                     infrastructureLinkLength,
-                                     startNodeId,
-                                     endNodeId)
-        }
+        return overriddenClosestPointFractionalMeasure
+            ?.let(this::withClosestPointFractionalMeasure)
+            ?: this
     }
+
+    private fun withClosestPointFractionalMeasure(newClosestPointFractionalMeasure: Double) =
+        SnappedLinkState(infrastructureLinkId,
+                         closestDistance,
+                         newClosestPointFractionalMeasure,
+                         trafficFlowDirectionType,
+                         infrastructureLinkLength,
+                         startNodeId,
+                         endNodeId)
 }
