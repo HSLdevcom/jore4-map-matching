@@ -304,7 +304,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val endLinkCandidates: List<SnappedLinkState> = linkSearchResults[2]?.closestLinks
             ?: throw getExceptionIfCandidatesNotFound(routeEndPoint)
 
-        fun createTerminusLinkCandidates(linkCandidates: List<SnappedLinkState>, routeTerminusPoint: RouteTerminusPoint)
+        fun createTerminusLinkCandidates(closestLinks: List<SnappedLinkState>, routeTerminusPoint: RouteTerminusPoint)
             : List<TerminusLinkCandidate> {
 
             val linkIdAssociatedWithStopPoint: InfrastructureLinkId? =
@@ -312,11 +312,9 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                     ?.infrastructureLinkId
 
             return when (linkIdAssociatedWithStopPoint) {
-                null -> {
-                    linkCandidates.map { TerminusLinkCandidate(it, terminusStopPointMatchFoundByNationalId = false) }
-                }
+                null -> closestLinks.map { TerminusLinkCandidate(it, terminusStopPointMatchFoundByNationalId = false) }
                 else -> {
-                    linkCandidates.map { snappedLink ->
+                    closestLinks.map { snappedLink ->
                         if (snappedLink.infrastructureLinkId == linkIdAssociatedWithStopPoint)
                             TerminusLinkCandidate(
                                 // Move snap point inwards just 1.0 meters.
