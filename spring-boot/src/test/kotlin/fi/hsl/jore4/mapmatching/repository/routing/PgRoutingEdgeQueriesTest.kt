@@ -5,7 +5,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-class QueryHelperTest {
+class PgRoutingEdgeQueriesTest {
 
     @Nested
     @DisplayName("Get vehicle type constrained infrastructure links query (in SQL)")
@@ -14,7 +14,7 @@ class QueryHelperTest {
         @Test
         @DisplayName("With default parameter")
         fun withDefaultParameter() {
-            val query: String = QueryHelper.getVehicleTypeConstrainedLinksQuery()
+            val query: String = PgRoutingEdgeQueries.getVehicleTypeConstrainedLinksQuery()
 
             assertThat(query).isEqualTo("""
                 'SELECT l.infrastructure_link_id AS id,
@@ -31,7 +31,7 @@ class QueryHelperTest {
         @Test
         @DisplayName("When vehicle type parameter is given explicitly")
         fun whenVehicleTypeParameterGivenExplicitly() {
-            val query: String = QueryHelper.getVehicleTypeConstrainedLinksQuery("vehicleType")
+            val query: String = PgRoutingEdgeQueries.getVehicleTypeConstrainedLinksQuery("vehicleType")
 
             assertThat(query).isEqualTo("""
                 'SELECT l.infrastructure_link_id AS id,
@@ -57,7 +57,7 @@ class QueryHelperTest {
             @Test
             @DisplayName("Without terminus link or node IDs")
             fun withoutTerminusLinkOrNodeIds() {
-                val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
+                val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
 
                 assertThat(query).isEqualTo("""
                     'SELECT l.infrastructure_link_id AS id,
@@ -79,7 +79,7 @@ class QueryHelperTest {
                 @Test
                 @DisplayName("With one terminus link ID")
                 fun withOneTerminusLinkId() {
-                    val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(1, 0)
+                    val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(1, 0)
 
                     assertThat(query).isEqualTo("""
                         'SELECT l.infrastructure_link_id AS id,
@@ -100,7 +100,7 @@ class QueryHelperTest {
                 @Test
                 @DisplayName("With two terminus link IDs")
                 fun withTwoTerminusLinkIds() {
-                    val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(2, 0)
+                    val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(2, 0)
 
                     assertThat(query).isEqualTo("""
                         'SELECT l.infrastructure_link_id AS id,
@@ -126,7 +126,7 @@ class QueryHelperTest {
                 @Test
                 @DisplayName("With one terminus node ID")
                 fun withOneTerminusNodeId() {
-                    val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 1)
+                    val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 1)
 
                     assertThat(query).isEqualTo("""
                         'SELECT l.infrastructure_link_id AS id,
@@ -148,7 +148,7 @@ class QueryHelperTest {
                 @Test
                 @DisplayName("With two terminus node IDs")
                 fun withTwoTerminusNodeIds() {
-                    val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 2)
+                    val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 2)
 
                     assertThat(query).isEqualTo("""
                         'SELECT l.infrastructure_link_id AS id,
@@ -175,7 +175,7 @@ class QueryHelperTest {
                 @Test
                 @DisplayName("With one terminus link ID and one terminus node ID")
                 fun withOneTerminusLinkIdAndOneTerminusNodeId() {
-                    val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(1, 1)
+                    val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(1, 1)
 
                     assertThat(query).isEqualTo("""
                         'SELECT l.infrastructure_link_id AS id,
@@ -198,7 +198,7 @@ class QueryHelperTest {
                 @Test
                 @DisplayName("With two terminus link IDs and three terminus node IDs")
                 fun withTwoTerminusLinkIdsAndThreeTerminusNodeIds() {
-                    val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(2, 3)
+                    val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(2, 3)
 
                     assertThat(query).isEqualTo("""
                         'SELECT l.infrastructure_link_id AS id,
@@ -228,7 +228,7 @@ class QueryHelperTest {
         @Test
         @DisplayName("Without terminus link or node IDs")
         fun withoutTerminusLinkOrNodeIds() {
-            val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+            val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
                 vehicleTypeVariableName = "vehicleType",
                 lineStringEwkbVariableName = "lineStringEwkb",
                 bufferRadiusVariableName = "bufferRadius")
@@ -249,7 +249,7 @@ class QueryHelperTest {
         @Test
         @DisplayName("With terminus link IDs")
         fun withTerminusLinkIds() {
-            val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+            val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
                 vehicleTypeVariableName = "vehicleType",
                 terminusLinkIdsVariableName = "terminusLinkIds",
                 lineStringEwkbVariableName = "lineStringEwkb",
@@ -274,7 +274,7 @@ class QueryHelperTest {
         @Test
         @DisplayName("With terminus node IDs")
         fun withTerminusNodeIds() {
-            val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+            val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
                 vehicleTypeVariableName = "vehicleType",
                 terminusNodeIdsVariableName = "terminusNodeIds",
                 lineStringEwkbVariableName = "lineStringEwkb",
@@ -300,7 +300,7 @@ class QueryHelperTest {
         @Test
         @DisplayName("With terminus link and node IDs")
         fun withTerminusLinkAndNodeIds() {
-            val query: String = QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+            val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
                 vehicleTypeVariableName = "vehicleType",
                 terminusLinkIdsVariableName = "terminusLinkIds",
                 terminusNodeIdsVariableName = "terminusNodeIds",

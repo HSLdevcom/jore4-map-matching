@@ -178,13 +178,13 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 ?.run {
                     explicitLinkReferences
                         ?.run {
-                            QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+                            PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
                                 idsOfCandidatesForTerminusLinks.size,
                                 idsOfCandidatesForTerminusNodes.size)
                         }
-                        ?: QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
+                        ?: PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
                 }
-                ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
+                ?: PgRoutingEdgeQueries.getVehicleTypeConstrainedLinksQuery()
 
             fun createUnionSubquery(numberOfSequenceCandidates: Int): String = (1..numberOfSequenceCandidates)
                 .joinToString(

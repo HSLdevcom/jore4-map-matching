@@ -1,6 +1,6 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
-object QueryHelper {
+object PgRoutingEdgeQueries {
 
     private const val UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL = "''' || ? || '''"
 

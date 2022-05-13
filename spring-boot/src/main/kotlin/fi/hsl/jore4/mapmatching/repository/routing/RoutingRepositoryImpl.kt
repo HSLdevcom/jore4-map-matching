@@ -139,13 +139,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 ?.run {
                     explicitLinkReferences
                         ?.run {
-                            QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+                            PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(
                                 idsOfCandidatesForTerminusLinks.size,
                                 idsOfCandidatesForTerminusNodes.size)
                         }
-                        ?: QueryHelper.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
+                        ?: PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
                 }
-                ?: QueryHelper.getVehicleTypeConstrainedLinksQuery()
+                ?: PgRoutingEdgeQueries.getVehicleTypeConstrainedLinksQuery()
 
             return """
                 WITH route_link AS (
