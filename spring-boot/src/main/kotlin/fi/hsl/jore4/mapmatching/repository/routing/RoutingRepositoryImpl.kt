@@ -132,10 +132,10 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          */
         private fun getQueryForFindingRouteViaNodes(bufferAreaRestriction: BufferAreaRestriction?): String {
             // The produced SQL query is enclosed in quotes and passed as
-            // parameter to pgr_dijkstraVia() function. '?' is used as a bind
+            // parameter to pgRouting function. '?' is used as a bind
             // variable placeholder. Actual variable binding is left to occur
             // within initialisation of PreparedStatement.
-            val linkSelectionQueryForPgrDijkstra: String = bufferAreaRestriction
+            val linkSelectionQueryForPgRouting: String = bufferAreaRestriction
                 ?.run {
                     explicitLinkReferences
                         ?.run {
@@ -160,7 +160,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                         link.name AS link_name,
                         link.geom
                     FROM pgr_dijkstraVia(
-                        $linkSelectionQueryForPgrDijkstra,
+                        $linkSelectionQueryForPgRouting,
                         ?::bigint[],
                         directed := true,
                         strict := true,

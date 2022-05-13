@@ -172,9 +172,9 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             require(numberOfSequenceCandidates in 1..100) { "numberOfSequenceCandidates must be in range 1..100" }
 
             // The produced SQL query is enclosed in quotes and passed as parameter to
-            // pgr_dijkstraVia() function. '?' is used as a bind variable placeholder. Actual
+            // pgRouting function. '?' is used as a bind variable placeholder. Actual
             // variable binding is left to occur within initialisation of PreparedStatement.
-            val linkSelectionQueryForPgrDijkstra: String = bufferAreaRestriction
+            val linkSelectionQueryForPgRouting: String = bufferAreaRestriction
                 ?.run {
                     explicitLinkReferences
                         ?.run {
@@ -206,7 +206,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                     CROSS JOIN LATERAL (
                         SELECT max(pgr.route_agg_cost) AS route_agg_cost
                         FROM pgr_dijkstraVia(
-                            $linkSelectionQueryForPgrDijkstra,
+                            $linkSelectionQueryForPgRouting,
                             node_seq.node_arr,
                             directed := true,
                             strict := true,

@@ -7,8 +7,7 @@ object QueryHelper {
     /**
      * Generates an SQL query that fetches infrastructure links associated with
      * a specific vehicle type. The generated query is enclosed in quotes and
-     * intended to be passed as string parameter to pgr_dijkstraVia SQL
-     * function.
+     * intended to be passed as string parameter to a pgRouting SQL function.
      *
      * @return an SQL query enclosed in quotes as [java.lang.String]
      */
@@ -22,8 +21,7 @@ object QueryHelper {
     /**
      * Generates an SQL query that fetches infrastructure links associated with
      * a specific vehicle type. The generated query is enclosed in quotes and
-     * intended to be passed as string parameter to pgr_dijkstraVia SQL
-     * function.
+     * intended to be passed as string parameter to a pgRouting SQL function.
      *
      * @param vehicleTypeVariableName the variable name for vehicle type
      *
@@ -42,7 +40,7 @@ object QueryHelper {
      * "buffer area" or (2) matching with the given terminus link identifiers or
      * (3) whose endpoint nodes match with the given terminus node identifiers.
      * The generated query is enclosed in quotes and intended to be passed as
-     * string parameter to pgr_dijkstraVia SQL function.
+     * string parameter to a pgRouting SQL function.
      *
      * @param numberOfTerminusLinkIds the number of placeholders to generate for
      * terminus link identifiers
@@ -111,7 +109,7 @@ object QueryHelper {
      * by [terminusLinkIdsVariableName] or (3) whose endpoint nodes match with
      * terminus node identifiers identified by [terminusNodeIdsVariableName].
      * The generated query is enclosed in quotes and intended to be passed as
-     * string parameter to pgr_dijkstraVia SQL function.
+     * string parameter to a pgRouting SQL function.
      *
      * @param vehicleTypeVariableName the variable name for vehicle type
      * @param terminusLinkIdsVariableName the optional variable name for the
