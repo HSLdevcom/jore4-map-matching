@@ -30,7 +30,7 @@
         <!-- Library versions -->
         <arrow-core.version>1.0.0</arrow-core.version>
         <geolatte.version>1.8.2</geolatte.version>
-        <kotlin-logging-jvm.version>2.1.21</kotlin-logging-jvm.version>
+        <kotlin-logging-jvm.version>2.1.23</kotlin-logging-jvm.version>
         <quicktheories.version>0.26</quicktheories.version>
         <spring-boot.version>2.6.8</spring-boot.version>
 
