@@ -29,7 +29,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - DIGIROAD_ROUTING_DUMP_VERSION=2022-03-11
+      - DIGIROAD_ROUTING_DUMP_VERSION=2022-06-09
 
   # empty database used in development (instead of "jore4-mapmatchingdb")
   jore4-mapmatchingdevdb:
