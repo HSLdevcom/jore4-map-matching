@@ -30,7 +30,8 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
             ).permitAll()
 
             .antMatchers(HttpMethod.POST,
-                         MapMatchingController.URL_PREFIX + "/**"
+                         MapMatchingController.URL_PREFIX + "/**",
+                         RouteController.URL_PREFIX + "/**"
             ).permitAll()
 
             .anyRequest().denyAll()

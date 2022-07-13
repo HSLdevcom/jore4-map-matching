@@ -11,11 +11,8 @@ import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import javax.validation.Valid
 import javax.validation.constraints.Pattern
 
 private val LOGGER = KotlinLogging.logger {}
@@ -25,6 +22,7 @@ private val LOGGER = KotlinLogging.logger {}
 @RequestMapping(value = [RouteController.URL_PREFIX], produces = [MediaType.APPLICATION_JSON_VALUE])
 class RouteController @Autowired constructor(val routingService: IRoutingService) {
 
+    @Deprecated("GET request should be replaced with POST")
     @GetMapping("/$TRANSPORTATION_MODE_PARAM/{coords}",
                 "/$TRANSPORTATION_MODE_PARAM/{coords}.json")
     fun findRoute(@PathVariable transportationMode: String,
@@ -41,6 +39,24 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         return findRoute(vehicleType, coords, linkSearchRadius)
     }
 
+    @PostMapping("/$TRANSPORTATION_MODE_PARAM", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    fun findRoute(@PathVariable transportationMode: String,
+                  @Valid @RequestBody request: PublicTransportRouteFindRequestDTO)
+        : RoutingResponse {
+
+        LOGGER.debug { "Given transportation mode: $transportationMode" }
+        LOGGER.debug { "Given coordinate points: ${request.routePoints}" }
+
+        val vehicleType: VehicleType = findVehicleType(transportationMode, null)
+            ?: return RoutingResponse.invalidTransportationMode(transportationMode)
+
+        return routingService.findRoute(
+            toPoints(request.routePoints),
+            vehicleType,
+            request.linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS)
+    }
+
+    @Deprecated("GET request should be replaced with POST")
     @GetMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}",
                 "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}.json")
     fun findRoute(@PathVariable transportationMode: String,
@@ -56,6 +72,24 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
             ?: return RoutingResponse.invalidTransportationProfile(transportationMode, vehicleTypeParam)
 
         return findRoute(vehicleType, coords, linkSearchRadius)
+    }
+
+    @PostMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    fun findRoute(@PathVariable transportationMode: String,
+                  @PathVariable vehicleTypeParam: String,
+                  @Valid @RequestBody request: PublicTransportRouteFindRequestDTO)
+        : RoutingResponse {
+
+        LOGGER.debug { "Given profile: $transportationMode/$vehicleTypeParam" }
+        LOGGER.debug { "Given coordinate points: ${request.routePoints}" }
+
+        val vehicleType: VehicleType = findVehicleType(transportationMode, vehicleTypeParam)
+            ?: return RoutingResponse.invalidTransportationProfile(transportationMode, vehicleTypeParam)
+
+        return routingService.findRoute(
+            toPoints(request.routePoints),
+            vehicleType,
+            request.linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS)
     }
 
     private fun findRoute(vehicleType: VehicleType, coords: String, linkSearchRadius: Int?): RoutingResponse {
