@@ -269,11 +269,12 @@ The application is built with [Maven](https://maven.apache.org/). The applicatio
 
 There exist two Maven profiles: `dev` and `prod`. By default, Maven uses `dev` profile.
 
-In `prod` profile, the database is expected to be already set up with the schema definitions and data. Hence, no database migrations are run during application start.
+In `prod` profile, the database is expected to be already set up with the schema definitions and infrastructure data. Hence, no database migrations are run during application start.
 
-In `dev` profile, there are two databases used:
+In `dev` profile, all three databases are involved:
 -  _Development database_ containing the application data. The database is initially empty. Database migrations are run into the database during application start.
-- _Test database_ that is used in tests and within jOOQ code generation. Database migrations are run during Maven build within the `process-resource` lifecycle phase which occurs just before source code compilation. The jOOQ classes are updated in the same lifecycle phase after the migrations.
+- _Test database_ that is used in jOOQ code generation. Database migrations are run during Maven build within the `process-resource` lifecycle phase which occurs just before source code compilation. The jOOQ classes are updated in the same lifecycle phase after the migrations.
+- _Pre-populated database_ is used in Spring integration tests which rely upon pre-populated data (currently same data as in production) originating from [Digiroad](https://vayla.fi/en/transport-network/data/digiroad/data).
 
 With `dev` profile one needs to create a user-specific build configuration file e.g. as follows:
 
@@ -281,9 +282,9 @@ With `dev` profile one needs to create a user-specific build configuration file 
 touch spring-boot/profiles/dev/config.$(whoami).properties
 ```
 
-## Populating data within development
+## Populating data to development database
 
-Within development, the currently recommended way of importing infrastructure data is to:
+Within developing the application, the currently recommended way of importing infrastructure data is to:
 1. Start map-matching server with the commands below. Within launch, the server will run database migration scripts into the development database. The scripts will initialise schemas, tables, constraints and indices. Also a couple of enumeration tables are populated with a fixed set of data.
 
     ```sh
@@ -317,15 +318,15 @@ The development database can be re-initialised (without recreating it) by runnin
 mvn properties:read-project-properties flyway:clean flyway:migrate
 ```
 
-Currently, there is a discrepancy between production database and the development/test database with regard to schema arrangement. In production database, **postgis** and **pgrouting** extensions are created into _public_ schema whereas in the development/test database the extensions are created into a separate _extensions_ schema.  Having a separate _extensions_ schema makes it easier to develop the app. This discrepancy does not affect the functioning of the app.
+Currently, there is a discrepancy between pre-populated database and the development/test database with regard to schema arrangement. In pre-populated database, **postgis** and **pgrouting** extensions are created into _public_ schema whereas in the development/test database the extensions are created into a separate _extensions_ schema.  Having a separate _extensions_ schema makes it easier to develop the app. This discrepancy does not affect the functioning of the app.
 
-In the development/test database there exists also a _flyway_ schema (for keeping account of database migrations) that is not present in the production database since database migrations are not run in the production setup.
+In the development/test database there exists also a _flyway_ schema (for keeping account of database migrations) that is not present in the pre-populated database since database migrations are not run in the production setup.
 
 ## Docker Reference
 
 - Needs **postgis** and **pgrouting** extensions enabled in the production database.
 - Currently, there exist three databases in the docker-compose setup:
-    1. One for productional use that is pre-populated with infrastructure network data and pgRouting topology (exported from [digiroad-import repo](https://github.com/HSLdevcom/jore4-digiroad-import)). In the future, this might get replaced by linking to JORE4 database via FDW (Foreign Data Wrapper extension)
+    1. One for testing with pre-populated data with infrastructure network data and pgRouting topology (exported from [digiroad-import repo](https://github.com/HSLdevcom/jore4-digiroad-import)). In the future, this might get replaced by linking to JORE4 database via FDW (Foreign Data Wrapper extension)
     2. Development database. Initially empty with no schema, tables or data.
     3. Test database. Initially empty like development database. Used within test execution and for generating jOOQ classes.
 - When Azure flexible-server enables pgRouting extension, it is considered that the map-matching service could be changed to point directly to the JORE4 database (in production setup) instead of having its own database
@@ -356,3 +357,10 @@ The following configuration properties are to be defined for each environment:
 | db.password             | DB_PASSWORD             | db-password      | ****                                                                               | Password for the routing database                                                |
 
 More properties can be found from `/profiles/prod/config.properties`
+
+## License
+
+The project license is in [`LICENSE`](./LICENSE).
+
+Digiroad data has been licensed with Creative Commons BY 4.0 license by the
+[Finnish Transport Infrastructure Agency](https://vayla.fi/en/transport-network/data/digiroad/data).

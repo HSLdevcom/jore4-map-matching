@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Start development & test database in the background
+      - name: Start databases (blocking until up)
         run: ./development.sh start:devdeps
 
       - name: Set up JDK 11
