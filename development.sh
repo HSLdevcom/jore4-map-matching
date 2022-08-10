@@ -20,34 +20,41 @@ function start_test_database {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingtestdb
 }
 
-function start {
+function start_prod_database_blocking {
   start_prod_database
   while ! pg_isready -h localhost -p 19000
   do
-    echo "waiting for database to spin up"
+    echo "waiting for pre-populated database to spin up"
     sleep 2;
   done
+}
+
+function start_test_database_blocking {
+  start_test_database
+  while ! pg_isready -h localhost -p 20000
+  do
+    echo "waiting for test database to spin up"
+    sleep 2;
+  done
+}
+
+function start {
+  start_prod_database_blocking
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatching
 }
 
 function start_dev {
   start_dev_database
-  start_test_database
-  while ! pg_isready -h localhost -p 20000
-  do
-    echo "waiting for test database to spin up"
-    sleep 2;
-  done
+  # pre-populated database (same data as in production) is used in integration tests
+  start_prod_database_blocking
+  start_test_database_blocking
   cd "${WD}/spring-boot" && mvn clean spring-boot:run
 }
 
 function run_tests {
-  start_test_database
-  while ! pg_isready -h localhost -p 20000
-  do
-    echo "waiting for test database to spin up"
-    sleep 2;
-  done
+  # pre-populated database (same data as in production) is used in integration tests
+  start_prod_database_blocking
+  start_test_database_blocking
   cd "${WD}/spring-boot" && mvn clean verify
 }
 
@@ -69,16 +76,16 @@ function usage {
   Usage $0 <command>
 
   start
-    Start production database (pre-populated) and map-matching service in Docker container
+    Start pre-populated database (same data as in production) and map-matching service in Docker container
 
   start:dev
-    Start development & test database in Docker container and the app locally via Maven (using 'dev' profile)
+    Start all databases (development, test, pre-populated) in Docker containers and the app locally via Maven (using 'dev' profile)
 
   start:devdeps
-    Start development and test database to be used while developing the application
+    Start all databases (development, test, pre-populated) to be used while developing the application
 
   test
-    Run JUnit tests via Maven using 'dev' profile. Start development & test database if not already up.
+    Run JUnit tests via Maven using 'dev' profile. Start pre-populated & test database if not already up.
 
   stop
     Stop all map-matching related Docker containers
@@ -105,7 +112,8 @@ start:dev)
 
 start:devdeps)
   start_dev_database
-  start_test_database
+  start_test_database_blocking
+  start_prod_database_blocking
   ;;
 
 stop)
@@ -121,12 +129,7 @@ test)
   ;;
 
 generate:jooq)
-  start_test_database
-  while ! pg_isready -h localhost -p 20000
-  do
-    echo "waiting for db to spin up"
-    sleep 2;
-  done
+  start_test_database_blocking
   generate_jooq
   ;;
 

@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Start database and map-matching service
+      - name: Start databases and map-matching service
         run: ./development.sh start
 
       - name: Verify that dockerized map-matching API is up and running

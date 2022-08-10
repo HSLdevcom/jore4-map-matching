@@ -11,7 +11,7 @@ RUN mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
 COPY ./spring-boot/src /build/src
 # package using "prod" profile
 COPY ./spring-boot/profiles/prod /build/profiles/prod
-RUN mvn -Pprod clean package spring-boot:repackage
+RUN mvn -Pprod -DskipTests=true clean package spring-boot:repackage
 
 
 # slim image for distribution
