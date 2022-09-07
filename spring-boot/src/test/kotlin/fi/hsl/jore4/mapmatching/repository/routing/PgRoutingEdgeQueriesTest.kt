@@ -34,7 +34,7 @@ class PgRoutingEdgeQueriesTest {
             val query: String = PgRoutingEdgeQueries.getVehicleTypeConstrainedLinksQuery("vehicleType")
 
             assertThat(query).isEqualTo("""
-                'SELECT l.infrastructure_link_id AS id,
+                $$ SELECT l.infrastructure_link_id AS id,
                   l.start_node_id AS source,
                   l.end_node_id AS target,
                   l.cost,
@@ -42,7 +42,7 @@ class PgRoutingEdgeQueriesTest {
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
                   ON s.infrastructure_link_id = l.infrastructure_link_id
-                WHERE s.vehicle_type = ''' || :vehicleType || ''''""".trimIndent())
+                WHERE s.vehicle_type = $$ || quote_literal(:vehicleType)""".trimIndent())
         }
     }
 
@@ -234,7 +234,7 @@ class PgRoutingEdgeQueriesTest {
                 bufferRadiusVariableName = "bufferRadius")
 
             assertThat(query).isEqualTo("""
-                'SELECT l.infrastructure_link_id AS id,
+                $$ SELECT l.infrastructure_link_id AS id,
                   l.start_node_id AS source,
                   l.end_node_id AS target,
                   l.cost,
@@ -242,8 +242,8 @@ class PgRoutingEdgeQueriesTest {
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
                   ON s.infrastructure_link_id = l.infrastructure_link_id
-                WHERE s.vehicle_type = ''' || :vehicleType || '''
-                  AND ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || :lineStringEwkb || '''), 3067), ''' || :bufferRadius || '''), l.geom)'""".trimIndent())
+                WHERE s.vehicle_type = $$ || quote_literal(:vehicleType) || $$
+                  AND ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB($$ || quote_literal(:lineStringEwkb) || $$), 3067), $$ || quote_literal(:bufferRadius) || $$), l.geom)$$""".trimIndent())
         }
 
         @Test
@@ -256,7 +256,7 @@ class PgRoutingEdgeQueriesTest {
                 bufferRadiusVariableName = "bufferRadius")
 
             assertThat(query).isEqualTo("""
-                'SELECT l.infrastructure_link_id AS id,
+                $$ SELECT l.infrastructure_link_id AS id,
                   l.start_node_id AS source,
                   l.end_node_id AS target,
                   l.cost,
@@ -264,11 +264,11 @@ class PgRoutingEdgeQueriesTest {
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
                   ON s.infrastructure_link_id = l.infrastructure_link_id
-                WHERE s.vehicle_type = ''' || :vehicleType || '''
+                WHERE s.vehicle_type = $$ || quote_literal(:vehicleType) || $$
                   AND (
-                    l.infrastructure_link_id IN (''' || :terminusLinkIds || ''')
-                    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || :lineStringEwkb || '''), 3067), ''' || :bufferRadius || '''), l.geom)
-                  )'""".trimIndent())
+                    l.infrastructure_link_id = ANY(($$ || quote_literal(:terminusLinkIds) || $$)::bigint[])
+                    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB($$ || quote_literal(:lineStringEwkb) || $$), 3067), $$ || quote_literal(:bufferRadius) || $$), l.geom)
+                  )$$""".trimIndent())
         }
 
         @Test
@@ -281,7 +281,7 @@ class PgRoutingEdgeQueriesTest {
                 bufferRadiusVariableName = "bufferRadius")
 
             assertThat(query).isEqualTo("""
-                'SELECT l.infrastructure_link_id AS id,
+                $$ SELECT l.infrastructure_link_id AS id,
                   l.start_node_id AS source,
                   l.end_node_id AS target,
                   l.cost,
@@ -289,12 +289,11 @@ class PgRoutingEdgeQueriesTest {
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
                   ON s.infrastructure_link_id = l.infrastructure_link_id
-                WHERE s.vehicle_type = ''' || :vehicleType || '''
+                WHERE s.vehicle_type = $$ || quote_literal(:vehicleType) || $$
                   AND (
-                    l.start_node_id IN (''' || :terminusNodeIds || ''')
-                    OR l.end_node_id IN (''' || :terminusNodeIds || ''')
-                    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || :lineStringEwkb || '''), 3067), ''' || :bufferRadius || '''), l.geom)
-                  )'""".trimIndent())
+                    ($$ || quote_literal(:terminusNodeIds) || $$)::bigint[] && ARRAY[l.start_node_id, l.end_node_id]
+                    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB($$ || quote_literal(:lineStringEwkb) || $$), 3067), $$ || quote_literal(:bufferRadius) || $$), l.geom)
+                  )$$""".trimIndent())
         }
 
         @Test
@@ -308,7 +307,7 @@ class PgRoutingEdgeQueriesTest {
                 bufferRadiusVariableName = "bufferRadius")
 
             assertThat(query).isEqualTo("""
-                'SELECT l.infrastructure_link_id AS id,
+                $$ SELECT l.infrastructure_link_id AS id,
                   l.start_node_id AS source,
                   l.end_node_id AS target,
                   l.cost,
@@ -316,13 +315,12 @@ class PgRoutingEdgeQueriesTest {
                 FROM routing.infrastructure_link l
                 INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
                   ON s.infrastructure_link_id = l.infrastructure_link_id
-                WHERE s.vehicle_type = ''' || :vehicleType || '''
+                WHERE s.vehicle_type = $$ || quote_literal(:vehicleType) || $$
                   AND (
-                    l.infrastructure_link_id IN (''' || :terminusLinkIds || ''')
-                    OR l.start_node_id IN (''' || :terminusNodeIds || ''')
-                    OR l.end_node_id IN (''' || :terminusNodeIds || ''')
-                    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB(''' || :lineStringEwkb || '''), 3067), ''' || :bufferRadius || '''), l.geom)
-                  )'""".trimIndent())
+                    l.infrastructure_link_id = ANY(($$ || quote_literal(:terminusLinkIds) || $$)::bigint[])
+                    OR ($$ || quote_literal(:terminusNodeIds) || $$)::bigint[] && ARRAY[l.start_node_id, l.end_node_id]
+                    OR ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB($$ || quote_literal(:lineStringEwkb) || $$), 3067), $$ || quote_literal(:bufferRadius) || $$), l.geom)
+                  )$$""".trimIndent())
         }
     }
 }
