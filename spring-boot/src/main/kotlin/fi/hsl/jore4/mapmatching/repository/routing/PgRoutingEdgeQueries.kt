@@ -66,42 +66,35 @@ object PgRoutingEdgeQueries {
                                                                         postfix = " || '''")
         }
 
-        val commonQueryStart: String = getVehicleTypeConstrainedLinksQueryInternal(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
+        val additionalTerminusPredicates: MutableList<String> = ArrayList()
 
-        val bufferAreaRestriction: String = getBufferAreaRestriction(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
-                                                                     UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
-
-        return if (numberOfTerminusLinkIds > 0) {
+        if (numberOfTerminusLinkIds > 0) {
             val quotedLinkIdsParam = getPlaceholdersConcatenated(numberOfTerminusLinkIds)
-
-            if (numberOfTerminusNodeIds > 0) {
-                val quotedNodeIdsParam = getPlaceholdersConcatenated(numberOfTerminusNodeIds)
-
-                """'$commonQueryStart
-                |  AND (
-                |    l.infrastructure_link_id IN ($quotedLinkIdsParam)
-                |    OR l.start_node_id IN ($quotedNodeIdsParam)
-                |    OR l.end_node_id IN ($quotedNodeIdsParam)
-                |    OR $bufferAreaRestriction
-                |  )'""".trimMargin()
-            } else
-                """'$commonQueryStart
-                |  AND (
-                |    l.infrastructure_link_id IN ($quotedLinkIdsParam)
-                |    OR $bufferAreaRestriction
-                |  )'""".trimMargin()
-        } else if (numberOfTerminusNodeIds > 0) {
+            additionalTerminusPredicates.add("l.infrastructure_link_id IN ($quotedLinkIdsParam)")
+        }
+        if (numberOfTerminusNodeIds > 0) {
             val quotedNodeIdsParam = getPlaceholdersConcatenated(numberOfTerminusNodeIds)
 
-            """'$commonQueryStart
-            |  AND (
-            |    l.start_node_id IN ($quotedNodeIdsParam)
-            |    OR l.end_node_id IN ($quotedNodeIdsParam)
-            |    OR $bufferAreaRestriction
-            |  )'""".trimMargin()
-        } else
-            """'$commonQueryStart
-            |  AND $bufferAreaRestriction'""".trimMargin()
+            additionalTerminusPredicates.add("l.start_node_id IN ($quotedNodeIdsParam)")
+            additionalTerminusPredicates.add("l.end_node_id IN ($quotedNodeIdsParam)")
+        }
+
+        // Buffer area restriction is always applied.
+        additionalTerminusPredicates.add(getBufferAreaRestriction(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
+                                                                  UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL))
+
+        val queryStart: String = getVehicleTypeConstrainedLinksQueryInternal(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
+
+        val queryEnd: String = when (additionalTerminusPredicates.size) {
+
+            1 -> "\n  AND " + additionalTerminusPredicates.first()
+
+            else -> additionalTerminusPredicates.joinToString(prefix = "\n  AND (\n    ",
+                                                              separator = "\n    OR ",
+                                                              postfix = "\n  )")
+        }
+
+        return "'$queryStart$queryEnd'"
     }
 
     /**
@@ -143,32 +136,30 @@ object PgRoutingEdgeQueries {
         val wrappedLineStringEwkb: String = wrapBindVariable(lineStringEwkbVariableName)
         val wrappedBufferRadius: String = wrapBindVariable(bufferRadiusVariableName)
 
-        val commonQueryStart: String = getVehicleTypeConstrainedLinksQueryInternal(wrappedVehicleType)
-        val bufferAreaRestriction: String = getBufferAreaRestriction(wrappedLineStringEwkb, wrappedBufferRadius)
+        val additionalTerminusPredicates: MutableList<String> = ArrayList()
 
-        return if (terminusLinkIdsVariableName != null) {
-            if (terminusNodeIdsVariableName != null)
-                """$$ $commonQueryStart
-                |  AND (
-                |    l.infrastructure_link_id = ANY((${wrapBindVariable(terminusLinkIdsVariableName)})::bigint[])
-                |    OR (${wrapBindVariable(terminusNodeIdsVariableName)})::bigint[] && ARRAY[l.start_node_id, l.end_node_id]
-                |    OR $bufferAreaRestriction
-                |  )$$""".trimMargin()
-            else
-                """$$ $commonQueryStart
-                |  AND (
-                |    l.infrastructure_link_id = ANY((${wrapBindVariable(terminusLinkIdsVariableName)})::bigint[])
-                |    OR $bufferAreaRestriction
-                |  )$$""".trimMargin()
-        } else if (terminusNodeIdsVariableName != null)
-            """$$ $commonQueryStart
-            |  AND (
-            |    (${wrapBindVariable(terminusNodeIdsVariableName)})::bigint[] && ARRAY[l.start_node_id, l.end_node_id]
-            |    OR $bufferAreaRestriction
-            |  )$$""".trimMargin()
-        else
-            """$$ $commonQueryStart
-            |  AND $bufferAreaRestriction$$""".trimMargin()
+        if (terminusLinkIdsVariableName != null) {
+            additionalTerminusPredicates.add("l.infrastructure_link_id = ANY((${wrapBindVariable(terminusLinkIdsVariableName)})::bigint[])")
+        }
+        if (terminusNodeIdsVariableName != null) {
+            additionalTerminusPredicates.add("(${wrapBindVariable(terminusNodeIdsVariableName)})::bigint[] && ARRAY[l.start_node_id, l.end_node_id]")
+        }
+
+        // Buffer area restriction is always applied.
+        additionalTerminusPredicates.add(getBufferAreaRestriction(wrappedLineStringEwkb, wrappedBufferRadius))
+
+        val queryStart: String = getVehicleTypeConstrainedLinksQueryInternal(wrappedVehicleType)
+
+        val queryEnd: String = when (additionalTerminusPredicates.size) {
+
+            1 -> "\n  AND " + additionalTerminusPredicates.first()
+
+            else -> additionalTerminusPredicates.joinToString(prefix = "\n  AND (\n    ",
+                                                              separator = "\n    OR ",
+                                                              postfix = "\n  )")
+        }
+
+        return "$$ $queryStart$queryEnd$$"
     }
 
     private fun getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter: String): String = """
