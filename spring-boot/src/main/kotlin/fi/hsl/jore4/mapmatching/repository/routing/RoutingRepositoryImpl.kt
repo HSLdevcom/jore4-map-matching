@@ -80,7 +80,6 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 val trimmed = rs.getBoolean("trimmed")
 
                 val routeSeqNum = rs.getInt("seq")
-                val routeLegSeqNum = rs.getInt("path_seq")
 
                 val infrastructureLinkId = rs.getLong("infrastructure_link_id")
                 val forwardTraversal = rs.getBoolean("is_traversal_forwards")
@@ -98,7 +97,6 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 val lineString: LineString<G2D> = extractLineStringG2D(geom)
 
                 trimmed to RouteLinkDTO(routeSeqNum,
-                                        routeLegSeqNum,
                                         InfrastructureLinkTraversal(
                                             infrastructureLinkId,
                                             ExternalLinkReference(infrastructureSource, externalLinkId),
@@ -151,7 +149,6 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 WITH route_link AS (
                     SELECT
                         pgr.seq,
-                        pgr.path_seq,
                         link.infrastructure_link_id,
                         (pgr.node = link.start_node_id) AS is_traversal_forwards,
                         pgr.cost,
@@ -172,7 +169,6 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 trimmed_terminus_link AS (
                     SELECT
                         seq,
-                        path_seq,
                         infrastructure_link_id,
                         is_traversal_forwards,
                         infrastructure_source_name,
@@ -211,7 +207,6 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 )
                 SELECT false AS trimmed,
                     rl.seq,
-                    rl.path_seq,
                     rl.infrastructure_link_id,
                     rl.is_traversal_forwards,
                     rl.cost,
@@ -223,7 +218,6 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 UNION ALL
                 SELECT true AS trimmed,
                     ttl.seq,
-                    ttl.path_seq,
                     ttl.infrastructure_link_id,
                     ttl.is_traversal_forwards,
                     ST_Length(ttl.geom) AS cost,
