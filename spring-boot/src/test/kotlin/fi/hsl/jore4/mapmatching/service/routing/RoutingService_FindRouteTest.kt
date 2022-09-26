@@ -21,7 +21,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.test.Ignore
 
 @IntTest
 @Suppress("ClassName")
@@ -49,7 +48,7 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                 checkAssertions(response)
             }
 
-            else -> fail<Void>("RoutingResponse is not a success response as expected")
+            else -> fail<Void>("RoutingResponse is not a success response as expected: $response")
         }
     }
 
@@ -67,7 +66,7 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                 checkAssertions(response)
             }
 
-            else -> fail<Void>("RoutingResponse is not a failure response as expected")
+            else -> fail<Void>("RoutingResponse is not a failure response as expected: $response")
         }
     }
 
@@ -167,11 +166,8 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
         fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
             findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
-                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> = resp
-                    .routes.first()
-                    .paths.map { traversal: LinkTraversalDTO ->
-                        traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
-                    }
+                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
+                    getExternalLinkIdsAndTraversalDirections(resp)
 
                 assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
                     "441679" to true,
@@ -183,8 +179,8 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
     }
 
     @Nested
-    @DisplayName("When request route points coincide single one-way link in the forward direction")
-    inner class WhenRequestRoutePointsCoincideSingleOneWayLinkInForwardDirection {
+    @DisplayName("When request route points coincide single one-way link in the forwards direction")
+    inner class WhenRequestRoutePointsCoincideSingleOneWayLinkInForwardsDirection {
 
         private val requestRoutePoints: List<Point<G2D>> = listOf(toPoint(g(24.95735, 60.16813)),
                                                                   toPoint(g(24.95762, 60.16834)))
@@ -211,11 +207,8 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
         fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
             findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
-                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> = resp
-                    .routes.first()
-                    .paths.map { traversal: LinkTraversalDTO ->
-                        traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
-                    }
+                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
+                    getExternalLinkIdsAndTraversalDirections(resp)
 
                 assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
                     "441872" to true
@@ -225,14 +218,13 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
     }
 
     @Nested
-    @DisplayName("When request route points coincide single one-way link in the backward direction")
-    inner class WhenRequestRoutePointsCoincideSingleOneWayLinkInBackwardDirection {
+    @DisplayName("When request route points coincide single one-way link in the backwards direction")
+    inner class WhenRequestRoutePointsCoincideSingleOneWayLinkInBackwardsDirection {
 
         private val requestRoutePoints: List<Point<G2D>> = listOf(toPoint(g(24.95762, 60.16834)),
                                                                   toPoint(g(24.95735, 60.16813)))
 
         @Test
-        @Ignore("Does not work with pgr_trspViaEdges function. Will get fixed once pgr_withPointsVia is taken into use.")
         fun shouldReturnExpectedGeometry() {
             findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
@@ -258,15 +250,11 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
         }
 
         @Test
-        @Ignore("Does not work with pgr_trspViaEdges function. Will get fixed once pgr_withPointsVia is taken into use.")
         fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
             findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
-                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> = resp
-                    .routes.first()
-                    .paths.map { traversal: LinkTraversalDTO ->
-                        traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
-                    }
+                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
+                    getExternalLinkIdsAndTraversalDirections(resp)
 
                 assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
                     "441872" to true,
@@ -280,8 +268,8 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
     }
 
     @Nested
-    @DisplayName("When going back and forth a bi-directional link")
-    inner class WhenGoingBackAndForthABirectionalLink {
+    @DisplayName("When traversing back and forth a bi-directional link")
+    inner class WhenTraversingBackAndForthABirectionalLink {
 
         private val requestRoutePoints: List<Point<G2D>> = listOf(toPoint(g(24.98954, 60.27721)),
                                                                   toPoint(g(24.98891, 60.27711)),
@@ -315,11 +303,8 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
         fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
             findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
-                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> = resp
-                    .routes.first()
-                    .paths.map { traversal: LinkTraversalDTO ->
-                        traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
-                    }
+                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
+                    getExternalLinkIdsAndTraversalDirections(resp)
 
                 assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
                     "419821" to false,
@@ -328,6 +313,59 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                     "419825" to true,
                 ))
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("When all given points coincide with infrastructure network nodes")
+    inner class WhenAllGivenPointsCoincideWithInfrastructureNetworkNodes {
+
+        private val requestRoutePoints: List<Point<G2D>> = listOf(toPoint(g(24.95724, 60.16806)),
+                                                                  toPoint(g(24.95776, 60.16843)))
+
+        @Test
+        fun shouldReturnExpectedGeometry() {
+            findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+
+                val expectedCoordinates = PositionSequenceBuilders.variableSized(G2D::class.java)
+                    .add(24.95724, 60.16806)
+                    .add(24.95732, 60.16812)
+                    .add(24.95758, 60.16832)
+                    .add(24.95776, 60.16843)
+
+                val expectedGeometry: LineString<G2D> =
+                    mkLineString(expectedCoordinates.toPositionSequence(), WGS84)
+
+                val actualGeometry: LineString<G2D> = resp.routes.first().geometry
+
+                assertThat(roundCoordinates(actualGeometry, 5)).isEqualTo(expectedGeometry)
+            }
+        }
+
+        @Test
+        fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
+            findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+
+                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
+                    getExternalLinkIdsAndTraversalDirections(resp)
+
+                assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
+                    "441872" to true
+                ))
+            }
+        }
+    }
+
+    companion object {
+
+        private fun getExternalLinkIdsAndTraversalDirections(response: RoutingResponse.RoutingSuccessDTO)
+            : List<Pair<String, Boolean>> {
+
+            return response
+                .routes.first()
+                .paths.map { traversal: LinkTraversalDTO ->
+                    traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
+                }
         }
     }
 }

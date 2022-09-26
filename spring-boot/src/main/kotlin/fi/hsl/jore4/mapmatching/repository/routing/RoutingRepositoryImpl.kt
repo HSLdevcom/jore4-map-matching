@@ -4,8 +4,10 @@ import fi.hsl.jore4.mapmatching.model.ExternalLinkReference
 import fi.hsl.jore4.mapmatching.model.GeomTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.LinkSide
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.extractLineStringG2D
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.fromEwkb
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
@@ -34,9 +36,32 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     @Transactional(readOnly = true)
     override fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
                                           vehicleType: VehicleType,
+                                          bufferAreaRestriction: BufferAreaRestriction?)
+        : RouteDTO {
+
+        return findRouteViaNetworkNodesInternal(nodeIdSequence, vehicleType, null, null, bufferAreaRestriction)
+    }
+
+    @Transactional(readOnly = true)
+    override fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
+                                          vehicleType: VehicleType,
                                           fractionalStartLocationOnFirstLink: Double,
                                           fractionalEndLocationOnLastLink: Double,
                                           bufferAreaRestriction: BufferAreaRestriction?)
+        : RouteDTO {
+
+        return findRouteViaNetworkNodesInternal(nodeIdSequence,
+                                                vehicleType,
+                                                fractionalStartLocationOnFirstLink,
+                                                fractionalEndLocationOnLastLink,
+                                                bufferAreaRestriction)
+    }
+
+    fun findRouteViaNetworkNodesInternal(nodeIdSequence: NodeIdSequence,
+                                         vehicleType: VehicleType,
+                                         fractionalStartLocationOnFirstLink: Double?,
+                                         fractionalEndLocationOnLastLink: Double?,
+                                         bufferAreaRestriction: BufferAreaRestriction?)
         : RouteDTO {
 
         if (nodeIdSequence.isEmpty()) {
@@ -59,8 +84,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             // Setting array parameters can only be done through a java.sql.Connection object.
             pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("bigint", nodeIdArray))
 
-            pstmt.setDouble(paramIndex++, fractionalStartLocationOnFirstLink)
-            pstmt.setDouble(paramIndex++, fractionalEndLocationOnLastLink)
+            fractionalStartLocationOnFirstLink
+                ?.let { pstmt.setDouble(paramIndex++, it) }
+                ?: run { pstmt.setNull(paramIndex++, java.sql.Types.NUMERIC) }
+
+            fractionalEndLocationOnLastLink
+                ?.let { pstmt.setDouble(paramIndex++, it) }
+                ?: run { pstmt.setNull(paramIndex++, java.sql.Types.NUMERIC) }
         }
 
         val queryString: String = getQueryForFindingRouteViaNodes(bufferAreaRestriction)
@@ -78,22 +108,65 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             return RouteDTO.EMPTY
         }
 
+        // These three lists must have equal amount of items. Each list contains certain property
+        // for all custom points (to be visited on route). The properties are populated as array
+        // parameters into SQL query.
+        val linkIdsForCustomPoints: MutableList<Long> = ArrayList()
+        val fractionalLocations: MutableList<Double> = ArrayList()
+        val linkSides: MutableList<Char> = ArrayList() // left, right, both
+
+        // contains both infrastructure nodes and custom points
+        val visitedPointIds: MutableList<Long> = ArrayList()
+
+        // Is seems it is needed to avoid values [-2, -1] while assigning point IDs because that
+        // range seems to have special semantics in pgRouting output.
+        var nextCustomPointId = 3
+
+        points.forEach { point ->
+            when (point) {
+                is NetworkNode -> visitedPointIds.add(point.nodeId.value)
+
+                is FractionalLocationAlongLink -> {
+                    val side: Char = when (point.side) {
+                        LinkSide.LEFT -> 'l'
+                        LinkSide.RIGHT -> 'r'
+                        LinkSide.BOTH -> 'b'
+                    }
+
+                    linkIdsForCustomPoints.add(point.linkId.value)
+                    fractionalLocations.add(point.fractionalLocation)
+                    linkSides.add(side)
+
+                    // In pgRouting, custom point (relative location along infrastructure link) is
+                    // referenced by negative ID value.
+                    val customPointId: Int = nextCustomPointId++
+
+                    visitedPointIds.add((-customPointId).toLong())
+                }
+            }
+        }
+
+        // There could be consecutive duplicates of infrastructure node IDs due to snapping to link
+        // endpoints.
+        val filteredPointsIds: List<Long> = filterOutConsecutiveDuplicates(visitedPointIds)
+
         val parameterSetter = PreparedStatementSetter { pstmt ->
 
             var paramIndex = 1
 
-            val linkIdValues: Array<Int> = points.map { it.linkId.value.toInt() }.toTypedArray()
-            val pointFractions: Array<Double> = points.map { it.fractionalLocation }.toTypedArray()
-
             // Setting array parameters can only be done through a java.sql.Connection object.
-            pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("bigint", linkIdValues))
-            pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("float", pointFractions))
+
+            pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("bigint", linkIdsForCustomPoints.toTypedArray()))
+            pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("numeric", fractionalLocations.toTypedArray()))
+            pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("char", linkSides.toTypedArray()))
+
+            pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("bigint", filteredPointsIds.toTypedArray()))
 
             pstmt.setString(paramIndex++, vehicleType.value)
 
             // Set additional parameters if restricting infrastructure links with a buffer area.
             bufferAreaRestriction?.run {
-                paramIndex = setParametersForBufferAreaRestriction(pstmt, this, paramIndex)
+                setParametersForBufferAreaRestriction(pstmt, this, paramIndex)
             }
         }
 
@@ -261,8 +334,9 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 ) min_max_seq
                 INNER JOIN route_link ON seq IN (min_seq, max_seq)
                 CROSS JOIN (
-                    SELECT ? AS start_link_fractional, ? AS end_link_fractional
+                    SELECT ?::numeric AS start_link_fractional, ?::numeric AS end_link_fractional
                 ) substring_param
+                WHERE start_link_fractional IS NOT NULL AND end_link_fractional IS NOT NULL
             )
             SELECT *
             FROM (
@@ -294,34 +368,39 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
 
         /**
          * Returns an SQL query that finds the shortest path through infrastructure network via
-         * points along infrastructure links given as parameters. Each point is represented as a
-         * fractional location [0,1] on a link that is referenced by its ID. There is an embedded
-         * query enclosed in quotes that restricts the infrastructure links that are considered
-         * viable when finding the shortest path. The embedded query has its own set of parameters
-         * that are handled in [PgRoutingEdgeQueries] object.
+         * route points given as parameters. A route point is either (A) infrastructure node or
+         * (B) "custom point", that is, a point along infrastructure link that does not coincide
+         * with link's endpoints. The resulting route is returned as a sequence of route links
+         * each of which refers to an infrastructure link. For each route link, the geometry of the
+         * whole infrastructure link is returned. For terminus links, in case they are traversed
+         * only partially, also a trimmed version of the infrastructure link geometry is returned
+         * that models the real traversed path.
          *
-         * The query utilises pgRouting's pgr_trspViaEdges function. Currently, turn restrictions
-         * that the function itself supports (via a query given as parameter) is not applied/
-         * supported.
+         * Custom points are bound to the query via array parameters. There are three arrays for
+         * custom points to be bound while preparing the query. Each custom point is effectively a
+         * triple consisting of the following properties:
+         * (1) ID of the infrastructure link along which the point is located,
+         * (2) fractional location (0,1) on a link,
+         * (3) side of the road/street that the point affects with regard to the digitised direction
+         * of the link (left, right, both).
          *
-         * TODO NOTE! This version of query that uses pgr_trspViaEdges does not correctly handle
-         *  bi-directional closed loop links that are traversed backwards (against the digitised
-         *  direction). This will be fixed by switching to use pgr_withPointsVia function which
-         *  will be available in the upcoming 3.4.0 release of pgRouting.
+         * A visited points parameter is also bound as an array into the query. It consists of IDs
+         * of all route points.
+         *
+         * There is an embedded query enclosed in quotes that restricts the infrastructure links
+         * that are considered viable when finding the shortest path. The embedded query has its own
+         * set of parameters that are handled in [PgRoutingEdgeQueries] object.
+         *
+         * The query utilises pgRouting's pgr_withPointsVia function.
          *
          * The query contains sub-queries that process the output of pgRouting in several stages.
          * The processing involves recognising the direction of traversal on each link which
-         * information pgRouting itself does not provide. Because the points given as parameters
-         * appear as extra infrastructure nodes in the pgRouting output, the infrastructure links
-         * along which the points are located appear more times in the output than what is desired
-         * in the final output. The processing removes consecutive duplicate appearances of links in
-         * one direction of traversal. In addition, closed-loop links require special treatment
-         * which is done in the processing.
-         *
-         * For each link appearing in the shortest path, the geometry of whole link is returned
-         * independent of the given point parameters. However, for terminus links also trimmed
-         * versions of geometries are included that are affected by the first and the last point
-         * parameter.
+         * information pgRouting itself does not provide. Because some route points given as
+         * parameters (custom points) appear as extra infrastructure nodes in the pgRouting output,
+         * the infrastructure links along which those custom points are located appear more times in
+         * the output than what is desired in the final output. The processing removes consecutive
+         * duplicate appearances of links in one direction of traversal. In addition, closed-loop
+         * links require special treatment which is done in the processing.
          *
          * Since the query is quite long and complex a commentary in form of a sample data
          * transformation is provided below for sub-queries transforming the output of pgRouting.
@@ -330,97 +409,111 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          *
          * Sample output after "pgr" sub-query. "edge" means the ID of an infrastructure link and
          * "node" denotes either:
-         * - a given point along an infrastructure link, if negative
-         * - an infrastructure node, if positive
+         * - infrastructure node, if positive
+         * - custom point (relative location along infrastructure link), if negative
          *
-         *  seq |  edge  |  node  |        cost
-         * -----+--------+--------+--------------------
-         *    1 | 238709 |     -1 | 27.689157697826758
-         *    2 |     -1 |     -2 |                  0
-         *    3 | 238709 |     -2 | 27.689157697826765
-         *    4 |     -1 |     -3 |                  0
-         *    5 | 238709 |     -3 |  83.06747309348029
-         *    6 | 238714 | 115666 | 13.741292778420942
-         *    7 | 238712 | 115667 | 21.790898535769582
-         *    8 | 238707 | 115663 |  21.20953754741562
-         *    9 |     -1 |     -4 |                  0
-         *   10 | 238707 |     -4 |  21.20953754741562
-         *   11 |     -2 |     -5 |                  0
+         *  seq | path_id |  edge  |  node  |        cost
+         * -----+---------+--------+--------+--------------------
+         *    1 |       1 | 238709 |     -3 | 27.689157697826765
+         *    2 |       1 |     -1 |     -4 |                  0
+         *    3 |       2 | 238709 |     -4 | 27.689157697826765
+         *    4 |       2 |     -1 |     -5 |                  0
+         *    5 |       3 | 238709 |     -5 | 27.689157697826765
+         *    6 |       3 | 238709 |     -4 | 27.689157697826765
+         *    7 |       3 | 238709 |     -3 | 27.689157697826772
+         *    8 |       3 | 238714 | 115666 | 13.741292778420942
+         *    9 |       3 | 238712 | 115667 | 21.790898535769582
+         *   10 |       3 | 238707 | 115663 |  21.20953754741562
+         *   11 |       3 |     -1 |     -6 |                  0
+         *   12 |       4 | 238707 |     -6 |  21.20953754741562
+         *   13 |       4 |     -2 |     -7 |                  0
          *
-         * Sample output after "pgr_transform1" sub-query. Start and end points are added. Negative
-         * points refer to given point parameters and positive points are the actual infrastructure
-         * nodes.
+         * Sample output after "pgr_transform1" sub-query. Start and end points are added. Positive
+         * values refer to actual infrastructure nodes and negative values refer to given custom
+         * points.
          *
-         *  seq |  edge  |        cost        | start_point | end_point
-         * -----+--------+--------------------+-------------+-----------
-         *    1 | 238709 | 27.689157697826758 |          -1 |        -2
-         *    3 | 238709 | 27.689157697826765 |          -2 |        -3
-         *    5 | 238709 |  83.06747309348029 |          -3 |    115666
-         *    6 | 238714 | 13.741292778420942 |      115666 |    115667
-         *    7 | 238712 | 21.790898535769582 |      115667 |    115663
-         *    8 | 238707 |  21.20953754741562 |      115663 |        -4
-         *   10 | 238707 |  21.20953754741562 |          -4 |        -5
+         *  seq | path_id |  edge  |        cost        | start_point | end_point
+         * -----+---------+--------+--------------------+-------------+-----------
+         *    1 |       1 | 238709 | 27.689157697826765 |          -3 |        -4
+         *    3 |       2 | 238709 | 27.689157697826765 |          -4 |        -5
+         *    5 |       3 | 238709 | 27.689157697826765 |          -5 |        -4
+         *    6 |       3 | 238709 | 27.689157697826765 |          -4 |        -3
+         *    7 |       3 | 238709 | 27.689157697826772 |          -3 |    115666
+         *    8 |       3 | 238714 | 13.741292778420942 |      115666 |    115667
+         *    9 |       3 | 238712 | 21.790898535769582 |      115667 |    115663
+         *   10 |       3 | 238707 |  21.20953754741562 |      115663 |        -6
+         *   12 |       4 | 238707 |  21.20953754741562 |          -6 |        -7
          *
          * Sample output after "pgr_transform2" sub-query. Start and end fractions are derived for
          * each link traversal.
          *
-         *  seq |  edge  | start_fraction | end_fraction
-         * -----+--------+----------------+--------------
-         *    1 | 238709 |        0.75000 |      0.50000
-         *    3 | 238709 |        0.50000 |      0.25000
-         *    5 | 238709 |        0.25000 |          1.0
-         *    6 | 238714 |            0.0 |          1.0
-         *    7 | 238712 |            0.0 |          1.0
-         *    8 | 238707 |            0.0 |      0.33000
-         *   10 | 238707 |        0.33000 |      0.66000
+         *  seq | path_id |  edge  | start_fraction | end_fraction
+         * -----+---------+--------+----------------+--------------
+         *    1 |       1 | 238709 |           0.75 |          0.5
+         *    3 |       2 | 238709 |            0.5 |         0.25
+         *    5 |       3 | 238709 |           0.25 |          0.5
+         *    6 |       3 | 238709 |            0.5 |         0.75
+         *    7 |       3 | 238709 |           0.75 |          1.0
+         *    8 |       3 | 238714 |            0.0 |          1.0
+         *    9 |       3 | 238712 |            0.0 |          1.0
+         *   10 |       3 | 238707 |            0.0 |         0.33
+         *   12 |       4 | 238707 |           0.33 |         0.66
          *
          * Sample output after "pgr_transform3" sub-query. Direction of traversal is determined
          * based on start and end fractions.
          *
-         *  seq |  edge  | is_traversal_forwards | start_fraction | end_fraction
-         * -----+--------+-----------------------+----------------+--------------
-         *    1 | 238709 | f                     |        0.75000 |      0.50000
-         *    3 | 238709 | f                     |        0.50000 |      0.25000
-         *    5 | 238709 | t                     |        0.25000 |          1.0
-         *    6 | 238714 | t                     |            0.0 |          1.0
-         *    7 | 238712 | t                     |            0.0 |          1.0
-         *    8 | 238707 | t                     |            0.0 |      0.33000
-         *   10 | 238707 | t                     |        0.33000 |      0.66000
+         *  seq | path_id |  edge  | is_traversal_forwards | start_fraction | end_fraction
+         * -----+---------+--------+-----------------------+----------------+--------------
+         *    1 |       1 | 238709 | f                     |           0.75 |          0.5
+         *    3 |       2 | 238709 | f                     |            0.5 |         0.25
+         *    5 |       3 | 238709 | t                     |           0.25 |          0.5
+         *    6 |       3 | 238709 | t                     |            0.5 |         0.75
+         *    7 |       3 | 238709 | t                     |           0.75 |          1.0
+         *    8 |       3 | 238714 | t                     |            0.0 |          1.0
+         *    9 |       3 | 238712 | t                     |            0.0 |          1.0
+         *   10 |       3 | 238707 | t                     |            0.0 |         0.33
+         *   12 |       4 | 238707 | t                     |           0.33 |         0.66
          *
          * Sample output after "pgr_transform4" sub-query. Consecutive duplicates of links in one
          * direction of traversal are removed.
          *
-         *  seq |  edge  | is_traversal_forwards | start_fraction | end_fraction
-         * -----+--------+-----------------------+----------------+--------------
-         *    1 | 238709 | f                     |        0.75000 |      0.50000
-         *    5 | 238709 | t                     |        0.25000 |          1.0
-         *    6 | 238714 | t                     |            0.0 |          1.0
-         *    7 | 238712 | t                     |            0.0 |          1.0
-         *    8 | 238707 | t                     |            0.0 |      0.33000
+         *  seq | path_id |  edge  | is_traversal_forwards | start_fraction | end_fraction
+         * -----+---------+--------+-----------------------+----------------+--------------
+         *    1 |       1 | 238709 | f                     |           0.75 |          0.5
+         *    5 |       3 | 238709 | t                     |           0.25 |          0.5
+         *    8 |       3 | 238714 | t                     |            0.0 |          1.0
+         *    9 |       3 | 238712 | t                     |            0.0 |          1.0
+         *   10 |       3 | 238707 | t                     |            0.0 |         0.33
          *
          * Sample output after "pgr_transform5" sub-query. End fractions are corrected after removal
          * of duplicate links in the previous stage. In addition, sequence numbers are reallocated.
          *
          *  seq |  edge  | is_traversal_forwards | start_fraction | end_fraction
          * -----+--------+-----------------------+----------------+--------------
-         *    1 | 238709 | f                     |        0.75000 |      0.25000
-         *    2 | 238709 | t                     |        0.25000 |          1.0
+         *    1 | 238709 | f                     |           0.75 |         0.25
+         *    2 | 238709 | t                     |           0.25 |          1.0
          *    3 | 238714 | t                     |            0.0 |          1.0
          *    4 | 238712 | t                     |            0.0 |          1.0
-         *    5 | 238707 | t                     |            0.0 |      0.66000
+         *    5 | 238707 | t                     |            0.0 |         0.66
          */
-        private fun getQueryForFindingRouteViaPoints(bufferAreaRestriction: BufferAreaRestriction?): String =
+        private fun getQueryForFindingRouteViaPoints(bufferAreaRestriction: BufferAreaRestriction?) =
             """
             WITH point_params AS (
                 SELECT
-                    ?::int[] AS edge_ids,
-                    ?::numeric[] AS fractions
+                    ?::bigint[] AS edge_ids,
+                    ?::numeric[] AS fractions,
+                    ?::char[] AS sides
+            ),
+            visited_points AS (
+                SELECT ?::bigint[] AS ids
             ),
             custom_point AS (
                 SELECT
-                    edge_index AS pid,
+                    edge_index + 2 AS pid,
                     edge_id,
-                    fraction
+                    fraction,
+                    round(fraction, 5) AS rounded_fraction,
+                    side::char
                 FROM (
                     SELECT *, row_number() OVER () AS edge_index
                     FROM (
@@ -433,27 +526,50 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                         SELECT unnest(fractions) AS fraction FROM point_params
                     ) u
                 ) fractions ON fraction_index = edge_index
+                INNER JOIN (
+                    SELECT *, row_number() OVER () AS side_index
+                    FROM (
+                        SELECT unnest(sides) AS side FROM point_params
+                    ) u
+                ) sides ON side_index = edge_index
+            ),
+            points_sql AS (
+                SELECT string_agg(sql, ' UNION ') AS txt
+                FROM (
+                    SELECT
+                        CASE
+                            WHEN pid = 3 THEN
+                                'SELECT ' || pid || ' AS pid, ' || edge_id || ' AS edge_id, ' || rounded_fraction || ' AS fraction, ''' || side || '''::char AS side'
+                            ELSE
+                                'SELECT ' || pid || ', ' || edge_id || ', ' || rounded_fraction || ', ''' || side || '''::char'
+                        END AS sql
+                    FROM custom_point
+                ) parts
             ),
             pgr AS (
-                SELECT seq, id3 AS edge, id2 AS node, cost
-                FROM point_params
-                CROSS JOIN pgr_trspViaEdges(
+                SELECT seq, path_id, edge, node, cost
+                FROM visited_points pts
+                CROSS JOIN points_sql sql
+                CROSS JOIN pgr_withPointsVia(
                     ${createLinkSelectionQueryForPgRouting(bufferAreaRestriction)},
-                    edge_ids,
-                    fractions,
-                    true,
-                    true
+                    sql.txt,
+                    pts.ids,
+                    directed => true,
+                    strict => true,  -- for topologically sound results
+                    U_turn_on_edge => true,
+                    driving_side => 'r'::char,
+                    details => true  -- for flawless operation of the following transformations
                 ) pgr
             ),
             pgr_transform1 AS (
-                SELECT seq, edge, cost, node AS start_point, end_point
+                SELECT seq, path_id, edge, cost, node AS start_point, end_point
                 FROM (
                     SELECT *, lead(node) OVER (ORDER BY seq) AS end_point FROM pgr
                 ) sub
                 WHERE edge >= 0
             ),
             pgr_transform2 AS (
-                SELECT seq, edge,
+                SELECT seq, path_id, edge,
                     CASE
                         WHEN pgr.start_point < 0 THEN p1.fraction
                         WHEN l.start_node_id = l.end_node_id THEN ( -- closed loop
@@ -464,8 +580,8 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                     SELECT CASE WHEN forward_cost_diff < backward_cost_diff THEN 0.0 ELSE 1.0 END
                                     FROM (
                                         SELECT
-                                            abs(pgr.cost - l.cost * p2.fraction) AS forward_cost_diff,
-                                            abs(pgr.cost - l.cost * (1.0 - p2.fraction)) AS backward_cost_diff
+                                            abs(pgr.cost - l.cost * p2.rounded_fraction) AS forward_cost_diff,
+                                            abs(pgr.cost - l.cost * (1.0 - p2.rounded_fraction)) AS backward_cost_diff
                                     ) diffs
                                 )
                             END
@@ -483,8 +599,8 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                     SELECT CASE WHEN forward_cost_diff < backward_cost_diff THEN 1.0 ELSE 0.0 END
                                     FROM (
                                         SELECT
-                                            abs(pgr.cost - l.cost * (1.0 - p1.fraction)) AS forward_cost_diff,
-                                            abs(pgr.cost - l.cost * p1.fraction) AS backward_cost_diff
+                                            abs(pgr.cost - l.cost * (1.0 - p1.rounded_fraction)) AS forward_cost_diff,
+                                            abs(pgr.cost - l.cost * p1.rounded_fraction) AS backward_cost_diff
                                     ) diffs
                                 )
                             END
@@ -507,12 +623,12 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 ) last
             ),
             pgr_transform3 AS (
-                SELECT seq, edge, (end_fraction > start_fraction) AS is_traversal_forwards, start_fraction, end_fraction
+                SELECT seq, path_id, edge, (end_fraction > start_fraction) AS is_traversal_forwards, start_fraction, end_fraction
                 FROM pgr_transform2
                 WHERE start_fraction <> end_fraction -- sanity check
             ),
             pgr_transform4 AS (
-                SELECT seq, edge, is_traversal_forwards, start_fraction, end_fraction
+                SELECT seq, path_id, edge, is_traversal_forwards, start_fraction, end_fraction
                 FROM (
                     SELECT *,
                         lag(edge) OVER (ORDER BY seq) AS prev_edge,
@@ -523,7 +639,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     seq = 1
                     OR edge <> prev_edge
                     OR is_traversal_forwards <> prev_traversal_forwards
-                    -- closed loop cases (including multi traversals) ->
+                    -- closed loop cases ->
                     OR start_fraction IN (0.0, 1.0)
             ),
             pgr_transform5 AS (
