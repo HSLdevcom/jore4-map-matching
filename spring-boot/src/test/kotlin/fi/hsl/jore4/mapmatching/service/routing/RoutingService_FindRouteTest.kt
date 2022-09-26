@@ -21,7 +21,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.test.Ignore
 
 @IntTest
 @Suppress("ClassName")
@@ -232,7 +231,6 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                                                                   toPoint(g(24.95735, 60.16813)))
 
         @Test
-        @Ignore("Does not work with pgr_trspViaEdges function. Will get fixed once pgr_withPointsVia is taken into use.")
         fun shouldReturnExpectedGeometry() {
             findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
@@ -258,7 +256,6 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
         }
 
         @Test
-        @Ignore("Does not work with pgr_trspViaEdges function. Will get fixed once pgr_withPointsVia is taken into use.")
         fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
             findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
@@ -326,6 +323,49 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                     "419821" to true,
                     "419827" to true,
                     "419825" to true,
+                ))
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("When all given points coincide with infrastructure network nodes")
+    inner class WhenAllGivenPointsCoincideWithInfrastructureNetworkNodes {
+
+        private val requestRoutePoints: List<Point<G2D>> = listOf(toPoint(g(24.95724, 60.16806)),
+                                                                  toPoint(g(24.95776, 60.16843)))
+
+        @Test
+        fun shouldReturnExpectedGeometry() {
+            findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+
+                val expectedCoordinates = PositionSequenceBuilders.variableSized(G2D::class.java)
+                    .add(24.95724, 60.16806)
+                    .add(24.95732, 60.16812)
+                    .add(24.95758, 60.16832)
+                    .add(24.95776, 60.16843)
+
+                val expectedGeometry: LineString<G2D> =
+                    mkLineString(expectedCoordinates.toPositionSequence(), WGS84)
+
+                val actualGeometry: LineString<G2D> = resp.routes.first().geometry
+
+                assertThat(roundCoordinates(actualGeometry, 5)).isEqualTo(expectedGeometry)
+            }
+        }
+
+        @Test
+        fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
+            findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+
+                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> = resp
+                    .routes.first()
+                    .paths.map { traversal: LinkTraversalDTO ->
+                        traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
+                    }
+
+                assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
+                    "441872" to true
                 ))
             }
         }

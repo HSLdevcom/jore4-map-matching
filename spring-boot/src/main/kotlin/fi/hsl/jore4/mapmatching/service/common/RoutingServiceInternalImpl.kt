@@ -1,9 +1,11 @@
 package fi.hsl.jore4.mapmatching.service.common
 
+import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
+import fi.hsl.jore4.mapmatching.repository.routing.NetworkNode
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
@@ -42,11 +44,30 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
                                     bufferAreaRestriction: BufferAreaRestriction?)
         : RouteDTO {
 
-        return routingRepository.findRouteViaPoints(points,
-                                                    vehicleType,
-                                                    bufferAreaRestriction)
-            .also { route: RouteDTO ->
-                LOGGER.debug { "Got route links: ${joinToLogString(route.routeLinks)}" }
+        return when (points.all { it is NetworkNode }) {
+
+            true -> {
+                val nodeIdList: List<InfrastructureNodeId> =
+                    points.mapNotNull { if (it is NetworkNode) it.nodeId else null }
+
+                val nodeIdSequence = NodeIdSequence(nodeIdList).duplicatesRemoved()
+
+                routingRepository
+                    .findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
+                    .also { route: RouteDTO ->
+                        LOGGER.debug {
+                            "Got route links for nodes $nodeIdSequence: ${joinToLogString(route.routeLinks)}"
+                        }
+                    }
             }
+
+            false -> {
+                routingRepository
+                    .findRouteViaPoints(points, vehicleType, bufferAreaRestriction)
+                    .also { route: RouteDTO ->
+                        LOGGER.debug { "Got route links: ${joinToLogString(route.routeLinks)}" }
+                    }
+            }
+        }
     }
 }
