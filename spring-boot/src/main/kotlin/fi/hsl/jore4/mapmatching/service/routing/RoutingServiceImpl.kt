@@ -10,7 +10,6 @@ import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.toPgRoutingPoint
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
@@ -47,11 +46,12 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
         }
 
-        val routePoints: List<PgRoutingPoint> = closestLinks.map { toPgRoutingPoint(it.link) }
+        val sourceRoutePoints: List<PgRoutingPoint> =
+            closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.link) }
 
-        val route: RouteDTO = routingServiceInternal.findRouteViaPoints(routePoints, vehicleType)
+        val resultRoute: RouteDTO = routingServiceInternal.findRouteViaPoints(sourceRoutePoints, vehicleType)
 
-        return RoutingResponseCreator.create(route)
+        return RoutingResponseCreator.create(resultRoute)
     }
 
     private fun findClosestInfrastructureLinks(points: List<Point<G2D>>,
@@ -59,7 +59,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
                                                linkQueryDistance: Int)
         : List<SnapPointToLinkDTO> {
 
-        val closestLinks: Collection<SnapPointToLinkDTO> = linkRepository
+        return linkRepository
             .findClosestLinks(points, vehicleType, linkQueryDistance.toDouble())
             .toSortedMap()
             .also { sortedResults: SortedMap<Int, SnapPointToLinkDTO> ->
@@ -72,20 +72,9 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
                 }
             }
             .values
-
-        // On the first and last link on route, the location is snapped to terminus node if within close distance.
-
-        fun snapToTerminusNode(snap: SnapPointToLinkDTO): SnapPointToLinkDTO =
-            snap.withLocationOnLinkSnappedToTerminusNodeIfWithinDistance(SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
-
-        fun firstSnap() = snapToTerminusNode(closestLinks.first())
-        fun lastSnap() = snapToTerminusNode(closestLinks.last())
-
-        return when (closestLinks.size) {
-            0 -> emptyList()
-            1 -> listOf(firstSnap())
-            2 -> listOf(firstSnap(), lastSnap())
-            else -> listOf(firstSnap()) + closestLinks.drop(1).dropLast(1) + lastSnap()
-        }
+            .map { snap ->
+                // The location is snapped to terminus node if within close distance.
+                snap.withLocationOnLinkSnappedToTerminusNodeIfWithinDistance(SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
+            }
     }
 }
