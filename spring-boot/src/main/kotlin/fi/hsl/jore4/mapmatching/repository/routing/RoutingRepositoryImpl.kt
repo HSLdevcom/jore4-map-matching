@@ -124,16 +124,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     companion object {
 
         /**
-         * The generated query uses '?' placeholder for bind variables since
-         * there exist SQL ARRAY parameters that cannot be set via named
-         * variables in Spring JDBC templates.
+         * The produced SQL query is enclosed in quotes and passed as parameter
+         * to pgRouting function. '?' is used as a bind variable placeholder.
+         * Actual variable binding is left to occur within initialisation of
+         * PreparedStatement.
          */
-        private fun getQueryForFindingRouteViaNodes(bufferAreaRestriction: BufferAreaRestriction?): String {
-            // The produced SQL query is enclosed in quotes and passed as
-            // parameter to pgRouting function. '?' is used as a bind
-            // variable placeholder. Actual variable binding is left to occur
-            // within initialisation of PreparedStatement.
-            val linkSelectionQueryForPgRouting: String = bufferAreaRestriction
+        private fun createLinkSelectionQueryForPgRouting(bufferAreaRestriction: BufferAreaRestriction?): String =
+            bufferAreaRestriction
                 ?.run {
                     explicitLinkReferences
                         ?.run {
@@ -145,90 +142,95 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 }
                 ?: PgRoutingEdgeQueries.getVehicleTypeConstrainedLinksQuery()
 
-            return """
-                WITH route_link AS (
-                    SELECT
-                        pgr.seq,
-                        link.infrastructure_link_id,
-                        (pgr.node = link.start_node_id) AS is_traversal_forwards,
-                        pgr.cost,
-                        src.infrastructure_source_name,
-                        link.external_link_id,
-                        link.name AS link_name,
-                        link.geom
-                    FROM pgr_dijkstraVia(
-                        $linkSelectionQueryForPgRouting,
-                        ?::bigint[],
-                        directed := true,
-                        strict := true,
-                        U_turn_on_edge := true
-                    ) pgr
-                    INNER JOIN routing.infrastructure_link link ON link.infrastructure_link_id = pgr.edge
-                    INNER JOIN routing.infrastructure_source src ON src.infrastructure_source_id = link.infrastructure_source_id
-                ),
-                trimmed_terminus_link AS (
-                    SELECT
-                        seq,
-                        infrastructure_link_id,
-                        is_traversal_forwards,
-                        infrastructure_source_name,
-                        external_link_id,
-                        link_name,
-                        CASE
-                            WHEN max_seq = 1 THEN CASE -- only one link
-                                WHEN is_traversal_forwards = true AND start_link_fractional < end_link_fractional 
-                                    THEN ST_LineSubstring(geom, start_link_fractional, end_link_fractional)
-                                WHEN is_traversal_forwards = false AND start_link_fractional > end_link_fractional 
-                                    THEN ST_LineSubstring(geom, end_link_fractional, start_link_fractional)
-                                ELSE NULL
-                            END
-                            WHEN seq = 1 THEN CASE -- start link
-                                WHEN is_traversal_forwards = true AND start_link_fractional < 1.0
-                                    THEN ST_LineSubstring(geom, start_link_fractional, 1.0)
-                                WHEN is_traversal_forwards = false AND start_link_fractional > 0.0
-                                    THEN ST_LineSubstring(geom, 0.0, start_link_fractional)
-                                ELSE NULL
-                            END
-                            ELSE CASE -- end link
-                                WHEN is_traversal_forwards = true AND end_link_fractional > 0.0
-                                    THEN ST_LineSubstring(geom, 0.0, end_link_fractional)
-                                WHEN is_traversal_forwards = false AND end_link_fractional < 1.0
-                                    THEN ST_LineSubstring(geom, end_link_fractional, 1.0)
-                                ELSE NULL
-                            END
-                        END AS geom
-                    FROM (
-                        SELECT min(seq) AS min_seq, max(seq) AS max_seq FROM route_link
-                    ) min_max_seq
-                    INNER JOIN route_link ON seq IN (min_seq, max_seq)
-                    CROSS JOIN (
-                        SELECT ? AS start_link_fractional, ? AS end_link_fractional
-                    ) substring_param
-                )
-                SELECT false AS trimmed,
-                    rl.seq,
-                    rl.infrastructure_link_id,
-                    rl.is_traversal_forwards,
-                    rl.cost,
-                    rl.infrastructure_source_name,
-                    rl.external_link_id,
-                    rl.link_name,
-                    ST_AsEWKB(ST_Transform(rl.geom, 4326)) as geom
-                FROM route_link rl
-                UNION ALL
-                SELECT true AS trimmed,
-                    ttl.seq,
-                    ttl.infrastructure_link_id,
-                    ttl.is_traversal_forwards,
-                    ST_Length(ttl.geom) AS cost,
-                    ttl.infrastructure_source_name,
-                    ttl.external_link_id,
-                    ttl.link_name,
-                    ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
-                FROM trimmed_terminus_link ttl
-                WHERE ttl.geom IS NOT NULL
-                ORDER BY seq, trimmed;
-                """.trimIndent()
-        }
+        /**
+         * The generated query uses '?' placeholder for bind variables since
+         * there exist SQL ARRAY parameters that cannot be set via named
+         * variables in Spring JDBC templates.
+         */
+        private fun getQueryForFindingRouteViaNodes(bufferAreaRestriction: BufferAreaRestriction?): String =
+            """
+            WITH route_link AS (
+                SELECT
+                    pgr.seq,
+                    link.infrastructure_link_id,
+                    (pgr.node = link.start_node_id) AS is_traversal_forwards,
+                    pgr.cost,
+                    src.infrastructure_source_name,
+                    link.external_link_id,
+                    link.name AS link_name,
+                    link.geom
+                FROM pgr_dijkstraVia(
+                    ${createLinkSelectionQueryForPgRouting(bufferAreaRestriction)},
+                    ?::bigint[],
+                    directed := true,
+                    strict := true,
+                    U_turn_on_edge := true
+                ) pgr
+                INNER JOIN routing.infrastructure_link link ON link.infrastructure_link_id = pgr.edge
+                INNER JOIN routing.infrastructure_source src ON src.infrastructure_source_id = link.infrastructure_source_id
+            ),
+            trimmed_terminus_link AS (
+                SELECT
+                    seq,
+                    infrastructure_link_id,
+                    is_traversal_forwards,
+                    infrastructure_source_name,
+                    external_link_id,
+                    link_name,
+                    CASE
+                        WHEN max_seq = 1 THEN CASE -- only one link
+                            WHEN is_traversal_forwards = true AND start_link_fractional < end_link_fractional 
+                                THEN ST_LineSubstring(geom, start_link_fractional, end_link_fractional)
+                            WHEN is_traversal_forwards = false AND start_link_fractional > end_link_fractional 
+                                THEN ST_LineSubstring(geom, end_link_fractional, start_link_fractional)
+                            ELSE NULL
+                        END
+                        WHEN seq = 1 THEN CASE -- start link
+                            WHEN is_traversal_forwards = true AND start_link_fractional < 1.0
+                                THEN ST_LineSubstring(geom, start_link_fractional, 1.0)
+                            WHEN is_traversal_forwards = false AND start_link_fractional > 0.0
+                                THEN ST_LineSubstring(geom, 0.0, start_link_fractional)
+                            ELSE NULL
+                        END
+                        ELSE CASE -- end link
+                            WHEN is_traversal_forwards = true AND end_link_fractional > 0.0
+                                THEN ST_LineSubstring(geom, 0.0, end_link_fractional)
+                            WHEN is_traversal_forwards = false AND end_link_fractional < 1.0
+                                THEN ST_LineSubstring(geom, end_link_fractional, 1.0)
+                            ELSE NULL
+                        END
+                    END AS geom
+                FROM (
+                    SELECT min(seq) AS min_seq, max(seq) AS max_seq FROM route_link
+                ) min_max_seq
+                INNER JOIN route_link ON seq IN (min_seq, max_seq)
+                CROSS JOIN (
+                    SELECT ? AS start_link_fractional, ? AS end_link_fractional
+                ) substring_param
+            )
+            SELECT false AS trimmed,
+                rl.seq,
+                rl.infrastructure_link_id,
+                rl.is_traversal_forwards,
+                rl.cost,
+                rl.infrastructure_source_name,
+                rl.external_link_id,
+                rl.link_name,
+                ST_AsEWKB(ST_Transform(rl.geom, 4326)) as geom
+            FROM route_link rl
+            UNION ALL
+            SELECT true AS trimmed,
+                ttl.seq,
+                ttl.infrastructure_link_id,
+                ttl.is_traversal_forwards,
+                ST_Length(ttl.geom) AS cost,
+                ttl.infrastructure_source_name,
+                ttl.external_link_id,
+                ttl.link_name,
+                ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
+            FROM trimmed_terminus_link ttl
+            WHERE ttl.geom IS NOT NULL
+            ORDER BY seq, trimmed;
+            """.trimIndent()
     }
 }
