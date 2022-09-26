@@ -162,10 +162,15 @@ object PgRoutingEdgeQueries {
         return "$$ $queryStart$queryEnd$$"
     }
 
+    /*
+     * TODO Currently, pgr_trspViaEdges function requires IDs of infrastructure links and network
+     *  nodes to be 32-bit integers. Starting from pgRouting v3.4.0 we can switch to use
+     *  pgr_withPointsVia or pgr_trspVia_withPoints function and remove the casts from the query.
+     */
     private fun getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter: String): String = """
-        SELECT l.infrastructure_link_id AS id,
-          l.start_node_id AS source,
-          l.end_node_id AS target,
+        SELECT l.infrastructure_link_id::int AS id,
+          l.start_node_id::int AS source,
+          l.end_node_id::int AS target,
           l.cost,
           l.reverse_cost
         FROM routing.infrastructure_link l
