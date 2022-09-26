@@ -17,9 +17,9 @@ class PgRoutingEdgeQueriesTest {
             val query: String = PgRoutingEdgeQueries.getVehicleTypeConstrainedLinksQuery()
 
             assertThat(query).isEqualTo("""
-                'SELECT l.infrastructure_link_id AS id,
-                  l.start_node_id AS source,
-                  l.end_node_id AS target,
+                'SELECT l.infrastructure_link_id::int AS id,
+                  l.start_node_id::int AS source,
+                  l.end_node_id::int AS target,
                   l.cost,
                   l.reverse_cost
                 FROM routing.infrastructure_link l
@@ -34,9 +34,9 @@ class PgRoutingEdgeQueriesTest {
             val query: String = PgRoutingEdgeQueries.getVehicleTypeConstrainedLinksQuery("vehicleType")
 
             assertThat(query).isEqualTo("""
-                $$ SELECT l.infrastructure_link_id AS id,
-                  l.start_node_id AS source,
-                  l.end_node_id AS target,
+                $$ SELECT l.infrastructure_link_id::int AS id,
+                  l.start_node_id::int AS source,
+                  l.end_node_id::int AS target,
                   l.cost,
                   l.reverse_cost
                 FROM routing.infrastructure_link l
@@ -60,9 +60,9 @@ class PgRoutingEdgeQueriesTest {
                 val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 0)
 
                 assertThat(query).isEqualTo("""
-                    'SELECT l.infrastructure_link_id AS id,
-                      l.start_node_id AS source,
-                      l.end_node_id AS target,
+                    'SELECT l.infrastructure_link_id::int AS id,
+                      l.start_node_id::int AS source,
+                      l.end_node_id::int AS target,
                       l.cost,
                       l.reverse_cost
                     FROM routing.infrastructure_link l
@@ -82,9 +82,9 @@ class PgRoutingEdgeQueriesTest {
                     val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(1, 0)
 
                     assertThat(query).isEqualTo("""
-                        'SELECT l.infrastructure_link_id AS id,
-                          l.start_node_id AS source,
-                          l.end_node_id AS target,
+                        'SELECT l.infrastructure_link_id::int AS id,
+                          l.start_node_id::int AS source,
+                          l.end_node_id::int AS target,
                           l.cost,
                           l.reverse_cost
                         FROM routing.infrastructure_link l
@@ -103,9 +103,9 @@ class PgRoutingEdgeQueriesTest {
                     val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(2, 0)
 
                     assertThat(query).isEqualTo("""
-                        'SELECT l.infrastructure_link_id AS id,
-                          l.start_node_id AS source,
-                          l.end_node_id AS target,
+                        'SELECT l.infrastructure_link_id::int AS id,
+                          l.start_node_id::int AS source,
+                          l.end_node_id::int AS target,
                           l.cost,
                           l.reverse_cost
                         FROM routing.infrastructure_link l
@@ -129,9 +129,9 @@ class PgRoutingEdgeQueriesTest {
                     val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 1)
 
                     assertThat(query).isEqualTo("""
-                        'SELECT l.infrastructure_link_id AS id,
-                          l.start_node_id AS source,
-                          l.end_node_id AS target,
+                        'SELECT l.infrastructure_link_id::int AS id,
+                          l.start_node_id::int AS source,
+                          l.end_node_id::int AS target,
                           l.cost,
                           l.reverse_cost
                         FROM routing.infrastructure_link l
@@ -151,9 +151,9 @@ class PgRoutingEdgeQueriesTest {
                     val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(0, 2)
 
                     assertThat(query).isEqualTo("""
-                        'SELECT l.infrastructure_link_id AS id,
-                          l.start_node_id AS source,
-                          l.end_node_id AS target,
+                        'SELECT l.infrastructure_link_id::int AS id,
+                          l.start_node_id::int AS source,
+                          l.end_node_id::int AS target,
                           l.cost,
                           l.reverse_cost
                         FROM routing.infrastructure_link l
@@ -178,9 +178,9 @@ class PgRoutingEdgeQueriesTest {
                     val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(1, 1)
 
                     assertThat(query).isEqualTo("""
-                        'SELECT l.infrastructure_link_id AS id,
-                          l.start_node_id AS source,
-                          l.end_node_id AS target,
+                        'SELECT l.infrastructure_link_id::int AS id,
+                          l.start_node_id::int AS source,
+                          l.end_node_id::int AS target,
                           l.cost,
                           l.reverse_cost
                         FROM routing.infrastructure_link l
@@ -201,9 +201,9 @@ class PgRoutingEdgeQueriesTest {
                     val query: String = PgRoutingEdgeQueries.getVehicleTypeAndBufferAreaConstrainedLinksQuery(2, 3)
 
                     assertThat(query).isEqualTo("""
-                        'SELECT l.infrastructure_link_id AS id,
-                          l.start_node_id AS source,
-                          l.end_node_id AS target,
+                        'SELECT l.infrastructure_link_id::int AS id,
+                          l.start_node_id::int AS source,
+                          l.end_node_id::int AS target,
                           l.cost,
                           l.reverse_cost
                         FROM routing.infrastructure_link l
@@ -234,9 +234,9 @@ class PgRoutingEdgeQueriesTest {
                 bufferRadiusVariableName = "bufferRadius")
 
             assertThat(query).isEqualTo("""
-                $$ SELECT l.infrastructure_link_id AS id,
-                  l.start_node_id AS source,
-                  l.end_node_id AS target,
+                $$ SELECT l.infrastructure_link_id::int AS id,
+                  l.start_node_id::int AS source,
+                  l.end_node_id::int AS target,
                   l.cost,
                   l.reverse_cost
                 FROM routing.infrastructure_link l
@@ -256,9 +256,9 @@ class PgRoutingEdgeQueriesTest {
                 bufferRadiusVariableName = "bufferRadius")
 
             assertThat(query).isEqualTo("""
-                $$ SELECT l.infrastructure_link_id AS id,
-                  l.start_node_id AS source,
-                  l.end_node_id AS target,
+                $$ SELECT l.infrastructure_link_id::int AS id,
+                  l.start_node_id::int AS source,
+                  l.end_node_id::int AS target,
                   l.cost,
                   l.reverse_cost
                 FROM routing.infrastructure_link l
@@ -281,9 +281,9 @@ class PgRoutingEdgeQueriesTest {
                 bufferRadiusVariableName = "bufferRadius")
 
             assertThat(query).isEqualTo("""
-                $$ SELECT l.infrastructure_link_id AS id,
-                  l.start_node_id AS source,
-                  l.end_node_id AS target,
+                $$ SELECT l.infrastructure_link_id::int AS id,
+                  l.start_node_id::int AS source,
+                  l.end_node_id::int AS target,
                   l.cost,
                   l.reverse_cost
                 FROM routing.infrastructure_link l
@@ -307,9 +307,9 @@ class PgRoutingEdgeQueriesTest {
                 bufferRadiusVariableName = "bufferRadius")
 
             assertThat(query).isEqualTo("""
-                $$ SELECT l.infrastructure_link_id AS id,
-                  l.start_node_id AS source,
-                  l.end_node_id AS target,
+                $$ SELECT l.infrastructure_link_id::int AS id,
+                  l.start_node_id::int AS source,
+                  l.end_node_id::int AS target,
                   l.cost,
                   l.reverse_cost
                 FROM routing.infrastructure_link l

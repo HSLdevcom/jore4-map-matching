@@ -4,6 +4,7 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RoutingPoint
 
 interface IRoutingServiceInternal {
 
@@ -27,14 +28,37 @@ interface IRoutingServiceInternal {
      * restriction for the target set of infrastructure links can be defined
      * while finding route through infrastructure network.
      *
-     * @return a list of path elements of which each consists of a reference to
-     * an infrastructure link and the direction of traversal on it. If a route
-     * could not be found then an empty list is returned.
+     * @return a DTO holding a list of route links that together constitute the
+     * resulting route. Each route link contains a path element that consists of
+     * a reference to an infrastructure link and the direction of traversal on
+     * it. If a route could not be found then an empty list is returned.
      */
     fun findRouteViaNodes(nodeIdSequence: NodeIdSequence,
                           vehicleType: VehicleType,
                           fractionalStartLocationOnFirstLink: Double,
                           fractionalEndLocationOnLastLink: Double,
                           bufferAreaRestriction: BufferAreaRestriction? = null)
+        : RouteDTO
+
+    /**
+     * Find the shortest route through infrastructure network via given points
+     * and constrained by the given vehicle type and optional buffer area.
+     *
+     * @param points list of route points that the route must pass through.
+     * @param vehicleType vehicle type constraint for the route. Resulting route
+     * must consist of only those infrastructure links that are safely
+     * traversable by the given vehicle type.
+     * @param bufferAreaRestriction contains data with which geometrical
+     * restriction for the target set of infrastructure links can be defined
+     * while finding route through infrastructure network.
+     *
+     * @return a DTO holding a list of route links that together constitute the
+     * resulting route. Each route link contains a path element that consists of
+     * a reference to an infrastructure link and the direction of traversal on
+     * it. If a route could not be found then an empty list is returned.
+     */
+    fun findRouteViaPoints(points: List<RoutingPoint>,
+                           vehicleType: VehicleType,
+                           bufferAreaRestriction: BufferAreaRestriction? = null)
         : RouteDTO
 }
