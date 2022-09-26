@@ -131,14 +131,14 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                 val endLink: SnappedLinkState = nodeSeqResult.endLink
 
                 val route: RouteDTO =
-                    routingService.findRoute(nodeIdSequence,
-                                             vehicleType,
-                                             startLink.closestPointFractionalMeasure,
-                                             endLink.closestPointFractionalMeasure,
-                                             BufferAreaRestriction.from(routeGeometry,
-                                                                        matchingParameters.bufferRadiusInMeters,
-                                                                        startLink,
-                                                                        endLink))
+                    routingService.findRouteViaNodes(nodeIdSequence,
+                                                     vehicleType,
+                                                     startLink.closestPointFractionalMeasure,
+                                                     endLink.closestPointFractionalMeasure,
+                                                     BufferAreaRestriction.from(routeGeometry,
+                                                                                matchingParameters.bufferRadiusInMeters,
+                                                                                startLink,
+                                                                                endLink))
 
                 RoutingResponseCreator.create(route)
             }

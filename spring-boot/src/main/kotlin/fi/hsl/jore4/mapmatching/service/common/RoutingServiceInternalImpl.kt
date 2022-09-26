@@ -18,11 +18,11 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
     : IRoutingServiceInternal {
 
     @Transactional(readOnly = true)
-    override fun findRoute(nodeIdSequence: NodeIdSequence,
-                           vehicleType: VehicleType,
-                           fractionalStartLocationOnFirstLink: Double,
-                           fractionalEndLocationOnLastLink: Double,
-                           bufferAreaRestriction: BufferAreaRestriction?)
+    override fun findRouteViaNodes(nodeIdSequence: NodeIdSequence,
+                                   vehicleType: VehicleType,
+                                   fractionalStartLocationOnFirstLink: Double,
+                                   fractionalEndLocationOnLastLink: Double,
+                                   bufferAreaRestriction: BufferAreaRestriction?)
         : RouteDTO {
 
         return routingRepository.findRouteViaNetworkNodes(nodeIdSequence,

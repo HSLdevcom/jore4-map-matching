@@ -31,10 +31,10 @@ interface IRoutingServiceInternal {
      * an infrastructure link and the direction of traversal on it. If a route
      * could not be found then an empty list is returned.
      */
-    fun findRoute(nodeIdSequence: NodeIdSequence,
-                  vehicleType: VehicleType,
-                  fractionalStartLocationOnFirstLink: Double,
-                  fractionalEndLocationOnLastLink: Double,
-                  bufferAreaRestriction: BufferAreaRestriction? = null)
+    fun findRouteViaNodes(nodeIdSequence: NodeIdSequence,
+                          vehicleType: VehicleType,
+                          fractionalStartLocationOnFirstLink: Double,
+                          fractionalEndLocationOnLastLink: Double,
+                          bufferAreaRestriction: BufferAreaRestriction? = null)
         : RouteDTO
 }

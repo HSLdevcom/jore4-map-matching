@@ -60,10 +60,10 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
 
                 LOGGER.debug { "Resolved node ID sequence: $nodeIdSequence" }
 
-                val route: RouteDTO = routingServiceInternal.findRoute(nodeIdSequence,
-                                                                       vehicleType,
-                                                                       nodeSeqRes.startLink.closestPointFractionalMeasure,
-                                                                       nodeSeqRes.endLink.closestPointFractionalMeasure)
+                val route: RouteDTO = routingServiceInternal.findRouteViaNodes(nodeIdSequence,
+                                                                               vehicleType,
+                                                                               nodeSeqRes.startLink.closestPointFractionalMeasure,
+                                                                               nodeSeqRes.endLink.closestPointFractionalMeasure)
 
                 return RoutingResponseCreator.create(route)
             }
