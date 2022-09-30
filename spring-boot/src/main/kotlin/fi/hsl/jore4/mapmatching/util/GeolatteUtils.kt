@@ -13,6 +13,9 @@ import org.geolatte.geom.Point
 import org.geolatte.geom.PositionSequenceBuilders
 import org.geolatte.geom.codec.Wkb
 import org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84
+import java.math.BigDecimal
+import java.math.RoundingMode.HALF_UP
+import kotlin.math.max
 
 object GeolatteUtils {
 
@@ -59,6 +62,23 @@ object GeolatteUtils {
             line.positions.drop(1).forEach(positionSequenceBuilder::add)
 
             prevLineLastPosition = line.endPosition
+        }
+
+        return mkLineString(positionSequenceBuilder.toPositionSequence(), WGS84)
+    }
+
+    fun roundCoordinates(line: LineString<G2D>, decimalPrecision: Int): LineString<G2D> {
+        val positionSequenceBuilder = PositionSequenceBuilders.variableSized(G2D::class.java)
+
+        fun round(num: Double): Double {
+            val bd = BigDecimal.valueOf(num)
+            val numDecimals: Int = max(0, bd.stripTrailingZeros().scale())
+
+            return if (numDecimals <= decimalPrecision) num else bd.setScale(decimalPrecision, HALF_UP).toDouble()
+        }
+
+        line.positions.forEach { pos: G2D ->
+            positionSequenceBuilder.add(G2D(round(pos.lon), round(pos.lat)))
         }
 
         return mkLineString(positionSequenceBuilder.toPositionSequence(), WGS84)
