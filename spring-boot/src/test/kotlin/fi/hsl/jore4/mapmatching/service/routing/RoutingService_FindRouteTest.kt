@@ -275,4 +275,56 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
             }
         }
     }
+
+    @Nested
+    @DisplayName("When going back and forth a bi-directional link")
+    inner class WhenGoingBackAndForthABirectionalLink {
+
+        private val requestRoutePoints: List<Point<G2D>> = listOf(toPoint(g(24.98954, 60.27721)),
+                                                                  toPoint(g(24.98891, 60.27711)),
+                                                                  toPoint(g(24.98803, 60.27699)),
+                                                                  toPoint(g(24.99012, 60.27728)))
+
+        @Test
+        fun shouldReturnExpectedGeometry() {
+            findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+
+                val expectedCoordinates = PositionSequenceBuilders.variableSized(G2D::class.java)
+                    .add(24.98955, 60.2772)
+                    .add(24.98884, 60.27709)
+                    .add(24.98772, 60.27693)
+                    .add(24.98884, 60.27709)
+                    .add(24.98964, 60.27721)
+                    .add(24.98979, 60.27724)
+                    .add(24.98988, 60.27725)
+                    .add(24.99012, 60.27728)
+
+                val expectedGeometry: LineString<G2D> =
+                    mkLineString(expectedCoordinates.toPositionSequence(), WGS84)
+
+                val actualGeometry: LineString<G2D> = resp.routes.first().geometry
+
+                assertThat(roundCoordinates(actualGeometry, 5)).isEqualTo(expectedGeometry)
+            }
+        }
+
+        @Test
+        fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
+            findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+
+                val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> = resp
+                    .routes.first()
+                    .paths.map { traversal: LinkTraversalDTO ->
+                        traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
+                    }
+
+                assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
+                    "419821" to false,
+                    "419821" to true,
+                    "419827" to true,
+                    "419825" to true,
+                ))
+            }
+        }
+    }
 }
