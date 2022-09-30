@@ -10,6 +10,7 @@ import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.test.IntTest
 import fi.hsl.jore4.mapmatching.test.IntegrationTest
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.roundCoordinates
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toPoint
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -70,26 +71,26 @@ class MatchingService_FindMatchForPublicTransportRouteTest @Autowired constructo
 
         private fun createSourceGeometry(): LineString<G2D> {
             val positionSequenceBuilder = PositionSequenceBuilders.variableSized(G2D::class.java)
-                .add(25.008022, 60.18773)
-                .add(25.007984, 60.187677)
-                .add(25.007197, 60.186677)
-                .add(25.006818, 60.186097)
-                .add(25.0062, 60.185922)
+                .add(25.00802, 60.18773)
+                .add(25.00798, 60.18768)
+                .add(25.00720, 60.18668)
+                .add(25.00682, 60.18610)
+                .add(25.00620, 60.18592)
                 .add(25.00573, 60.18589)
-                .add(25.004165, 60.185955)
-                .add(25.003768, 60.185967)
+                .add(25.00417, 60.18596)
+                .add(25.00377, 60.18597)
 
             return mkLineString(positionSequenceBuilder.toPositionSequence(), WGS84)
         }
 
         private fun createSourceRoutePoints(): List<RoutePoint> = listOf(
-            RouteStopPoint(location = toPoint(g(25.007994, 60.187739)),
-                           projectedLocation = toPoint(g(25.008022, 60.18773)),
+            RouteStopPoint(location = toPoint(g(25.00800, 60.18774)),
+                           projectedLocation = toPoint(g(25.00802, 60.18773)),
                            nationalId = 240525,
                            passengerId = "H4026"),
-            RouteJunctionPoint(location = toPoint(g(25.006818, 60.186097))),
+            RouteJunctionPoint(location = toPoint(g(25.00682, 60.18610))),
             RouteStopPoint(location = toPoint(g(25.00323, 60.18605)),
-                           projectedLocation = toPoint(g(25.003768, 60.185967)),
+                           projectedLocation = toPoint(g(25.00377, 60.18597)),
                            nationalId = 240681,
                            passengerId = "H4034")
         )
@@ -102,25 +103,25 @@ class MatchingService_FindMatchForPublicTransportRouteTest @Autowired constructo
                                                           DEFAULT_MATCHING_PARAMS) { resp ->
 
                 val positionSequenceBuilder = PositionSequenceBuilders.variableSized(G2D::class.java)
-                    .add(25.00802519622538, 60.18772920125103)
-                    .add(25.00797417868717, 60.187678573925)
-                    .add(25.0072063517561, 60.18667322842173)
-                    .add(25.00691766531791, 60.1862738972099)
-                    .add(25.00683990177706, 60.18610546064316)
-                    .add(25.00652058879184, 60.18600404182171)
-                    .add(25.00615281454607, 60.185920512407115)
-                    .add(25.005805753048907, 60.185892468525985)
-                    .add(25.005417525805708, 60.18590264138491)
-                    .add(25.004908706323214, 60.18592247667472)
-                    .add(25.00429811282315, 60.185946490065355)
-                    .add(25.00376822241676, 60.18596833797931)
+                    .add(25.00802, 60.18773)
+                    .add(25.00797, 60.18768)
+                    .add(25.00721, 60.18667)
+                    .add(25.00692, 60.18627)
+                    .add(25.00684, 60.18611)
+                    .add(25.00652, 60.18600)
+                    .add(25.00615, 60.18592)
+                    .add(25.00581, 60.18589)
+                    .add(25.00542, 60.18590)
+                    .add(25.00491, 60.18592)
+                    .add(25.00430, 60.18595)
+                    .add(25.00377, 60.18597)
 
                 val expectedGeometry: LineString<G2D> =
                     mkLineString(positionSequenceBuilder.toPositionSequence(), WGS84)
 
                 val actualGeometry: LineString<G2D> = resp.routes.first().geometry
 
-                assertThat(actualGeometry).isEqualTo(expectedGeometry)
+                assertThat(roundCoordinates(actualGeometry, 5)).isEqualTo(expectedGeometry)
             }
         }
 
