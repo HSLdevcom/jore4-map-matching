@@ -9,10 +9,6 @@ import fi.hsl.jore4.mapmatching.repository.routing.RoutingPoint
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
-import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
-import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionResult
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.createNodeSequenceCandidates
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.toRoutingPoint
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
@@ -29,7 +25,6 @@ private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkRepository,
-                                                val nodeService: INodeServiceInternal,
                                                 val routingServiceInternal: IRoutingServiceInternal)
     : IRoutingService {
 
@@ -92,22 +87,5 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             2 -> listOf(firstSnap(), lastSnap())
             else -> listOf(firstSnap()) + closestLinks.drop(1).dropLast(1) + lastSnap()
         }
-    }
-
-    /**
-     * @throws [IllegalStateException]
-     */
-    private fun resolveNetworkNodeIds(closestLinks: Collection<SnapPointToLinkDTO>,
-                                      vehicleType: VehicleType)
-        : NodeSequenceResolutionResult {
-
-        val nodeSequenceCandidates: NodeSequenceCandidatesBetweenSnappedLinks =
-            createNodeSequenceCandidates(closestLinks)
-
-        require(nodeSequenceCandidates.isRoutePossible()) {
-            "Cannot produce route based on single infrastructure node"
-        }
-
-        return nodeService.resolveNodeIdSequence(listOf(nodeSequenceCandidates), vehicleType)
     }
 }
