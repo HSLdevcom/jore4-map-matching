@@ -65,6 +65,10 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
      * high certainty. Without this condition, the false one can be chosen from
      * two (or more) nearby nodes. This distance must be greater than or equal
      * to [junctionNodeMatchDistance].
+     * @property fallbackToViaNodesAlgorithm By default, via-graph-edges
+     * algorithm is used in route matching. In the event of a matching failure,
+     * a retry using via-graph-vertices is performed if this property is set to
+     * true.
      */
     data class MapMatchingParametersDTO(val bufferRadiusInMeters: Double?,
                                         val terminusLinkQueryDistance: Double?,
@@ -72,7 +76,8 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
                                         val maxStopLocationDeviation: Double?,
                                         val roadJunctionMatchingEnabled: Boolean?,
                                         val junctionNodeMatchDistance: Double?,
-                                        val junctionNodeClearingDistance: Double?) {
+                                        val junctionNodeClearingDistance: Double?,
+                                        val fallbackToViaNodesAlgorithm: Boolean?) {
 
         private val isRoadJunctionMatchingEnabled: Boolean
             get() = roadJunctionMatchingEnabled?.let { it } != false

@@ -53,12 +53,12 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
      * @property closerNodeId is the ID of the node that is closer to the snapped projected point on link.
      */
     val closerNodeId: InfrastructureNodeId
-        get() = if (closestPointFractionalMeasure <= 0.5) startNodeId else endNodeId
+        get() = if (isStartNodeCloser()) startNodeId else endNodeId
 
     /**
      * @property furtherNodeId is the ID of the node that lies further away from the snapped projected point on link.
      */
-    val furtherNodeId: InfrastructureNodeId get() = if (startNodeId == closerNodeId) endNodeId else startNodeId
+    val furtherNodeId: InfrastructureNodeId get() = if (isStartNodeCloser()) endNodeId else startNodeId
 
     val isSnappedToStartNode: Boolean by lazy {
         closestPointFractionalMeasure.isWithinTolerance(0.0)
@@ -69,6 +69,8 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
     }
 
     override fun getInfrastructureNodeId() = closerNodeId
+
+    fun isStartNodeCloser(): Boolean = closestPointFractionalMeasure <= 0.5
 
     fun findSnappedNode(): InfrastructureNodeId? {
         return if (isSnappedToStartNode)
@@ -87,15 +89,20 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
 
     fun isOnSameLinkAs(other: SnappedLinkState): Boolean = infrastructureLinkId == other.infrastructureLinkId
 
-    fun withSnappedToTerminusNode(thresholdDistanceOfSnappingToLinkEndpointInMeters: Double): SnappedLinkState {
-        val distanceFromStartOfLink: Double = closestPointFractionalMeasure * infrastructureLinkLength
+    /**
+     * Returns the distance to start of infrastructure link in meters.
+     */
+    fun getDistanceToStartOfLink(): Double = closestPointFractionalMeasure * infrastructureLinkLength
 
-        return if (distanceFromStartOfLink.isWithinTolerance(0.0,
-                                                             thresholdDistanceOfSnappingToLinkEndpointInMeters)
+    fun withSnappedToTerminusNode(thresholdDistanceOfSnappingToLinkEndpointInMeters: Double): SnappedLinkState {
+        val distanceToStartOfLink: Double = getDistanceToStartOfLink()
+
+        return if (distanceToStartOfLink.isWithinTolerance(0.0,
+                                                           thresholdDistanceOfSnappingToLinkEndpointInMeters)
         )
             withClosestPointFractionalMeasure(0.0)
-        else if (distanceFromStartOfLink.isWithinTolerance(infrastructureLinkLength,
-                                                           thresholdDistanceOfSnappingToLinkEndpointInMeters)
+        else if (distanceToStartOfLink.isWithinTolerance(infrastructureLinkLength,
+                                                         thresholdDistanceOfSnappingToLinkEndpointInMeters)
         )
             withClosestPointFractionalMeasure(1.0)
         else

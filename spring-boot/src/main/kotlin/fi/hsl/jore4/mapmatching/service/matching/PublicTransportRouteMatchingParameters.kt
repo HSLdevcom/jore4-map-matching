@@ -26,6 +26,9 @@ import java.lang.IllegalArgumentException
  * to infrastructure links in the local database. If the distance between
  * these two type of locations exceeds [maxStopLocationDeviation] for a stop
  * point, then the stop point is not included in the results.
+ * @property fallbackToViaNodesAlgorithm By default, via-graph-edges algorithm
+ * is used in route matching. In the event of a matching failure, a retry using
+ * via-graph-vertices is performed if this property is set to true.
  * @property roadJunctionMatching contains parameters for tuning heuristics to
  * match source route points with infrastructure network nodes. If missing, then
  * road junction node matching is disabled.
@@ -36,6 +39,7 @@ data class PublicTransportRouteMatchingParameters(val bufferRadiusInMeters: Doub
                                                   val terminusLinkQueryDistance: Double,
                                                   val terminusLinkQueryLimit: Int,
                                                   val maxStopLocationDeviation: Double,
+                                                  val fallbackToViaNodesAlgorithm: Boolean,
                                                   val roadJunctionMatching: JunctionMatchingParameters?) {
 
     /**

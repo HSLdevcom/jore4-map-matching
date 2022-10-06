@@ -34,7 +34,8 @@ class MatchingService_FindMatchForPublicTransportRouteTest @Autowired constructo
                                           routePoints: List<RoutePoint>,
                                           vehicleType: VehicleType,
                                           matchingParameters: PublicTransportRouteMatchingParameters = DEFAULT_MATCHING_PARAMS)
-        : RoutingResponse = matchingService.findMatchForPublicTransportRoute(routeGeometry,
+        : RoutingResponse = matchingService.findMatchForPublicTransportRoute("integration test", // route ID
+                                                                             routeGeometry,
                                                                              routePoints,
                                                                              vehicleType,
                                                                              matchingParameters)
@@ -156,6 +157,7 @@ class MatchingService_FindMatchForPublicTransportRouteTest @Autowired constructo
             terminusLinkQueryDistance = 50.0,
             terminusLinkQueryLimit = 5,
             maxStopLocationDeviation = 80.0,
+            fallbackToViaNodesAlgorithm = true,
             roadJunctionMatching = JunctionMatchingParameters(
                 matchDistance = 5.0,
                 clearingDistance = 30.0

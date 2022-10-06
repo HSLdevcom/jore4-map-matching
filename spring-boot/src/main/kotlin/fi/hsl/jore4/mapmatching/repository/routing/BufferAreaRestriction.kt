@@ -68,6 +68,24 @@ data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
                 return ExplicitLinkReferences(idsOfCandidatesForTerminusLinks,
                                               idsOfCandidatesForTerminusNodes)
             }
+
+            fun fromTerminusPoints(startPoint: PgRoutingPoint, endPoint: PgRoutingPoint): ExplicitLinkReferences {
+
+                val idsOfCandidatesForTerminusLinks: MutableSet<InfrastructureLinkId> = HashSet(2)
+                val idsOfCandidatesForTerminusNodes: MutableSet<InfrastructureNodeId> = HashSet(2)
+
+                fun addPoint(point: PgRoutingPoint) {
+                    when (point) {
+                        is RealNode -> idsOfCandidatesForTerminusNodes.add(point.nodeId)
+                        is VirtualNode -> idsOfCandidatesForTerminusLinks.add(point.linkId)
+                    }
+                }
+
+                addPoint(startPoint)
+                addPoint(endPoint)
+
+                return ExplicitLinkReferences(idsOfCandidatesForTerminusLinks, idsOfCandidatesForTerminusNodes)
+            }
         }
     }
 
@@ -80,5 +98,14 @@ data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
                                                                     bufferRadiusInMeters,
                                                                     ExplicitLinkReferences.fromTerminusLinks(startLink,
                                                                                                              endLink))
+
+        fun from(lineGeometry: LineString<G2D>,
+                 bufferRadiusInMeters: Double,
+                 startPoint: PgRoutingPoint,
+                 endPoint: PgRoutingPoint) = BufferAreaRestriction(lineGeometry,
+                                                                   bufferRadiusInMeters,
+                                                                   ExplicitLinkReferences.fromTerminusPoints(
+                                                                       startPoint,
+                                                                       endPoint))
     }
 }
