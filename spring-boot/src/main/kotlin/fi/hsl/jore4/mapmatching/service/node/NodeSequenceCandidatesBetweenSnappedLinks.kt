@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.node
 
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import kotlin.math.max
 import kotlin.math.min
 
@@ -22,10 +22,10 @@ import kotlin.math.min
  * case of bidirectional links. Therefore, we need to test which way produces
  * the shortest route while preserving both terminus links as part of the route.
  *
- * @property startLink holds data about route start point snapped to
+ * @property pointOnStartLink holds data about route start point snapped to
  * infrastructure link
- * @property endLink holds data about route end point snapped to infrastructure
- * link
+ * @property pointOnEndLink holds data about route end point snapped to
+ * infrastructure link
  * @property nodeIdSequences list of infrastructure network node identifier
  * sequences. Each sequence starts with one or both endpoint nodes of the start
  * link and ends with one or both nodes associated with the route's end link.
@@ -33,8 +33,8 @@ import kotlin.math.min
  * whether the directions of traversal on terminus links can be determined by
  * interim nodes.
  */
-data class NodeSequenceCandidatesBetweenSnappedLinks(val startLink: SnappedLinkState,
-                                                     val endLink: SnappedLinkState,
+data class NodeSequenceCandidatesBetweenSnappedLinks(val pointOnStartLink: SnappedPointOnLink,
+                                                     val pointOnEndLink: SnappedPointOnLink,
                                                      val nodeIdSequences: List<NodeIdSequence>)
     : Comparable<NodeSequenceCandidatesBetweenSnappedLinks> {
 
@@ -60,9 +60,9 @@ data class NodeSequenceCandidatesBetweenSnappedLinks(val startLink: SnappedLinkS
      */
     fun isRoutePossible(): Boolean = nodeIdSequences.size > 1 || nodeIdSequences.first().size > 1
 
-    private fun getDistanceToCloserTerminusLink(): Double = min(startLink.closestDistance, endLink.closestDistance)
+    private fun getDistanceToCloserTerminusLink(): Double = min(pointOnStartLink.closestDistance, pointOnEndLink.closestDistance)
 
-    private fun getDistanceToFurtherTerminusLink(): Double = max(startLink.closestDistance, endLink.closestDistance)
+    private fun getDistanceToFurtherTerminusLink(): Double = max(pointOnStartLink.closestDistance, pointOnEndLink.closestDistance)
 
     // sorting node sequence candidates by closest distances to terminus links
     override fun compareTo(other: NodeSequenceCandidatesBetweenSnappedLinks): Int {

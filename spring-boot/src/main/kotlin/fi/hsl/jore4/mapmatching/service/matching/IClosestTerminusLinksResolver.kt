@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.matching
 
 import fi.hsl.jore4.mapmatching.model.VehicleType
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 
@@ -28,5 +28,5 @@ interface IClosestTerminusLinksResolver {
                                                         vehicleType: VehicleType,
                                                         linkQueryDistance: Double,
                                                         linkQueryLimit: Int)
-        : Pair<List<SnappedLinkState>, List<SnappedLinkState>>
+        : Pair<List<SnappedPointOnLink>, List<SnappedPointOnLink>>
 }

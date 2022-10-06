@@ -7,4 +7,4 @@ import org.geolatte.geom.Point
 data class SnapPointToLinksResult(val point: Point<G2D>,
                                   val queryDistance: Double,
                                   val limit: Int,
-                                  val closestLinks: List<SnappedLinkState>)
+                                  val closestLinks: List<SnappedPointOnLink>)

@@ -8,4 +8,4 @@ import fi.hsl.jore4.mapmatching.model.LinkSide
  */
 data class SnapStopToLinkResult(val stopNationalId: Int,
                                 val stopSideOnLink: LinkSide,
-                                val link: SnappedLinkState)
+                                val pointOnLink: SnappedPointOnLink)

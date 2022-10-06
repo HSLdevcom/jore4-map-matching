@@ -47,7 +47,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         }
 
         val sourceRoutePoints: List<PgRoutingPoint> =
-            closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.link) }
+            closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.pointOnClosestLink) }
 
         val resultRouteLinks: List<RouteLink> = routingServiceInternal
             .findRouteViaPointsOnLinks(sourceRoutePoints,

@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinksResult
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import fi.hsl.jore4.mapmatching.util.InternalService
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
@@ -21,7 +21,7 @@ class ClosestTerminusLinksResolverImpl @Autowired constructor(val linkRepository
                                                                  vehicleType: VehicleType,
                                                                  linkQueryDistance: Double,
                                                                  linkQueryLimit: Int)
-        : Pair<List<SnappedLinkState>, List<SnappedLinkState>> {
+        : Pair<List<SnappedPointOnLink>, List<SnappedPointOnLink>> {
 
         // The method findNClosestLinks returns one-based index.
         // The number of the closest links searched is limited by linkQueryLimit parameter.
@@ -39,10 +39,10 @@ class ClosestTerminusLinksResolverImpl @Autowired constructor(val linkRepository
                     "$terminusType point ($terminusPoint) while applying vehicle type constraint '$vehicleType'")
         }
 
-        val closestStartLinks: List<SnappedLinkState> = linkSearchResults[1]?.closestLinks
+        val closestStartLinks: List<SnappedPointOnLink> = linkSearchResults[1]?.closestLinks
             ?: throw getExceptionIfNoLinksFound(startPoint, true)
 
-        val closestEndLinks: List<SnappedLinkState> = linkSearchResults[2]?.closestLinks
+        val closestEndLinks: List<SnappedPointOnLink> = linkSearchResults[2]?.closestLinks
             ?: throw getExceptionIfNoLinksFound(endPoint, false)
 
         return closestStartLinks to closestEndLinks

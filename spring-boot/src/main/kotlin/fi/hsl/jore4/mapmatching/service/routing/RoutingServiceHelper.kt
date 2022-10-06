@@ -10,8 +10,8 @@ object RoutingServiceHelper {
                                      pointsToBeFiltered: List<Point<G2D>>)
         : List<Point<G2D>> {
 
-        val snappedPoints: Set<Point<G2D>> = snaps.map(SnapPointToLinkResult::point).toSet()
+        val snappedLocations: Set<Point<G2D>> = snaps.map(SnapPointToLinkResult::point).toSet()
 
-        return pointsToBeFiltered.filter { it !in snappedPoints }
+        return pointsToBeFiltered.filter { it !in snappedLocations }
     }
 }

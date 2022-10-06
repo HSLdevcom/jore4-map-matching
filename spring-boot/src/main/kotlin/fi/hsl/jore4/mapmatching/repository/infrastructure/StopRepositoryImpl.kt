@@ -63,13 +63,13 @@ class StopRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
             SnapStopToLinkResult(stopNationalId,
                                  stopSideOnLink,
-                                 SnappedLinkState(InfrastructureLinkId(infrastructureLinkId),
-                                                  0.0, // closest distance from stop to link is ignored
-                                                  closestPointFractionalMeasure,
-                                                  TrafficFlowDirectionType.from(trafficFlowDirectionType),
-                                                  linkLength,
-                                                  InfrastructureNodeId(startNodeId),
-                                                  InfrastructureNodeId(endNodeId)))
+                                 SnappedPointOnLink(InfrastructureLinkId(infrastructureLinkId),
+                                                    0.0, // closest distance from stop to link is ignored
+                                                    closestPointFractionalMeasure,
+                                                    TrafficFlowDirectionType.from(trafficFlowDirectionType),
+                                                    linkLength,
+                                                    InfrastructureNodeId(startNodeId),
+                                                    InfrastructureNodeId(endNodeId)))
         }
     }
 

@@ -8,7 +8,7 @@ import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkResult
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RealNode
@@ -95,14 +95,14 @@ class MatchRouteViaPointsOnLinksServiceImpl @Autowired constructor(
         val startLocation: Point<G2D> = toPoint(sourceRouteGeometry.startPosition)
         val endLocation: Point<G2D> = toPoint(sourceRouteGeometry.endPosition)
 
-        val (closestStartLinks: List<SnappedLinkState>, closestEndLinks: List<SnappedLinkState>) =
+        val (closestStartLinks: List<SnappedPointOnLink>, closestEndLinks: List<SnappedPointOnLink>) =
             closestTerminusLinksResolver.findClosestInfrastructureLinksForRouteEndpoints(startLocation,
                                                                                          endLocation,
                                                                                          vehicleType,
                                                                                          terminusLinkQueryDistance,
                                                                                          terminusLinkQueryLimit)
 
-        fun snapToTerminusNodes(pointsOnLinks: List<SnappedLinkState>): List<SnappedLinkState> =
+        fun snapToTerminusNodes(pointsOnLinks: List<SnappedPointOnLink>): List<SnappedPointOnLink> =
             pointsOnLinks.map {
                 // The location is snapped to terminus node if within close distance.
                 it.withSnappedToTerminusNode(Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
@@ -172,7 +172,7 @@ class MatchRouteViaPointsOnLinksServiceImpl @Autowired constructor(
             .values
             .associateBy(SnapStopToLinkResult::stopNationalId) { snap ->
 
-                val pointOnLink: SnappedLinkState = snap.link
+                val pointOnLink: SnappedPointOnLink = snap.pointOnLink
                     // The location is snapped to terminus node if within close distance.
                     .withSnappedToTerminusNode(Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
 
