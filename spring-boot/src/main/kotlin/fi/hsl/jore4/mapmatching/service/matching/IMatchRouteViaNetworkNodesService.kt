@@ -6,7 +6,7 @@ import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
-interface IMatchingService {
+interface IMatchRouteViaNetworkNodesService {
 
     /**
      * Finds the shortest route through the infrastructure network provided by
@@ -16,7 +16,9 @@ interface IMatchingService {
      * the resulting route. The resulting route must be safely traversable by
      * the given vehicle type.
      *
-     * @param sourceRouteId optional identifier for source route
+     * This internal service variant utilises network nodes based algorithm
+     * (via graph vertices) while finding a matching route.
+     *
      * @param sourceRouteGeometry the source geometry as a LineString for which
      * a closely matching target LineString geometry is to be resolved.
      * @param sourceRoutePoints the route points along the source route
@@ -31,8 +33,7 @@ interface IMatchingService {
      *
      * @return either a successful or failure-marking routing response.
      */
-    fun findMatchForPublicTransportRoute(sourceRouteId: String?,
-                                         sourceRouteGeometry: LineString<G2D>,
+    fun findMatchForPublicTransportRoute(sourceRouteGeometry: LineString<G2D>,
                                          sourceRoutePoints: List<RoutePoint>,
                                          vehicleType: VehicleType,
                                          matchingParameters: PublicTransportRouteMatchingParameters)

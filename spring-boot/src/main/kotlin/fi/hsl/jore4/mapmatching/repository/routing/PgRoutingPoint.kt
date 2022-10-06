@@ -12,7 +12,9 @@ sealed interface PgRoutingPoint {
 
     companion object {
 
-        fun fromSnappedPointOnLink(pointOnLink: SnappedLinkState): PgRoutingPoint {
+        fun fromSnappedPointOnLink(pointOnLink: SnappedLinkState, linkSideIfVirtualNode: LinkSide = LinkSide.BOTH)
+            : PgRoutingPoint {
+
             return if (pointOnLink.isSnappedToStartNode)
                 RealNode(pointOnLink.startNodeId)
             else if (pointOnLink.isSnappedToEndNode)
@@ -20,7 +22,7 @@ sealed interface PgRoutingPoint {
             else
                 VirtualNode(pointOnLink.infrastructureLinkId,
                             pointOnLink.closestPointFractionalMeasure,
-                            LinkSide.BOTH,
+                            linkSideIfVirtualNode,
                             pointOnLink.closerNodeId)
         }
     }
