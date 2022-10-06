@@ -12,11 +12,27 @@ import org.geolatte.geom.Point
  * @property location the coordinates for a terminus point of the route. This holds the first/last
  * coordinate of the LineString geometry of the source route.
  * @property terminusType indicates whether this instance denotes a start or end point of a route
- * @property isStopPoint indicates whether the route is terminated at a public transport stop point
- * @property stopPointNationalId the national ID of the public transport stop at a terminus point of
- * the source route in case the route starts from/ends at a stop point
  */
-data class SourceRouteTerminusPoint(val location: Point<G2D>,
-                                    val terminusType: TerminusType,
-                                    val isStopPoint: Boolean,
-                                    val stopPointNationalId: Int?)
+sealed interface SourceRouteTerminusPoint {
+
+    val location: Point<G2D>
+    val terminusType: TerminusType
+}
+
+/**
+ * Models the first/last point on a source route as a public transport stop point.
+ *
+ * @property stopPointNationalId the optional national ID for the public transport stop at route's
+ * terminus point
+ */
+data class SourceRouteTerminusStopPoint(override val location: Point<G2D>,
+                                        override val terminusType: TerminusType,
+                                        val stopPointNationalId: Int?)
+    : SourceRouteTerminusPoint
+
+/**
+ * Models the first/last point on a source route that is not a public transport stop point.
+ */
+data class SourceRouteTerminusNonStopPoint(override val location: Point<G2D>,
+                                           override val terminusType: TerminusType)
+    : SourceRouteTerminusPoint
