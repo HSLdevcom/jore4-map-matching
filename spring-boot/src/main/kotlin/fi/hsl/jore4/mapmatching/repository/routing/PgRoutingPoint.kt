@@ -3,7 +3,7 @@ package fi.hsl.jore4.mapmatching.repository.routing
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.LinkSide
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 
 /**
  * Source point for pgRouting functions: pgr_withPointsVia, pgr_trspVia_withPoints
@@ -12,7 +12,7 @@ sealed interface PgRoutingPoint {
 
     companion object {
 
-        fun fromSnappedPointOnLink(pointOnLink: SnappedLinkState, linkSideIfVirtualNode: LinkSide = LinkSide.BOTH)
+        fun fromSnappedPointOnLink(pointOnLink: SnappedPointOnLink, linkSideIfVirtualNode: LinkSide = LinkSide.BOTH)
             : PgRoutingPoint {
 
             return if (pointOnLink.isSnappedToStartNode)

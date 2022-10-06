@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.AGAINST_DIGITISED_DIRECTION
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.ALONG_DIGITISED_DIRECTION
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolverParamsGenerator.LinkDirection.BIDIRECTIONAL
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolverParamsGenerator.LinkDirection.ONE_WAY
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolverParamsGenerator.LinkDirection.ONE_WAY_AGAINST_DIGITISED_DIRECTION
@@ -32,10 +32,10 @@ import fi.hsl.jore4.mapmatching.test.generators.EnumGenerators.locationAlongLink
 import fi.hsl.jore4.mapmatching.test.generators.EnumGenerators.trafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.test.generators.Retry
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter
-import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.SnappedLinkStateParams
-import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapSingleLinkTwice
-import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapTwoConnectedLinks
-import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator.snapTwoUnconnectedLinks
+import fi.hsl.jore4.mapmatching.test.generators.SnappedPointOnLinkGenerator.SnappedPointOnLinkParams
+import fi.hsl.jore4.mapmatching.test.generators.SnappedPointOnLinkGenerator.snapSingleLinkTwice
+import fi.hsl.jore4.mapmatching.test.generators.SnappedPointOnLinkGenerator.snapTwoConnectedLinks
+import fi.hsl.jore4.mapmatching.test.generators.SnappedPointOnLinkGenerator.snapTwoUnconnectedLinks
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate.booleans
 import org.quicktheories.generators.Generate.constant
@@ -219,28 +219,28 @@ object VisitedNodesResolverParamsGenerator {
     private fun generateList(source: Gen<InfrastructureNodeId>, amount: Int): Gen<List<InfrastructureNodeId>> =
         lists().of(source).ofSize(amount)
 
-    private fun generateNonRedundantViaNodes(startLink: SnappedLinkState, endLink: SnappedLinkState)
+    private fun generateNonRedundantViaNodes(pointOnStartLink: SnappedPointOnLink, pointOnEndLink: SnappedPointOnLink)
         : Gen<List<InfrastructureNodeId>> {
 
         return integers().between(1, MAX_NUMBER_OF_VIA_NODES).flatMap { numViaNodes ->
 
             val genFirstNodeId: Gen<InfrastructureNodeId> = Retry(nodeId()) {
-                it != startLink.closerNodeId
-                    && (it != endLink.closerNodeId || !startLink.isOnSameLinkAs(endLink) && numViaNodes > 1)
+                it != pointOnStartLink.closerNodeId
+                    && (it != pointOnEndLink.closerNodeId || !pointOnStartLink.isOnSameLinkAs(pointOnEndLink) && numViaNodes > 1)
             }
 
-            val genLastNodeId: Gen<InfrastructureNodeId> = Retry(nodeId()) { it != endLink.closerNodeId }
+            val genLastNodeId: Gen<InfrastructureNodeId> = Retry(nodeId()) { it != pointOnEndLink.closerNodeId }
 
             generateViaNodes(numViaNodes, genFirstNodeId, genLastNodeId)
         }
     }
 
-    private fun generateViaNodesNotStartingOrEndingWithNodesOfTerminusLinks(startLink: SnappedLinkState,
-                                                                            endLink: SnappedLinkState)
+    private fun generateViaNodesNotStartingOrEndingWithNodesOfTerminusLinks(pointOnStartLink: SnappedPointOnLink,
+                                                                            pointOnEndLink: SnappedPointOnLink)
         : Gen<List<InfrastructureNodeId>> {
 
         val genTerminusNodeId: Gen<InfrastructureNodeId> = Retry(nodeId()) {
-            !startLink.isOnLinkTerminatedByNode(it) && !endLink.isOnLinkTerminatedByNode(it)
+            !pointOnStartLink.isOnLinkTerminatedByNode(it) && !pointOnEndLink.isOnLinkTerminatedByNode(it)
         }
 
         return integers().between(1, MAX_NUMBER_OF_VIA_NODES)
@@ -269,7 +269,8 @@ object VisitedNodesResolverParamsGenerator {
         }
     }
 
-    private fun generateFullyRedundantViaNodes(startLink: SnappedLinkState, endLink: SnappedLinkState)
+    private fun generateFullyRedundantViaNodes(pointOnStartLink: SnappedPointOnLink,
+                                               pointOnEndLink: SnappedPointOnLink)
         : Gen<List<InfrastructureNodeId>> {
 
         return integers().between(1, MAX_NUMBER_OF_VIA_NODES).flatMap { numViaNodes ->
@@ -279,10 +280,10 @@ object VisitedNodesResolverParamsGenerator {
                 val sizeOfSecondSequence = numViaNodes - sizeOfFirstSequence
 
                 val firstSequence: Gen<List<InfrastructureNodeId>> =
-                    generateList(constant(startLink.closerNodeId), sizeOfFirstSequence)
+                    generateList(constant(pointOnStartLink.closerNodeId), sizeOfFirstSequence)
 
                 val secondSequence: Gen<List<InfrastructureNodeId>> =
-                    generateList(constant(endLink.closerNodeId), sizeOfSecondSequence)
+                    generateList(constant(pointOnEndLink.closerNodeId), sizeOfSecondSequence)
 
                 firstSequence.zip(secondSequence, Collection<InfrastructureNodeId>::plus)
             }
@@ -337,7 +338,7 @@ object VisitedNodesResolverParamsGenerator {
         }
 
         fun build(): Gen<VisitedNodesResolverParams> {
-            return generateTerminusLinks().flatMap { (startLink, endLink) ->
+            return generatePointsOnTerminusLinks().flatMap { (pointOnStartLink, pointOnEndLink) ->
 
                 fun generateRandomViaNodeIds(): Gen<List<InfrastructureNodeId>> {
                     return lists()
@@ -350,22 +351,24 @@ object VisitedNodesResolverParamsGenerator {
                 val genViaNodeIds: Gen<List<InfrastructureNodeId>> = when (viaNodeScheme) {
                     VIA_NODES_EMPTY -> generateEmptyViaNodeIds()
                     VIA_NODES_RANDOM -> generateRandomViaNodeIds()
-                    VIA_NODES_FULLY_REDUNDANT -> generateFullyRedundantViaNodes(startLink, endLink)
-                    VIA_NODES_NON_REDUNDANT -> generateNonRedundantViaNodes(startLink, endLink)
+                    VIA_NODES_FULLY_REDUNDANT -> generateFullyRedundantViaNodes(pointOnStartLink, pointOnEndLink)
+                    VIA_NODES_NON_REDUNDANT -> generateNonRedundantViaNodes(pointOnStartLink, pointOnEndLink)
                     VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS -> {
                         oneOf(generateEmptyViaNodeIds(),
-                              generateViaNodesNotStartingOrEndingWithNodesOfTerminusLinks(startLink, endLink))
+                              generateViaNodesNotStartingOrEndingWithNodesOfTerminusLinks(pointOnStartLink,
+                                                                                          pointOnEndLink))
                     }
+
                     ViaNodeGenerationScheme.ANY -> oneOf(generateEmptyViaNodeIds(), generateRandomViaNodeIds())
                 }
 
                 genViaNodeIds.map { viaNodeIds ->
-                    VisitedNodesResolverParams(startLink, viaNodeIds, endLink)
+                    VisitedNodesResolverParams(pointOnStartLink, viaNodeIds, pointOnEndLink)
                 }
             }
         }
 
-        private fun generateTerminusLinks(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+        private fun generatePointsOnTerminusLinks(): Gen<Pair<SnappedPointOnLink, SnappedPointOnLink>> {
             return unwrapTerminusLinkRelation().flatMap { terminusLinkRelation ->
 
                 if (terminusLinkRelation == SAME_LINK)
@@ -391,25 +394,28 @@ object VisitedNodesResolverParamsGenerator {
             }
         }
 
-        private fun snapSingleLinkTwice(): Gen<Pair<SnappedLinkState, SnappedLinkState>> {
-            return generateStartLinkParams().flatMap { startLinkParams ->
+        private fun snapSingleLinkTwice(): Gen<Pair<SnappedPointOnLink, SnappedPointOnLink>> {
+            return generateParamsForPointOnStartLink().flatMap { pointOnStartLinkParams ->
 
-                snapSingleLinkTwice(startLinkParams.hasDiscreteNodes,
-                                    startLinkParams.trafficFlowDirectionType,
-                                    startLinkParams.snapPointLocationFilter,
+                snapSingleLinkTwice(pointOnStartLinkParams.hasDiscreteNodes,
+                                    pointOnStartLinkParams.trafficFlowDirectionType,
+                                    pointOnStartLinkParams.snapPointLocationFilter,
                                     SnapPointLocationAlongLinkFilter.AT_MIDPOINT)
             }
         }
 
         private fun snapTwoDiscreteLinks(terminusLinkRelation: TerminusLinkRelation)
-            : Gen<Pair<SnappedLinkState, SnappedLinkState>> {
+            : Gen<Pair<SnappedPointOnLink, SnappedPointOnLink>> {
 
-            return generateStartLinkParams().flatMap { startLinkParams ->
-                generateEndLinkParams().flatMap { endLinkParams ->
+            return generateParamsForPointOnStartLink().flatMap { pointOnStartLinkParams ->
+                generateParamsForPointOnEndLink().flatMap { pointOnEndLinkParams ->
 
                     when (terminusLinkRelation) {
-                        DISCRETE_LINKS_CONNECTED -> snapTwoConnectedLinks(startLinkParams, endLinkParams)
-                        DISCRETE_LINKS_UNCONNECTED -> snapTwoUnconnectedLinks(startLinkParams, endLinkParams)
+                        DISCRETE_LINKS_CONNECTED ->
+                            snapTwoConnectedLinks(pointOnStartLinkParams, pointOnEndLinkParams)
+
+                        DISCRETE_LINKS_UNCONNECTED ->
+                            snapTwoUnconnectedLinks(pointOnStartLinkParams, pointOnEndLinkParams)
 
                         else -> throw IllegalStateException("Should not end up here")
                     }
@@ -417,14 +423,14 @@ object VisitedNodesResolverParamsGenerator {
             }
         }
 
-        private fun generateStartLinkParams()
-            : Gen<SnappedLinkStateParams> = generateSnappedLinkStateParams(startLinkProperties)
+        private fun generateParamsForPointOnStartLink()
+            : Gen<SnappedPointOnLinkParams> = generateSnappedPointOnLinkParams(startLinkProperties)
 
-        private fun generateEndLinkParams()
-            : Gen<SnappedLinkStateParams> = generateSnappedLinkStateParams(endLinkProperties)
+        private fun generateParamsForPointOnEndLink()
+            : Gen<SnappedPointOnLinkParams> = generateSnappedPointOnLinkParams(endLinkProperties)
 
-        private fun generateSnappedLinkStateParams(linkProperties: TerminusLinkProperties)
-            : Gen<SnappedLinkStateParams> {
+        private fun generateSnappedPointOnLinkParams(linkProperties: TerminusLinkProperties)
+            : Gen<SnappedPointOnLinkParams> {
 
             return generateLinkEndpointDiscreteness(linkProperties.endpointDiscreteness)
                 .flatMap { hasDiscreteNodes ->
@@ -435,9 +441,9 @@ object VisitedNodesResolverParamsGenerator {
                             generateSnapPointLocationFilter(linkProperties.snapPointLocation)
                                 .map { snapPointLocationFilter ->
 
-                                    SnappedLinkStateParams(hasDiscreteNodes,
-                                                           trafficFlowDirectionType,
-                                                           snapPointLocationFilter)
+                                    SnappedPointOnLinkParams(hasDiscreteNodes,
+                                                             trafficFlowDirectionType,
+                                                             snapPointLocationFilter)
                                 }
                         }
                 }

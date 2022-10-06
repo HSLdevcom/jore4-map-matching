@@ -1,6 +1,6 @@
 package fi.hsl.jore4.mapmatching.service.node
 
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolverParamsGenerator.LinkDirection
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolverParamsGenerator.LinkDirection.BIDIRECTIONAL
 import fi.hsl.jore4.mapmatching.service.node.VisitedNodesResolverParamsGenerator.LinkDirection.ONE_WAY_AGAINST_DIGITISED_DIRECTION
@@ -61,7 +61,7 @@ class VisitedNodesResolverTest {
                         assertThat(createOutput(input))
                             .isInstanceOfSatisfying(VisitSingleNode::class.java) {
 
-                                assertThat(it.nodeId).isEqualTo(input.startLink.startNodeId)
+                                assertThat(it.nodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                             }
                     }
             }
@@ -74,7 +74,7 @@ class VisitedNodesResolverTest {
                         assertThat(createOutput(input))
                             .isInstanceOfSatisfying(VisitSingleNode::class.java) {
 
-                                assertThat(it.nodeId).isEqualTo(input.startLink.startNodeId)
+                                assertThat(it.nodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                             }
                     }
             }
@@ -129,8 +129,8 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                        assertThat(it.startNodeId).isEqualTo(input.startLink.startNodeId)
-                                        assertThat(it.endNodeId).isEqualTo(input.startLink.endNodeId)
+                                        assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
+                                        assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                     }
                             }
                     }
@@ -143,8 +143,8 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                        assertThat(it.startNodeId).isEqualTo(input.startLink.startNodeId)
-                                        assertThat(it.endNodeId).isEqualTo(input.startLink.endNodeId)
+                                        assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
+                                        assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                     }
                             }
                     }
@@ -176,8 +176,8 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                        assertThat(it.startNodeId).isEqualTo(input.startLink.endNodeId)
-                                        assertThat(it.endNodeId).isEqualTo(input.startLink.startNodeId)
+                                        assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
+                                        assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
                             }
                     }
@@ -190,8 +190,8 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                        assertThat(it.startNodeId).isEqualTo(input.startLink.endNodeId)
-                                        assertThat(it.endNodeId).isEqualTo(input.startLink.startNodeId)
+                                        assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
+                                        assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
                             }
                     }
@@ -223,7 +223,7 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitSingleNode::class.java) {
 
-                                        assertThat(it.nodeId).isEqualTo(input.startLink.startNodeId)
+                                        assertThat(it.nodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
                             }
                     }
@@ -236,7 +236,7 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitSingleNode::class.java) {
 
-                                        assertThat(it.nodeId).isEqualTo(input.startLink.startNodeId)
+                                        assertThat(it.nodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
                             }
                     }
@@ -281,8 +281,8 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                        assertThat(it.startNodeId).isEqualTo(input.startLink.endNodeId)
-                                        assertThat(it.endNodeId).isEqualTo(input.startLink.startNodeId)
+                                        assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
+                                        assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
                             }
                     }
@@ -295,8 +295,8 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                        assertThat(it.startNodeId).isEqualTo(input.startLink.endNodeId)
-                                        assertThat(it.endNodeId).isEqualTo(input.startLink.startNodeId)
+                                        assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
+                                        assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
                             }
                     }
@@ -350,8 +350,8 @@ class VisitedNodesResolverTest {
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
 
                                         val expectedNodesToVisit =
-                                            VisitNodesOfSingleLinkUnidirectionally(input.startLink.endNodeId,
-                                                                                   input.startLink.startNodeId)
+                                            VisitNodesOfSingleLinkUnidirectionally(input.pointOnStartLink.endNodeId,
+                                                                                   input.pointOnStartLink.startNodeId)
 
                                         assertThat(it.nodesToVisitOnStartLink).isEqualTo(expectedNodesToVisit)
                                         assertThat(it.nodesToVisitOnEndLink).isEqualTo(expectedNodesToVisit)
@@ -389,8 +389,8 @@ class VisitedNodesResolverTest {
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
 
                                         val expectedNodesToVisit =
-                                            VisitNodesOfSingleLinkUnidirectionally(input.startLink.endNodeId,
-                                                                                   input.startLink.startNodeId)
+                                            VisitNodesOfSingleLinkUnidirectionally(input.pointOnStartLink.endNodeId,
+                                                                                   input.pointOnStartLink.startNodeId)
 
                                         assertThat(it.nodesToVisitOnStartLink).isEqualTo(expectedNodesToVisit)
                                         assertThat(it.nodesToVisitOnEndLink).isEqualTo(expectedNodesToVisit)
@@ -449,8 +449,8 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                        assertThat(it.startNodeId).isEqualTo(input.startLink.startNodeId)
-                                        assertThat(it.endNodeId).isEqualTo(input.startLink.endNodeId)
+                                        assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
+                                        assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                     }
                             }
                     }
@@ -463,8 +463,8 @@ class VisitedNodesResolverTest {
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                        assertThat(it.startNodeId).isEqualTo(input.startLink.startNodeId)
-                                        assertThat(it.endNodeId).isEqualTo(input.startLink.endNodeId)
+                                        assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
+                                        assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                     }
                             }
                     }
@@ -518,8 +518,8 @@ class VisitedNodesResolverTest {
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
 
                                         val expectedNodesToVisit =
-                                            VisitNodesOfSingleLinkUnidirectionally(input.startLink.startNodeId,
-                                                                                   input.startLink.endNodeId)
+                                            VisitNodesOfSingleLinkUnidirectionally(input.pointOnStartLink.startNodeId,
+                                                                                   input.pointOnStartLink.endNodeId)
 
                                         assertThat(it.nodesToVisitOnStartLink).isEqualTo(expectedNodesToVisit)
                                         assertThat(it.nodesToVisitOnEndLink).isEqualTo(expectedNodesToVisit)
@@ -557,8 +557,8 @@ class VisitedNodesResolverTest {
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
 
                                         val expectedNodesToVisit =
-                                            VisitNodesOfSingleLinkUnidirectionally(input.startLink.startNodeId,
-                                                                                   input.startLink.endNodeId)
+                                            VisitNodesOfSingleLinkUnidirectionally(input.pointOnStartLink.startNodeId,
+                                                                                   input.pointOnStartLink.endNodeId)
 
                                         assertThat(it.nodesToVisitOnStartLink).isEqualTo(expectedNodesToVisit)
                                         assertThat(it.nodesToVisitOnEndLink).isEqualTo(expectedNodesToVisit)
@@ -672,7 +672,7 @@ class VisitedNodesResolverTest {
                             .isInstanceOfSatisfying(VisitSingleNode::class.java) {
 
                                 assertThat(it.nodeId)
-                                    .isEqualTo(input.startLink.closerNodeId)
+                                    .isEqualTo(input.pointOnStartLink.closerNodeId)
                             }
                     }
             }
@@ -686,14 +686,14 @@ class VisitedNodesResolverTest {
                         assertThat(visit.nodesToVisitOnStartLink)
                             .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                val snappedLink: SnappedLinkState = input.startLink
+                                val pointOnLink: SnappedPointOnLink = input.pointOnStartLink
 
                                 if (nodesReversed) {
-                                    assertThat(it.startNodeId).isEqualTo(snappedLink.endNodeId)
-                                    assertThat(it.endNodeId).isEqualTo(snappedLink.startNodeId)
+                                    assertThat(it.startNodeId).isEqualTo(pointOnLink.endNodeId)
+                                    assertThat(it.endNodeId).isEqualTo(pointOnLink.startNodeId)
                                 } else {
-                                    assertThat(it.startNodeId).isEqualTo(snappedLink.startNodeId)
-                                    assertThat(it.endNodeId).isEqualTo(snappedLink.endNodeId)
+                                    assertThat(it.startNodeId).isEqualTo(pointOnLink.startNodeId)
+                                    assertThat(it.endNodeId).isEqualTo(pointOnLink.endNodeId)
                                 }
                             }
                     }
@@ -706,10 +706,10 @@ class VisitedNodesResolverTest {
                         assertThat(visit.nodesToVisitOnStartLink)
                             .isInstanceOfSatisfying(VisitNodesOfSingleLinkBidirectionally::class.java) {
 
-                                val snappedLink: SnappedLinkState = input.startLink
+                                val pointOnLink: SnappedPointOnLink = input.pointOnStartLink
 
-                                assertThat(it.firstNodeId).isEqualTo(snappedLink.startNodeId)
-                                assertThat(it.secondNodeId).isEqualTo(snappedLink.endNodeId)
+                                assertThat(it.firstNodeId).isEqualTo(pointOnLink.startNodeId)
+                                assertThat(it.secondNodeId).isEqualTo(pointOnLink.endNodeId)
                             }
                     }
             }
@@ -759,7 +759,7 @@ class VisitedNodesResolverTest {
                                           VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS)
                                 .map { params ->
                                     params.run {
-                                        withViaNodeIds(listOf(startLink.furtherNodeId) + viaNodeIds)
+                                        withViaNodeIds(listOf(pointOnStartLink.furtherNodeId) + viaNodeIds)
                                     }
                                 }
                                 .describedAs { prettyPrint(it) }
@@ -874,7 +874,7 @@ class VisitedNodesResolverTest {
                             .isInstanceOfSatisfying(VisitSingleNode::class.java) {
 
                                 assertThat(it.nodeId)
-                                    .isEqualTo(input.endLink.closerNodeId)
+                                    .isEqualTo(input.pointOnEndLink.closerNodeId)
                             }
                     }
             }
@@ -888,14 +888,14 @@ class VisitedNodesResolverTest {
                         assertThat(visit.nodesToVisitOnEndLink)
                             .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
 
-                                val snappedLink: SnappedLinkState = input.endLink
+                                val pointOnLink: SnappedPointOnLink = input.pointOnEndLink
 
                                 if (nodesReversed) {
-                                    assertThat(it.startNodeId).isEqualTo(snappedLink.endNodeId)
-                                    assertThat(it.endNodeId).isEqualTo(snappedLink.startNodeId)
+                                    assertThat(it.startNodeId).isEqualTo(pointOnLink.endNodeId)
+                                    assertThat(it.endNodeId).isEqualTo(pointOnLink.startNodeId)
                                 } else {
-                                    assertThat(it.startNodeId).isEqualTo(snappedLink.startNodeId)
-                                    assertThat(it.endNodeId).isEqualTo(snappedLink.endNodeId)
+                                    assertThat(it.startNodeId).isEqualTo(pointOnLink.startNodeId)
+                                    assertThat(it.endNodeId).isEqualTo(pointOnLink.endNodeId)
                                 }
                             }
                     }
@@ -908,10 +908,10 @@ class VisitedNodesResolverTest {
                         assertThat(visit.nodesToVisitOnEndLink)
                             .isInstanceOfSatisfying(VisitNodesOfSingleLinkBidirectionally::class.java) {
 
-                                val snappedLink: SnappedLinkState = input.endLink
+                                val pointOnLink: SnappedPointOnLink = input.pointOnEndLink
 
-                                assertThat(it.firstNodeId).isEqualTo(snappedLink.startNodeId)
-                                assertThat(it.secondNodeId).isEqualTo(snappedLink.endNodeId)
+                                assertThat(it.firstNodeId).isEqualTo(pointOnLink.startNodeId)
+                                assertThat(it.secondNodeId).isEqualTo(pointOnLink.endNodeId)
                             }
                     }
             }
@@ -961,7 +961,7 @@ class VisitedNodesResolverTest {
                                         VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS)
                                 .map { params ->
                                     params.run {
-                                        withViaNodeIds(viaNodeIds + endLink.furtherNodeId)
+                                        withViaNodeIds(viaNodeIds + pointOnEndLink.furtherNodeId)
                                     }
                                 }
                                 .describedAs { prettyPrint(it) }
@@ -1147,28 +1147,28 @@ class VisitedNodesResolverTest {
             """
                 {
                     startLink: {
-                        id: ${startLink.infrastructureLinkId},
-                        closestPointFractionalMeasure: ${startLink.closestPointFractionalMeasure},
-                        trafficFlowDirectionType: ${startLink.trafficFlowDirectionType},
-                        startNodeId: ${startLink.startNodeId},
-                        endNodeId: ${startLink.endNodeId}
+                        id: ${pointOnStartLink.infrastructureLinkId},
+                        closestPointFractionalMeasure: ${pointOnStartLink.closestPointFractionalMeasure},
+                        trafficFlowDirectionType: ${pointOnStartLink.trafficFlowDirectionType},
+                        startNodeId: ${pointOnStartLink.startNodeId},
+                        endNodeId: ${pointOnStartLink.endNodeId}
                     },
                     viaNodeIds: $viaNodeIds,
                     endLink: {
-                        id: ${endLink.infrastructureLinkId},
-                        closestPointFractionalMeasure: ${endLink.closestPointFractionalMeasure},
-                        trafficFlowDirectionType: ${endLink.trafficFlowDirectionType},
-                        startNodeId: ${endLink.startNodeId},
-                        endNodeId: ${endLink.endNodeId}
+                        id: ${pointOnEndLink.infrastructureLinkId},
+                        closestPointFractionalMeasure: ${pointOnEndLink.closestPointFractionalMeasure},
+                        trafficFlowDirectionType: ${pointOnEndLink.trafficFlowDirectionType},
+                        startNodeId: ${pointOnEndLink.startNodeId},
+                        endNodeId: ${pointOnEndLink.endNodeId}
                     }
                 }
             """.trimIndent()
         }
 
         private fun createOutput(params: VisitedNodesResolverParams): VisitedNodes {
-            return VisitedNodesResolver.resolve(params.startLink,
+            return VisitedNodesResolver.resolve(params.pointOnStartLink,
                                                 params.viaNodeIds,
-                                                params.endLink)
+                                                params.pointOnEndLink)
         }
     }
 }

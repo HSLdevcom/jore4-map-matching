@@ -4,15 +4,13 @@ import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.AGAINST_DIGITISED_DIRECTION
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.ALONG_DIGITISED_DIRECTION
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.BIDIRECTIONAL
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
-import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toVisitedNodes
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
+import fi.hsl.jore4.mapmatching.service.node.SnappedPointOnLinkExtension.toVisitedNodes
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.AT_END
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.AT_START
 import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.BETWEEN_ENDPOINTS_EXCLUSIVE
-import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.CLOSE_TO_END
-import fi.hsl.jore4.mapmatching.test.generators.SnapPointLocationAlongLinkFilter.CLOSE_TO_START
-import fi.hsl.jore4.mapmatching.test.generators.SnappedLinkStateGenerator
+import fi.hsl.jore4.mapmatching.test.generators.SnappedPointOnLinkGenerator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -20,16 +18,16 @@ import org.junit.jupiter.api.Test
 import org.quicktheories.QuickTheory.qt
 import org.quicktheories.dsl.TheoryBuilder
 
-@DisplayName("Test SnappedLinkStateExtension class")
-class SnappedLinkStateExtensionTest {
+@DisplayName("Test SnappedPointOnLinkExtensionTest class")
+class SnappedPointOnLinkExtensionTest {
 
     private fun forSnappedLinksWithDiscreteEndpoints(trafficFlowDirectionType: TrafficFlowDirectionType,
                                                      snapPointLocationFilter: SnapPointLocationAlongLinkFilter)
-        : TheoryBuilder<SnappedLinkState> {
+        : TheoryBuilder<SnappedPointOnLink> {
 
-        return qt().forAll(SnappedLinkStateGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                              trafficFlowDirectionType,
-                                                              snapPointLocationFilter))
+        return qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
+                                                                trafficFlowDirectionType,
+                                                                snapPointLocationFilter))
     }
 
     @Nested
@@ -40,13 +38,13 @@ class SnappedLinkStateExtensionTest {
         @DisplayName("When infrastructure link starts from same node as it ends at")
         fun whenEndpointNodesAreNonDiscrete() {
             return qt()
-                .forAll(SnappedLinkStateGenerator.snapLink(hasDiscreteEndpoints = false))
-                .checkAssert { snappedLink ->
+                .forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = false))
+                .checkAssert { pointOnLink ->
 
-                    assertThat(snappedLink.toVisitedNodes())
+                    assertThat(pointOnLink.toVisitedNodes())
                         .isEqualTo(
                             VisitSingleNode(
-                                snappedLink.startNodeId))
+                                pointOnLink.startNodeId))
                 }
         }
 
@@ -59,12 +57,12 @@ class SnappedLinkStateExtensionTest {
             fun whenInfrastructureLinkIsBidirectional() {
                 return forSnappedLinksWithDiscreteEndpoints(BIDIRECTIONAL,
                                                             AT_START)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitSingleNode(
-                                    snappedLink.startNodeId))
+                                    pointOnLink.startNodeId))
                     }
             }
 
@@ -73,12 +71,12 @@ class SnappedLinkStateExtensionTest {
             fun whenTraversalIsAlongDigitisedDirectionOfInfrastructureLink() {
                 return forSnappedLinksWithDiscreteEndpoints(ALONG_DIGITISED_DIRECTION,
                                                             AT_START)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitSingleNode(
-                                    snappedLink.startNodeId))
+                                    pointOnLink.startNodeId))
                     }
             }
 
@@ -87,12 +85,12 @@ class SnappedLinkStateExtensionTest {
             fun whenTraversalIsAgainstDigitisedDirectionOfInfrastructureLink() {
                 return forSnappedLinksWithDiscreteEndpoints(AGAINST_DIGITISED_DIRECTION,
                                                             AT_START)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitSingleNode(
-                                    snappedLink.startNodeId))
+                                    pointOnLink.startNodeId))
                     }
             }
         }
@@ -106,12 +104,12 @@ class SnappedLinkStateExtensionTest {
             fun whenInfrastructureLinkIsBidirectional() {
                 return forSnappedLinksWithDiscreteEndpoints(BIDIRECTIONAL,
                                                             AT_END)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitSingleNode(
-                                    snappedLink.endNodeId))
+                                    pointOnLink.endNodeId))
                     }
             }
 
@@ -120,12 +118,12 @@ class SnappedLinkStateExtensionTest {
             fun whenTraversalIsAlongDigitisedDirectionOfInfrastructureLink() {
                 return forSnappedLinksWithDiscreteEndpoints(ALONG_DIGITISED_DIRECTION,
                                                             AT_END)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitSingleNode(
-                                    snappedLink.endNodeId))
+                                    pointOnLink.endNodeId))
                     }
             }
 
@@ -134,12 +132,12 @@ class SnappedLinkStateExtensionTest {
             fun whenTraversalIsAgainstDigitisedDirectionOfInfrastructureLink() {
                 return forSnappedLinksWithDiscreteEndpoints(AGAINST_DIGITISED_DIRECTION,
                                                             AT_END)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitSingleNode(
-                                    snappedLink.endNodeId))
+                                    pointOnLink.endNodeId))
                     }
             }
         }
@@ -153,12 +151,12 @@ class SnappedLinkStateExtensionTest {
             fun whenInfrastructureLinkIsBidirectional() {
                 return forSnappedLinksWithDiscreteEndpoints(BIDIRECTIONAL,
                                                             BETWEEN_ENDPOINTS_EXCLUSIVE)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitNodesOfSingleLinkBidirectionally(
-                                    snappedLink.startNodeId, snappedLink.endNodeId))
+                                    pointOnLink.startNodeId, pointOnLink.endNodeId))
                     }
             }
 
@@ -167,12 +165,12 @@ class SnappedLinkStateExtensionTest {
             fun whenInfrastructureLinkIsOneWayAndTraversalIsAlongDigitisedDirection() {
                 return forSnappedLinksWithDiscreteEndpoints(ALONG_DIGITISED_DIRECTION,
                                                             BETWEEN_ENDPOINTS_EXCLUSIVE)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitNodesOfSingleLinkUnidirectionally(
-                                    snappedLink.startNodeId, snappedLink.endNodeId))
+                                    pointOnLink.startNodeId, pointOnLink.endNodeId))
                     }
             }
 
@@ -181,12 +179,12 @@ class SnappedLinkStateExtensionTest {
             fun whenInfrastructureLinkIsOneWayAndTraversalIsAgainstDigitisedDirection() {
                 return forSnappedLinksWithDiscreteEndpoints(AGAINST_DIGITISED_DIRECTION,
                                                             BETWEEN_ENDPOINTS_EXCLUSIVE)
-                    .checkAssert { snappedLink ->
+                    .checkAssert { pointOnLink ->
 
-                        assertThat(snappedLink.toVisitedNodes())
+                        assertThat(pointOnLink.toVisitedNodes())
                             .isEqualTo(
                                 VisitNodesOfSingleLinkUnidirectionally(
-                                        snappedLink.endNodeId, snappedLink.startNodeId))
+                                    pointOnLink.endNodeId, pointOnLink.startNodeId))
                     }
             }
         }

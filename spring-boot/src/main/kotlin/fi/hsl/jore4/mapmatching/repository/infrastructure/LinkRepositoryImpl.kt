@@ -44,13 +44,13 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
             SnapPointToLinkResult(point,
                                   distanceInMeters,
-                                  SnappedLinkState(it.infrastructureLinkId,
-                                                   it.closestDistance,
-                                                   it.closestPointFractionalMeasure,
-                                                   it.trafficFlowDirectionType,
-                                                   it.linkLength,
-                                                   it.startNodeId,
-                                                   it.endNodeId))
+                                  SnappedPointOnLink(it.infrastructureLinkId,
+                                                     it.closestDistance,
+                                                     it.closestPointFractionalMeasure,
+                                                     it.trafficFlowDirectionType,
+                                                     it.linkLength,
+                                                     it.startNodeId,
+                                                     it.endNodeId))
         })
     }
 
@@ -69,19 +69,19 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
         return resultItems
             .groupBy(LinkResultItem::pointSeqNum, valueTransform = {
-                SnappedLinkState(it.infrastructureLinkId,
-                                 it.closestDistance,
-                                 it.closestPointFractionalMeasure,
-                                 it.trafficFlowDirectionType,
-                                 it.linkLength,
-                                 it.startNodeId,
-                                 it.endNodeId)
+                SnappedPointOnLink(it.infrastructureLinkId,
+                                   it.closestDistance,
+                                   it.closestPointFractionalMeasure,
+                                   it.trafficFlowDirectionType,
+                                   it.linkLength,
+                                   it.startNodeId,
+                                   it.endNodeId)
             })
             .mapValues { entry ->
                 val pointSeqNum = entry.key
                 val point = points[pointSeqNum - 1]
 
-                val closestLinks: List<SnappedLinkState> = entry.value.sortedBy(SnappedLinkState::closestDistance)
+                val closestLinks: List<SnappedPointOnLink> = entry.value.sortedBy(SnappedPointOnLink::closestDistance)
 
                 SnapPointToLinksResult(point, distanceInMeters, limit, closestLinks)
             }

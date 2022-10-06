@@ -26,13 +26,13 @@ import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
  * the infrastructure link
  */
 @Suppress("MemberVisibilityCanBePrivate")
-data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
-                            val closestDistance: Double,
-                            val closestPointFractionalMeasure: Double,
-                            val trafficFlowDirectionType: TrafficFlowDirectionType,
-                            val infrastructureLinkLength: Double,
-                            val startNodeId: InfrastructureNodeId,
-                            val endNodeId: InfrastructureNodeId)
+data class SnappedPointOnLink(val infrastructureLinkId: InfrastructureLinkId,
+                              val closestDistance: Double,
+                              val closestPointFractionalMeasure: Double,
+                              val trafficFlowDirectionType: TrafficFlowDirectionType,
+                              val infrastructureLinkLength: Double,
+                              val startNodeId: InfrastructureNodeId,
+                              val endNodeId: InfrastructureNodeId)
     : HasInfrastructureNodeId {
 
     init {
@@ -85,14 +85,14 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
 
     fun isOnLinkWithDiscreteNodes(): Boolean = startNodeId != endNodeId
 
-    fun isOnSameLinkAs(other: SnappedLinkState): Boolean = infrastructureLinkId == other.infrastructureLinkId
+    fun isOnSameLinkAs(other: SnappedPointOnLink): Boolean = infrastructureLinkId == other.infrastructureLinkId
 
     /**
      * Returns the distance to start of infrastructure link in meters.
      */
     fun getDistanceToStartOfLink(): Double = closestPointFractionalMeasure * infrastructureLinkLength
 
-    fun withSnappedToTerminusNode(thresholdDistanceOfSnappingToLinkEndpointInMeters: Double): SnappedLinkState {
+    fun withSnappedToTerminusNode(thresholdDistanceOfSnappingToLinkEndpointInMeters: Double): SnappedPointOnLink {
         val distanceToStartOfLink: Double = getDistanceToStartOfLink()
 
         return if (distanceToStartOfLink.isWithinTolerance(0.0,
@@ -114,7 +114,7 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
      * a terminus stop point is included in a map-matched route, snap point needs to be moved a bit
      * inwards.
      */
-    fun moveSnapPointInwardsIfLocatedAtEndpoint(inwardsOffsetInMeters: Double): SnappedLinkState {
+    fun moveSnapPointInwardsIfLocatedAtEndpoint(inwardsOffsetInMeters: Double): SnappedPointOnLink {
         require(inwardsOffsetInMeters < infrastructureLinkLength) {
             "inwardsOffsetInMeters must be less than length of infrastructure link ($infrastructureLinkLength): $inwardsOffsetInMeters"
         }
@@ -133,11 +133,11 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
     }
 
     private fun withClosestPointFractionalMeasure(newClosestPointFractionalMeasure: Double) =
-        SnappedLinkState(infrastructureLinkId,
-                         closestDistance,
-                         newClosestPointFractionalMeasure,
-                         trafficFlowDirectionType,
-                         infrastructureLinkLength,
-                         startNodeId,
-                         endNodeId)
+        SnappedPointOnLink(infrastructureLinkId,
+                           closestDistance,
+                           newClosestPointFractionalMeasure,
+                           trafficFlowDirectionType,
+                           infrastructureLinkLength,
+                           startNodeId,
+                           endNodeId)
 }

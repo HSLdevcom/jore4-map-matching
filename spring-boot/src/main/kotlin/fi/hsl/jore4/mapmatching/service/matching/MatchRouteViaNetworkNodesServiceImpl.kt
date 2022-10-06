@@ -11,7 +11,7 @@ import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkResult
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
@@ -46,7 +46,7 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
 
     internal data class InfrastructureLinksOnRoute(val startLinkCandidates: List<TerminusLinkCandidate>,
                                                    val endLinkCandidates: List<TerminusLinkCandidate>,
-                                                   val viaLinksIndexedByRoutePointOrdering: Map<Int, SnappedLinkState>)
+                                                   val viaLinksIndexedByRoutePointOrdering: Map<Int, SnappedPointOnLink>)
 
     @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun findMatchForPublicTransportRoute(sourceRouteGeometry: LineString<G2D>,
@@ -90,18 +90,18 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
 
                 LOGGER.debug { "Resolved node ID sequence: $nodeIdSequence" }
 
-                val startLink: SnappedLinkState = nodeSeqResult.startLink
-                val endLink: SnappedLinkState = nodeSeqResult.endLink
+                val pointOnStartLink: SnappedPointOnLink = nodeSeqResult.pointOnStartLink
+                val pointOnEndLink: SnappedPointOnLink = nodeSeqResult.pointOnEndLink
 
                 val routeLinks: List<RouteLink> = routingService
                     .findRouteViaNodes(nodeIdSequence,
                                        vehicleType,
-                                       startLink.closestPointFractionalMeasure,
-                                       endLink.closestPointFractionalMeasure,
+                                       pointOnStartLink.closestPointFractionalMeasure,
+                                       pointOnEndLink.closestPointFractionalMeasure,
                                        BufferAreaRestriction.from(sourceRouteGeometry,
                                                                   matchingParameters.bufferRadiusInMeters,
-                                                                  startLink,
-                                                                  endLink))
+                                                                  pointOnStartLink,
+                                                                  pointOnEndLink))
                     .also { routeLinks: List<RouteLink> ->
                         if (routeLinks.isNotEmpty()) {
                             LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
@@ -132,7 +132,7 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
         val startLocation: Point<G2D> = toPoint(sourceRouteGeometry.startPosition)
         val endLocation: Point<G2D> = toPoint(sourceRouteGeometry.endPosition)
 
-        val (closestStartLinks: List<SnappedLinkState>, closestEndLinks: List<SnappedLinkState>) =
+        val (closestStartLinks: List<SnappedPointOnLink>, closestEndLinks: List<SnappedPointOnLink>) =
             closestTerminusLinksResolver.findClosestInfrastructureLinksForRouteEndpoints(startLocation,
                                                                                          endLocation,
                                                                                          vehicleType,
@@ -158,7 +158,7 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
         val (
             startLinkCandidates: List<TerminusLinkCandidate>,
             endLinkCandidates: List<TerminusLinkCandidate>,
-            fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedLinkState?>
+            fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedPointOnLink?>
         ) = resolveInfrastructureLinksOnRoute(sourceRoutePoints,
                                               TerminusLinkSelectionInput,
                                               matchingParams.maxStopLocationDeviation)
@@ -173,7 +173,7 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
             }
             ?: emptyMap()
 
-        val viaNodeHolders: List<Either<SnappedLinkState, NodeProximity>> = sourceRoutePoints
+        val viaNodeHolders: List<Either<SnappedPointOnLink, NodeProximity>> = sourceRoutePoints
             .withIndex()
             .drop(1)
             .dropLast(1)
@@ -202,14 +202,14 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
         val fromStopNationalIdToInfrastructureLinkId: Map<Int, InfrastructureLinkId> =
             fromRoutePointIndexToSnappedLinkOfMatchedStop
                 .values
-                .associateBy(SnapStopToLinkResult::stopNationalId) { it.link.infrastructureLinkId }
+                .associateBy(SnapStopToLinkResult::stopNationalId) { it.pointOnLink.infrastructureLinkId }
 
         val (startLinkCandidates: List<TerminusLinkCandidate>, endLinkCandidates: List<TerminusLinkCandidate>) =
             MatchingServiceHelper.resolveTerminusLinkCandidates(terminusLinkSelectionInput,
                                                                 fromStopNationalIdToInfrastructureLinkId)
 
-        val fromRouteStopPointIndexToPointOnLink: Map<Int, SnappedLinkState> =
-            fromRoutePointIndexToSnappedLinkOfMatchedStop.mapValues { (_, snap) -> snap.link }
+        val fromRouteStopPointIndexToPointOnLink: Map<Int, SnappedPointOnLink> =
+            fromRoutePointIndexToSnappedLinkOfMatchedStop.mapValues { (_, snap) -> snap.pointOnLink }
 
         return InfrastructureLinksOnRoute(startLinkCandidates,
                                           endLinkCandidates,

@@ -11,7 +11,7 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RealNode
 import fi.hsl.jore4.mapmatching.repository.routing.VirtualNode
@@ -71,7 +71,7 @@ object MatchingServiceHelper {
                                                        stopPointsIndexedByNationalId: Map<Int, PgRoutingPoint>)
         : Pair<List<TerminusPointCandidate>, List<TerminusPointCandidate>> {
 
-        fun createTerminusPointCandidatesForOneEndpoint(linkCandidates: List<SnappedLinkState>,
+        fun createTerminusPointCandidatesForOneEndpoint(linkCandidates: List<SnappedPointOnLink>,
                                                         sourceRouteTerminusPoint: SourceRouteTerminusPoint)
             : List<TerminusPointCandidate> {
 
@@ -179,7 +179,7 @@ object MatchingServiceHelper {
                                       fromStopNationalIdToInfrastructureLinkId: Map<Int, InfrastructureLinkId>)
         : Pair<List<TerminusLinkCandidate>, List<TerminusLinkCandidate>> {
 
-        fun createTerminusLinkCandidates(closestLinks: List<SnappedLinkState>,
+        fun createTerminusLinkCandidates(closestLinks: List<SnappedPointOnLink>,
                                          routeTerminusPoint: SourceRouteTerminusPoint)
             : List<TerminusLinkCandidate> {
 
@@ -190,14 +190,14 @@ object MatchingServiceHelper {
             return when (linkIdAssociatedWithStopPoint) {
                 null -> closestLinks.map { TerminusLinkCandidate(it, terminusStopPointMatchFoundByNationalId = false) }
                 else -> {
-                    closestLinks.map { snappedLink ->
-                        if (snappedLink.infrastructureLinkId == linkIdAssociatedWithStopPoint)
+                    closestLinks.map { pointOnLink ->
+                        if (pointOnLink.infrastructureLinkId == linkIdAssociatedWithStopPoint)
                             TerminusLinkCandidate(
                                 // Move snap point inwards just 1.0 meters.
-                                snappedLink.moveSnapPointInwardsIfLocatedAtEndpoint(1.0),
+                                pointOnLink.moveSnapPointInwardsIfLocatedAtEndpoint(1.0),
                                 terminusStopPointMatchFoundByNationalId = true)
                         else
-                            TerminusLinkCandidate(snappedLink,
+                            TerminusLinkCandidate(pointOnLink,
                                                   terminusStopPointMatchFoundByNationalId = false)
                     }
                 }
@@ -357,7 +357,7 @@ object MatchingServiceHelper {
      */
     fun getSortedNodeSequenceCandidates(startLinkCandidates: List<TerminusLinkCandidate>,
                                         endLinkCandidates: List<TerminusLinkCandidate>,
-                                        viaNodeHolders: List<Either<SnappedLinkState, NodeProximity>>)
+                                        viaNodeHolders: List<Either<SnappedPointOnLink, NodeProximity>>)
         : List<NodeSequenceCandidatesBetweenSnappedLinks> {
 
         val viaNodeIds: List<InfrastructureNodeId> = viaNodeHolders.map { either ->
@@ -368,7 +368,7 @@ object MatchingServiceHelper {
         fun findLinkIdOfTerminusStopPoint(linkCandidates: List<TerminusLinkCandidate>): InfrastructureLinkId? {
             return linkCandidates
                 .find(TerminusLinkCandidate::terminusStopPointMatchFoundByNationalId)
-                ?.snappedLink?.infrastructureLinkId
+                ?.pointOnLink?.infrastructureLinkId
         }
 
         val linkIdOfStartStop: InfrastructureLinkId? = findLinkIdOfTerminusStopPoint(startLinkCandidates)
@@ -380,10 +380,11 @@ object MatchingServiceHelper {
             .flatMap { startLinkCandidate ->
                 endLinkCandidates.mapNotNull { endLinkCandidate ->
 
-                    val startLink: SnappedLinkState = startLinkCandidate.snappedLink
-                    val endLink: SnappedLinkState = endLinkCandidate.snappedLink
+                    val pointOnStartLink: SnappedPointOnLink = startLinkCandidate.pointOnLink
+                    val pointOnEndLink: SnappedPointOnLink = endLinkCandidate.pointOnLink
 
-                    val nodesToVisit: VisitedNodes = VisitedNodesResolver.resolve(startLink, viaNodeIds, endLink)
+                    val nodesToVisit: VisitedNodes =
+                        VisitedNodesResolver.resolve(pointOnStartLink, viaNodeIds, pointOnEndLink)
 
                     // Filter out duplicate node sequences that are already encountered within
                     // previously processed pairs of terminus links. Duplicates may exist in case
@@ -399,8 +400,8 @@ object MatchingServiceHelper {
                         }
 
                     if (nodeSequenceCombinations.isNotEmpty())
-                        NodeSequenceCandidatesBetweenSnappedLinks(startLink,
-                                                                  endLink,
+                        NodeSequenceCandidatesBetweenSnappedLinks(pointOnStartLink,
+                                                                  pointOnEndLink,
                                                                   nodeSequenceCombinations)
                     else
                         null
@@ -414,13 +415,13 @@ object MatchingServiceHelper {
                     // Indicates whether the source route's start point (in case it is a stop point)
                     // is along the start link of this terminus link pair.
                     val isRouteStartStopAlongStartLink: Boolean = linkIdOfStartStop
-                        ?.let { it == choice.startLink.infrastructureLinkId }
+                        ?.let { it == choice.pointOnStartLink.infrastructureLinkId }
                         ?: false
 
                     // Indicates whether the source route's end point (in case it is a stop point)
                     // is along the end link of this terminus link pair.
                     val isRouteEndStopAlongEndLink: Boolean = linkIdOfEndStop
-                        ?.let { it == choice.endLink.infrastructureLinkId }
+                        ?.let { it == choice.pointOnEndLink.infrastructureLinkId }
                         ?: false
 
                     // Deduce the amount of stops along given terminus link pair.

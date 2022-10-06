@@ -3,7 +3,7 @@ package fi.hsl.jore4.mapmatching.service.node
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
 import fi.hsl.jore4.mapmatching.repository.routing.NodeSequenceCandidate
@@ -33,8 +33,8 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
 
             if (nodeIdSequences.size == 1) {
                 return NodeSequenceResolutionSucceeded(nodeIdSequences.first(),
-                                                       candidatesBetweenLinks.startLink,
-                                                       candidatesBetweenLinks.endLink)
+                                                       candidatesBetweenLinks.pointOnStartLink,
+                                                       candidatesBetweenLinks.pointOnEndLink)
             }
 
             LOGGER.debug {
@@ -51,8 +51,8 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
 
         fun flattenCandidates(candidates: NodeSequenceCandidatesBetweenSnappedLinks): List<NodeSequenceCandidate> {
             return candidates.nodeIdSequences.map { nodeIdSequence ->
-                NodeSequenceCandidate(candidates.startLink.infrastructureLinkId,
-                                      candidates.endLink.infrastructureLinkId,
+                NodeSequenceCandidate(candidates.pointOnStartLink.infrastructureLinkId,
+                                      candidates.pointOnEndLink.infrastructureLinkId,
                                       nodeIdSequence)
             }
         }
@@ -64,8 +64,8 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
                     bufferAreaRestriction?.run {
                         BufferAreaRestriction.from(lineGeometry,
                                                    bufferRadiusInMeters,
-                                                   candidatesBetweenTwoLinks.startLink,
-                                                   candidatesBetweenTwoLinks.endLink)
+                                                   candidatesBetweenTwoLinks.pointOnStartLink,
+                                                   candidatesBetweenTwoLinks.pointOnEndLink)
                     }
 
                 nodeRepository
@@ -86,15 +86,15 @@ class NodeServiceInternalImpl @Autowired constructor(val nodeRepository: INodeRe
 
         return nodeSequenceCandidates
             .firstNotNullOfOrNull { candidatesBetweenTwoLinks ->
-                val startLink: SnappedLinkState = candidatesBetweenTwoLinks.startLink
-                val endLink: SnappedLinkState = candidatesBetweenTwoLinks.endLink
+                val pointOnStartLink: SnappedPointOnLink = candidatesBetweenTwoLinks.pointOnStartLink
+                val pointOnEndLink: SnappedPointOnLink = candidatesBetweenTwoLinks.pointOnEndLink
 
                 val nodeSeqKey: Pair<InfrastructureLinkId, InfrastructureLinkId> =
-                    startLink.infrastructureLinkId to endLink.infrastructureLinkId
+                    pointOnStartLink.infrastructureLinkId to pointOnEndLink.infrastructureLinkId
 
                 possibleNodeSequences[nodeSeqKey]
                     ?.let { nodeIdSequence: NodeIdSequence ->
-                        NodeSequenceResolutionSucceeded(nodeIdSequence, startLink, endLink)
+                        NodeSequenceResolutionSucceeded(nodeIdSequence, pointOnStartLink, pointOnEndLink)
                     }
             }
             ?: NodeSequenceResolutionFailed("Could not resolve node identifier sequence because of internal error")

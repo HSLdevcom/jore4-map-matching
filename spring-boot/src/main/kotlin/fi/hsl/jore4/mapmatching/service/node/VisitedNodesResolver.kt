@@ -4,44 +4,48 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.AGAINST_DIGITISED_DIRECTION
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.ALONG_DIGITISED_DIRECTION
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.BIDIRECTIONAL
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
-import fi.hsl.jore4.mapmatching.service.node.SnappedLinkStateExtension.toVisitedNodes
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
+import fi.hsl.jore4.mapmatching.service.node.SnappedPointOnLinkExtension.toVisitedNodes
 
 object VisitedNodesResolver {
 
-    fun resolve(startLink: SnappedLinkState, viaNodeIds: List<InfrastructureNodeId>, endLink: SnappedLinkState)
+    fun resolve(pointOnStartLink: SnappedPointOnLink,
+                viaNodeIds: List<InfrastructureNodeId>,
+                pointOnEndLink: SnappedPointOnLink)
         : VisitedNodes {
 
-        val reducedViaNodeIds: List<InfrastructureNodeId> = reduceViaNodeIds(startLink, endLink, viaNodeIds)
+        val reducedViaNodeIds: List<InfrastructureNodeId> =
+            reduceViaNodeIds(pointOnStartLink, pointOnEndLink, viaNodeIds)
 
-        if (reducedViaNodeIds.isEmpty() && startLink.isOnSameLinkAs(endLink)) {
-            return fromSingleLinkWithoutViaNodes(startLink,
-                                                 endLink.closestPointFractionalMeasure)
+        if (reducedViaNodeIds.isEmpty() && pointOnStartLink.isOnSameLinkAs(pointOnEndLink)) {
+            return fromSingleLinkWithoutViaNodes(pointOnStartLink,
+                                                 pointOnEndLink.closestPointFractionalMeasure)
         }
 
-        return VisitNodesOnMultipleLinks(resolveVisitedNodesOnStartLink(startLink, reducedViaNodeIds),
+        return VisitNodesOnMultipleLinks(resolveVisitedNodesOnStartLink(pointOnStartLink, reducedViaNodeIds),
                                          viaNodeIds,
-                                         resolveVisitedNodesOnEndLink(endLink, reducedViaNodeIds))
+                                         resolveVisitedNodesOnEndLink(pointOnEndLink, reducedViaNodeIds))
     }
 
-    private fun reduceViaNodeIds(startLink: SnappedLinkState,
-                                 endLink: SnappedLinkState,
+    private fun reduceViaNodeIds(pointOnStartLink: SnappedPointOnLink,
+                                 pointOnEndLink: SnappedPointOnLink,
                                  viaNodeIds: List<InfrastructureNodeId>)
         : List<InfrastructureNodeId> {
 
-        val firstNodeId: InfrastructureNodeId = startLink.closerNodeId
-        val lastNodeId: InfrastructureNodeId = endLink.closerNodeId
+        val firstNodeId: InfrastructureNodeId = pointOnStartLink.closerNodeId
+        val lastNodeId: InfrastructureNodeId = pointOnEndLink.closerNodeId
 
         return viaNodeIds
             .dropWhile { it == firstNodeId }
             .dropLastWhile { it == lastNodeId }
     }
 
-    private fun fromSingleLinkWithoutViaNodes(link: SnappedLinkState, secondSnapPointFractionalLocation: Double)
+    private fun fromSingleLinkWithoutViaNodes(pointOnLink: SnappedPointOnLink,
+                                              secondSnapPointFractionalLocation: Double)
         : VisitedNodes {
 
-        return when (link.isOnLinkWithDiscreteNodes()) {
-            true -> link.run {
+        return when (pointOnLink.isOnLinkWithDiscreteNodes()) {
+            true -> pointOnLink.run {
                 when (trafficFlowDirectionType) {
                     BIDIRECTIONAL -> {
                         when (closestPointFractionalMeasure.compareTo(secondSnapPointFractionalLocation)) {
@@ -72,22 +76,22 @@ object VisitedNodesResolver {
                     }
                 }
             }
-            false -> VisitSingleNode(link.startNodeId)
+            false -> VisitSingleNode(pointOnLink.startNodeId)
         }
     }
 
-    private fun resolveVisitedNodesOnStartLink(startLink: SnappedLinkState,
+    private fun resolveVisitedNodesOnStartLink(pointOnStartLink: SnappedPointOnLink,
                                                reducedViaNodeIds: List<InfrastructureNodeId>)
         : VisitedNodesOnLink {
 
-        val snappedTerminusNodeId: InfrastructureNodeId = startLink.closerNodeId
+        val snappedTerminusNodeId: InfrastructureNodeId = pointOnStartLink.closerNodeId
 
         fun isFurtherNodeOfStartLinkAtStartOfReducedListOfViaNodeIds(): Boolean =
             reducedViaNodeIds
                 .firstOrNull()
-                ?.takeIf { it == startLink.furtherNodeId } != null
+                ?.takeIf { it == pointOnStartLink.furtherNodeId } != null
 
-        return startLink.run {
+        return pointOnStartLink.run {
             if (trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION && endNodeId == snappedTerminusNodeId
                 || trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION && startNodeId == snappedTerminusNodeId
                 || !isFurtherNodeOfStartLinkAtStartOfReducedListOfViaNodeIds()
@@ -98,17 +102,18 @@ object VisitedNodesResolver {
         }
     }
 
-    private fun resolveVisitedNodesOnEndLink(endLink: SnappedLinkState, reducedViaNodeIds: List<InfrastructureNodeId>)
+    private fun resolveVisitedNodesOnEndLink(pointOnEndLink: SnappedPointOnLink,
+                                             reducedViaNodeIds: List<InfrastructureNodeId>)
         : VisitedNodesOnLink {
 
-        val snappedTerminusNodeId: InfrastructureNodeId = endLink.closerNodeId
+        val snappedTerminusNodeId: InfrastructureNodeId = pointOnEndLink.closerNodeId
 
         fun isFurtherNodeOfEndLinkAtEndOfReducedListOfViaNodeIds(): Boolean =
             reducedViaNodeIds
                 .lastOrNull()
-                ?.takeIf { it == endLink.furtherNodeId } != null
+                ?.takeIf { it == pointOnEndLink.furtherNodeId } != null
 
-        return endLink.run {
+        return pointOnEndLink.run {
             if (trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION && startNodeId == snappedTerminusNodeId
                 || trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION && endNodeId == snappedTerminusNodeId
                 || !isFurtherNodeOfEndLinkAtEndOfReducedListOfViaNodeIds()
