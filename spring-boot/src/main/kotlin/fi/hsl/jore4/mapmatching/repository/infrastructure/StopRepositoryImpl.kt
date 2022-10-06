@@ -2,6 +2,7 @@ package fi.hsl.jore4.mapmatching.repository.infrastructure
 
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
+import fi.hsl.jore4.mapmatching.model.LinkSide
 import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
@@ -42,7 +43,14 @@ class StopRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
         }
 
         return jdbcTemplate.query(queryString, jdbcParams) { rs: ResultSet, _: Int ->
-            val stopNationalId = rs.getInt("stop_national_id")
+            val stopNationalId = rs.getInt("public_transport_stop_national_id")
+
+            val stopSideOnLink: LinkSide =
+                when (rs.getBoolean("is_on_direction_of_link_forward_traversal")) {
+                    true -> LinkSide.RIGHT
+                    false -> LinkSide.LEFT
+                    null -> LinkSide.BOTH
+                }
 
             val infrastructureLinkId = rs.getLong("infrastructure_link_id")
             val startNodeId = rs.getLong("start_node_id")
@@ -54,6 +62,7 @@ class StopRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             val closestPointFractionalMeasure = rs.getDouble("fractional_measure")
 
             SnapStopToLinkDTO(stopNationalId,
+                              stopSideOnLink,
                               SnappedLinkState(InfrastructureLinkId(infrastructureLinkId),
                                                0.0, // closest distance from stop to link is ignored
                                                closestPointFractionalMeasure,
@@ -84,7 +93,8 @@ class StopRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
             return """
                 SELECT
-                    stop_params.stop_national_id,
+                    stop.public_transport_stop_national_id,
+                    stop.is_on_direction_of_link_forward_traversal,
                     link.infrastructure_link_id,
                     link.start_node_id,
                     link.end_node_id,

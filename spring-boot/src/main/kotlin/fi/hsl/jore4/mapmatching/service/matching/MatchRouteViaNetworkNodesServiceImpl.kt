@@ -18,47 +18,42 @@ import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.getSourceRouteTerminusPoint
-import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.validateInputForRouteMatching
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionFailed
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionResult
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionSucceeded
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toPoint
+import fi.hsl.jore4.mapmatching.util.InternalService
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 private val LOGGER = KotlinLogging.logger {}
 
-@Service
+@InternalService
 class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
     val closestTerminusLinksResolver: IClosestTerminusLinksResolver,
     val publicTransportStopMatcher: IPublicTransportStopMatcher,
     val roadJunctionMatcher: IRoadJunctionMatcher,
     val nodeService: INodeServiceInternal,
     val routingService: IRoutingServiceInternal
-) : IMatchingService {
+) : IMatchRouteViaNetworkNodesService {
 
     internal data class InfrastructureLinksOnRoute(val startLinkCandidates: List<TerminusLinkCandidate>,
                                                    val endLinkCandidates: List<TerminusLinkCandidate>,
                                                    val viaLinksIndexedByRoutePointOrdering: Map<Int, SnappedLinkState>)
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun findMatchForPublicTransportRoute(sourceRouteGeometry: LineString<G2D>,
                                                   sourceRoutePoints: List<RoutePoint>,
                                                   vehicleType: VehicleType,
                                                   matchingParameters: PublicTransportRouteMatchingParameters)
         : RoutingResponse {
-
-        validateInputForRouteMatching(sourceRoutePoints, vehicleType)?.let { validationError ->
-            return RoutingResponse.invalidValue(validationError)
-        }
 
         val terminusLinkSelectionInput: TerminusLinkSelectionInput = try {
             resolveTerminusLinkSelectionInput(sourceRouteGeometry,
@@ -68,7 +63,6 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
                                               matchingParameters.terminusLinkQueryLimit)
         } catch (ex: RuntimeException) {
             val errMessage: String = ex.message ?: "Failed to find closest terminus links on either end of route"
-            LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
 
@@ -80,7 +74,6 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
         } catch (ex: RuntimeException) {
             val errMessage: String =
                 ex.message ?: "Could not resolve node sequence candidates while map-matching via nodes (graph vertices)"
-            LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
 
@@ -118,10 +111,7 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
                 RoutingResponseCreator.create(routeLinks)
             }
 
-            is NodeSequenceResolutionFailed -> {
-                LOGGER.warn(nodeSeqResult.message)
-                RoutingResponse.noSegment(nodeSeqResult.message)
-            }
+            is NodeSequenceResolutionFailed -> RoutingResponse.noSegment(nodeSeqResult.message)
         }
     }
 
