@@ -3,6 +3,7 @@ package fi.hsl.jore4.mapmatching.service.matching
 import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
+import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import mu.KotlinLogging
@@ -29,17 +30,23 @@ object MatchingServiceHelper {
         return filterOutConsecutiveDuplicates(routePointLocations).size >= 2
     }
 
-    internal fun resolveTerminusLinkIfStopPoint(routeTerminusPoint: SourceRouteTerminusPoint,
-                                                fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>)
-        : SnappedLinkState? {
+    internal fun resolveTerminusLinkIfMatchFoundByStopNationalId(
+        sourceRouteTerminusPoint: SourceRouteTerminusPoint,
+        fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>): SnappedLinkState? {
 
-        return routeTerminusPoint.run {
-            if (isStopPoint) {
-                when (stopPointNationalId) {
+        val terminusType: TerminusType = sourceRouteTerminusPoint.terminusType
+
+        return when (sourceRouteTerminusPoint) {
+
+            is SourceRouteTerminusStopPoint -> {
+
+                when (val stopPointNationalId: Int? = sourceRouteTerminusPoint.stopPointNationalId) {
+
                     null -> {
                         LOGGER.debug { "Public transport stop for route $terminusType point is not given national ID" }
                         null
                     }
+
                     else -> {
                         fromStopNationalIdToInfrastructureLink[stopPointNationalId]
                             ?.also { link ->
@@ -58,8 +65,10 @@ object MatchingServiceHelper {
                             }
                     }
                 }
-            } else {
-                LOGGER.debug { "Route $terminusType point is not stop point" }
+            }
+
+            else -> {
+                LOGGER.debug { "Route $terminusType point is not a public transport stop point" }
                 null
             }
         }

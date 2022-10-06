@@ -28,7 +28,7 @@ import fi.hsl.jore4.mapmatching.repository.routing.SnapPointToNodesDTO
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
-import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.resolveTerminusLinkIfStopPoint
+import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.resolveTerminusLinkIfMatchFoundByStopNationalId
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.validateInputForRouteMatching
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
@@ -253,8 +253,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                 toPoint(if (terminusType == START) routeGeometry.startPosition else routeGeometry.endPosition)
 
             return when (routePoint) {
-                is RouteStopPoint -> SourceRouteTerminusPoint(location, terminusType, true, routePoint.nationalId)
-                else -> SourceRouteTerminusPoint(location, terminusType, false, null)
+                is RouteStopPoint -> SourceRouteTerminusStopPoint(location, terminusType, routePoint.nationalId)
+                else -> SourceRouteTerminusNonStopPoint(location, terminusType)
             }
         }
 
@@ -314,7 +314,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             : List<TerminusLinkCandidate> {
 
             val linkIdAssociatedWithStopPoint: InfrastructureLinkId? =
-                resolveTerminusLinkIfStopPoint(routeTerminusPoint, fromStopNationalIdToInfrastructureLink)
+                resolveTerminusLinkIfMatchFoundByStopNationalId(routeTerminusPoint, fromStopNationalIdToInfrastructureLink)
                     ?.infrastructureLinkId
 
             return when (linkIdAssociatedWithStopPoint) {
