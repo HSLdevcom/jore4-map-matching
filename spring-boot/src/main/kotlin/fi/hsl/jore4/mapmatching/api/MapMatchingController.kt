@@ -64,7 +64,8 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
         }
 
         return try {
-            matchingService.findMatchForPublicTransportRoute(request.routeGeometry,
+            matchingService.findMatchForPublicTransportRoute(request.routeId,
+                                                             request.routeGeometry,
                                                              request.routePoints,
                                                              vehicleType,
                                                              getMatchingParameters(request))
@@ -83,6 +84,7 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
         private const val DEFAULT_TERMINUS_LINK_QUERY_DISTANCE: Double = 50.0
         private const val DEFAULT_TERMINUS_LINK_QUERY_LIMIT: Int = 5
         private const val DEFAULT_MAX_STOP_LOCATION_DEVIATION: Double = 80.0
+        private const val DEFAULT_FALLBACK_TO_VIA_NODES_ALGO: Boolean = true
         private const val DEFAULT_ROAD_JUNCTION_MATCHING_ENABLED: Boolean = true
         private const val DEFAULT_JUNCTION_NODE_MATCH_DISTANCE: Double = 5.0
         private const val DEFAULT_JUNCTION_NODE_CLEARING_DISTANCE: Double = 30.0
@@ -98,6 +100,8 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
             val terminusLinkQueryLimit: Int = parameters?.terminusLinkQueryLimit ?: DEFAULT_TERMINUS_LINK_QUERY_LIMIT
             val maxStopLocationDeviation: Double =
                 parameters?.maxStopLocationDeviation ?: DEFAULT_MAX_STOP_LOCATION_DEVIATION
+            val fallbackToViaNodesAlgorithm: Boolean =
+                parameters?.fallbackToViaNodesAlgorithm ?: DEFAULT_FALLBACK_TO_VIA_NODES_ALGO
 
             val roadJunctionMatchingParameters: JunctionMatchingParameters? =
                 if (parameters?.roadJunctionMatchingEnabled ?: DEFAULT_ROAD_JUNCTION_MATCHING_ENABLED) {
@@ -113,6 +117,7 @@ class MapMatchingController @Autowired constructor(val matchingService: IMatchin
                                                           terminusLinkQueryDistance,
                                                           terminusLinkQueryLimit,
                                                           maxStopLocationDeviation,
+                                                          fallbackToViaNodesAlgorithm,
                                                           roadJunctionMatchingParameters)
         }
     }

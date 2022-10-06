@@ -68,6 +68,24 @@ data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
                 return ExplicitLinkReferences(idsOfCandidatesForTerminusLinks,
                                               idsOfCandidatesForTerminusNodes)
             }
+
+            fun fromPgRoutingPoints(startPoint: PgRoutingPoint, endPoint: PgRoutingPoint): ExplicitLinkReferences {
+
+                val idsOfCandidatesForTerminusLinks: MutableSet<InfrastructureLinkId> = HashSet()
+                val idsOfCandidatesForTerminusNodes: MutableSet<InfrastructureNodeId> = HashSet()
+
+                when (startPoint) {
+                    is RealNode -> idsOfCandidatesForTerminusNodes.add(startPoint.nodeId)
+                    is VirtualNode -> idsOfCandidatesForTerminusLinks.add(startPoint.linkId)
+                }
+
+                when (endPoint) {
+                    is RealNode -> idsOfCandidatesForTerminusNodes.add(endPoint.nodeId)
+                    is VirtualNode -> idsOfCandidatesForTerminusLinks.add(endPoint.linkId)
+                }
+
+                return ExplicitLinkReferences(idsOfCandidatesForTerminusLinks, idsOfCandidatesForTerminusNodes)
+            }
         }
     }
 
@@ -80,5 +98,14 @@ data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
                                                                     bufferRadiusInMeters,
                                                                     ExplicitLinkReferences.fromTerminusLinks(startLink,
                                                                                                              endLink))
+
+        fun from(lineGeometry: LineString<G2D>,
+                 bufferRadiusInMeters: Double,
+                 startPoint: PgRoutingPoint,
+                 endPoint: PgRoutingPoint) = BufferAreaRestriction(lineGeometry,
+                                                                   bufferRadiusInMeters,
+                                                                   ExplicitLinkReferences.fromPgRoutingPoints(
+                                                                       startPoint,
+                                                                       endPoint))
     }
 }
