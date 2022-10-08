@@ -191,7 +191,9 @@ class MatchRouteViaPointsOnLinksServiceImpl(
         targetRoutePointSequenceCandidates: List<List<PgRoutingPoint>>,
         bufferRadiusInMeters: Double
     ): List<RouteLink>? =
-        targetRoutePointSequenceCandidates.firstNotNullOfOrNull { targetRoutePoints ->
+        targetRoutePointSequenceCandidates.withIndex().firstNotNullOfOrNull { (index, targetRoutePoints) ->
+
+            val round = index + 1
 
             val bufferAreaRestriction =
                 BufferAreaRestriction.from(
@@ -201,8 +203,19 @@ class MatchRouteViaPointsOnLinksServiceImpl(
                     targetRoutePoints.last()
                 )
 
-            routingService
-                .findRouteViaPointsOnLinks(targetRoutePoints, vehicleType, true, bufferAreaRestriction)
-                .ifEmpty { null }
+            val routeLinks: List<RouteLink> =
+                routingService.findRouteViaPointsOnLinks(
+                    targetRoutePoints,
+                    vehicleType,
+                    true,
+                    bufferAreaRestriction
+                )
+
+            if (routeLinks.isNotEmpty()) {
+                if (round > 1) LOGGER.info { "Matched route on attempt #$round." }
+                routeLinks
+            } else {
+                null
+            }
         }
 }

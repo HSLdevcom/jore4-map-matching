@@ -92,7 +92,8 @@ data class RouteMatchFailure(
     override val routeId: String,
     override val sourceRouteGeometry: LineString<G2D>,
     override val sourceRouteLength: Double,
-    val bufferRadius: BufferRadius
+    val bufferRadius: BufferRadius,
+    val errorMessage: String?
 ) : MatchResult {
     override val matchFound = false
 }

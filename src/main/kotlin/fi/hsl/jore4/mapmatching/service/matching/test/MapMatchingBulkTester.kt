@@ -80,12 +80,20 @@ class MapMatchingBulkTester(
 
             val result: MatchResult = matchRoute(routeId, routeGeometry, routePoints, bufferRadiuses)
 
-            if (result is SuccessfulMatchResult) {
-                LOGGER.info {
-                    "Successfully matched route: $routeId (with bufferRadius=${result.getLowestBufferRadius()})"
-                }
-            } else {
-                LOGGER.info { "Failed to match route:      $routeId" }
+            when (result) {
+                is SuccessfulMatchResult ->
+                    LOGGER.info {
+                        "Successfully matched route: $routeId (with bufferRadius=${result.getLowestBufferRadius()})"
+                    }
+
+                is RouteMatchFailure ->
+                    LOGGER.info {
+                        "Failed to match route:      $routeId (${
+                            result.errorMessage ?: ""
+                        })"
+                    }
+
+                else -> throw IllegalStateException("Unknown route match result type")
             }
 
             result
@@ -156,7 +164,9 @@ class MapMatchingBulkTester(
         val lengthsOfMatchedRoutes: MutableList<Pair<BufferRadius, Double>> = mutableListOf()
         val unsuccessfulBufferRadiuses: MutableSet<BufferRadius> = mutableSetOf()
 
-        sortedBufferRadiuses.forEach { radius ->
+        var errorMessage: String? = null
+
+        sortedBufferRadiuses.withIndex().forEach { (roundIndex, radius) ->
             val matchingParams: PublicTransportRouteMatchingParameters = getMatchingParameters(radius)
 
             val response: RoutingResponse =
@@ -170,14 +180,22 @@ class MapMatchingBulkTester(
 
             val bufferRadius = BufferRadius(radius)
 
-            if (response is RoutingResponse.RoutingSuccessDTO) {
-                val route: RouteResultDTO = response.routes[0]
-                val lengthOfMatchedRoute: Double = calculateLengthOfRoute(route)
-                // val lengthOfMatchedRoute: Double = length(route.geometry)
+            when (response) {
+                is RoutingResponse.RoutingSuccessDTO -> {
+                    val route: RouteResultDTO = response.routes[0]
+                    val lengthOfMatchedRoute: Double = calculateLengthOfRoute(route)
+                    // val lengthOfMatchedRoute: Double = length(route.geometry)
 
-                lengthsOfMatchedRoutes.add(bufferRadius to lengthOfMatchedRoute)
-            } else {
-                unsuccessfulBufferRadiuses.add(bufferRadius)
+                    lengthsOfMatchedRoutes.add(bufferRadius to lengthOfMatchedRoute)
+                }
+
+                is RoutingResponse.RoutingFailureDTO -> {
+                    unsuccessfulBufferRadiuses.add(bufferRadius)
+
+                    if (roundIndex == 0) {
+                        errorMessage = response.message
+                    }
+                }
             }
         }
 
@@ -187,8 +205,10 @@ class MapMatchingBulkTester(
                     routeId,
                     geometry,
                     lengthOfSourceRoute,
-                    BufferRadius(sortedBufferRadiuses.last())
+                    BufferRadius(sortedBufferRadiuses.last()),
+                    errorMessage
                 )
+
             else ->
                 SuccessfulRouteMatchResult(
                     routeId,
