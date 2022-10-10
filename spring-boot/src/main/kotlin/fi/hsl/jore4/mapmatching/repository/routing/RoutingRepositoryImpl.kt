@@ -264,28 +264,31 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     SELECT ? AS start_link_fractional, ? AS end_link_fractional
                 ) substring_param
             )
-            SELECT false AS trimmed,
-                rl.seq,
-                rl.infrastructure_link_id,
-                rl.is_traversal_forwards,
-                rl.cost,
-                rl.infrastructure_source_name,
-                rl.external_link_id,
-                rl.link_name,
-                ST_AsEWKB(ST_Transform(rl.geom, 4326)) as geom
-            FROM route_link rl
-            UNION ALL
-            SELECT true AS trimmed,
-                ttl.seq,
-                ttl.infrastructure_link_id,
-                ttl.is_traversal_forwards,
-                ST_Length(ttl.geom) AS cost,
-                ttl.infrastructure_source_name,
-                ttl.external_link_id,
-                ttl.link_name,
-                ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
-            FROM trimmed_terminus_link ttl
-            WHERE ttl.geom IS NOT NULL
+            SELECT *
+            FROM (
+                SELECT false AS trimmed,
+                    rl.seq,
+                    rl.infrastructure_link_id,
+                    rl.is_traversal_forwards,
+                    rl.cost,
+                    rl.infrastructure_source_name,
+                    rl.external_link_id,
+                    rl.link_name,
+                    ST_AsEWKB(ST_Transform(rl.geom, 4326)) as geom
+                FROM route_link rl
+                UNION ALL
+                SELECT true AS trimmed,
+                    ttl.seq,
+                    ttl.infrastructure_link_id,
+                    ttl.is_traversal_forwards,
+                    ST_Length(ttl.geom) AS cost,
+                    ttl.infrastructure_source_name,
+                    ttl.external_link_id,
+                    ttl.link_name,
+                    ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
+                FROM trimmed_terminus_link ttl
+                WHERE ttl.geom IS NOT NULL
+            ) combined
             ORDER BY seq, trimmed;
             """.trimIndent()
 
@@ -608,28 +611,31 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 ) min_max_seq
                 INNER JOIN route_link ON seq IN (min_seq, max_seq)
             )
-            SELECT false AS trimmed,
-                rl.seq,
-                rl.infrastructure_link_id,
-                rl.is_traversal_forwards,
-                rl.cost,
-                rl.infrastructure_source_name,
-                rl.external_link_id,
-                rl.link_name,
-                ST_AsEWKB(ST_Transform(rl.geom, 4326)) as geom
-            FROM route_link rl
-            UNION ALL
-            SELECT true AS trimmed,
-                ttl.seq,
-                ttl.infrastructure_link_id,
-                ttl.is_traversal_forwards,
-                ST_Length(ttl.geom) AS cost,
-                ttl.infrastructure_source_name,
-                ttl.external_link_id,
-                ttl.link_name,
-                ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
-            FROM trimmed_terminus_link ttl
-            WHERE ttl.geom IS NOT NULL
+            SELECT *
+            FROM (
+                SELECT false AS trimmed,
+                    rl.seq,
+                    rl.infrastructure_link_id,
+                    rl.is_traversal_forwards,
+                    rl.cost,
+                    rl.infrastructure_source_name,
+                    rl.external_link_id,
+                    rl.link_name,
+                    ST_AsEWKB(ST_Transform(rl.geom, 4326)) as geom
+                FROM route_link rl
+                UNION ALL
+                SELECT true AS trimmed,
+                    ttl.seq,
+                    ttl.infrastructure_link_id,
+                    ttl.is_traversal_forwards,
+                    ST_Length(ttl.geom) AS cost,
+                    ttl.infrastructure_source_name,
+                    ttl.external_link_id,
+                    ttl.link_name,
+                    ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
+                FROM trimmed_terminus_link ttl
+                WHERE ttl.geom IS NOT NULL
+            ) combined
             ORDER BY seq, trimmed;
             """.trimIndent()
     }
