@@ -28,6 +28,7 @@ object RoutingServiceHelper {
         else
             FractionalLocationAlongLink(pointOnLink.infrastructureLinkId,
                                         pointOnLink.closestPointFractionalMeasure,
-                                        LinkSide.BOTH)
+                                        LinkSide.BOTH,
+                                        pointOnLink.closerNodeId)
     }
 }
