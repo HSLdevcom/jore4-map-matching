@@ -11,6 +11,7 @@ import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplica
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.extractLineStringG2D
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.fromEwkb
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toEwkb
+import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
 import fi.hsl.jore4.mapmatching.util.MultilingualString
 import fi.hsl.jore4.mapmatching.util.component.IJsonbConverter
 import org.geolatte.geom.G2D
@@ -22,11 +23,14 @@ import org.springframework.jdbc.core.PreparedStatementSetter
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.stream.Collectors.groupingBy
 import java.util.stream.Collectors.mapping
 import java.util.stream.Collectors.toList
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 @Repository
 class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate,
@@ -118,30 +122,85 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
         // contains both infrastructure nodes and custom points
         val visitedPointIds: MutableList<Long> = ArrayList()
 
+        // co-efficients for rounding fractional locations along infrastructure link
+        val roundedFractionDecimalPrecision = 3
+        val roundingTolerance: Double = BigDecimal.ONE.movePointLeft(roundedFractionDecimalPrecision).toDouble()
+        val roundingMultiplier: Double = 10.0.pow(roundedFractionDecimalPrecision.toDouble())
+
         // Is seems it is needed to avoid values [-2, -1] while assigning point IDs because that
         // range seems to have special semantics in pgRouting output.
         var nextCustomPointId = 3
 
+        // state for previously added custom point, used for comparing while adding new custom points
+        var prevCustomPointLinkId: Long? = null
+        var prevCustomPointRoundedFraction: Double? = null
+
+        fun addNodeAsRoutePoint(nodeId: InfrastructureNodeId) {
+            visitedPointIds.add(nodeId.value)
+
+            // Nullify these references since the previously added point is a node, not a location
+            // in-between the endpoint nodes of a link.
+            prevCustomPointLinkId = null
+            prevCustomPointRoundedFraction = null
+        }
+
         points.forEach { point ->
             when (point) {
-                is NetworkNode -> visitedPointIds.add(point.nodeId.value)
+                is NetworkNode -> addNodeAsRoutePoint(point.nodeId)
 
                 is FractionalLocationAlongLink -> {
-                    val side: Char = when (point.side) {
-                        LinkSide.LEFT -> 'l'
-                        LinkSide.RIGHT -> 'r'
-                        LinkSide.BOTH -> 'b'
+
+                    val fraction: Double = point.fractionalLocation
+
+                    if (fraction.isWithinTolerance(0.0, roundingTolerance)
+                        || fraction.isWithinTolerance(1.0, roundingTolerance)
+                    ) {
+                        // Snap to the node at link's endpoint if rounded value of fractional
+                        // location is zero or one.
+                        addNodeAsRoutePoint(point.closerNodeId)
+                    } else {
+
+                        val linkId: Long = point.linkId.value
+                        val roundedFraction: Double = (fraction * roundingMultiplier).roundToInt() / roundingMultiplier
+
+                        fun addCustomPoint() {
+                            val side: Char = when (point.side) {
+                                LinkSide.LEFT -> 'l'
+                                LinkSide.RIGHT -> 'r'
+                                LinkSide.BOTH -> 'b'
+                            }
+
+                            linkIdsForCustomPoints.add(linkId)
+                            fractionalLocations.add(fraction)
+                            linkSides.add(side)
+
+                            // In pgRouting, custom point (relative location along infrastructure
+                            // link) is referenced by negative ID value.
+                            val customPointId: Int = nextCustomPointId++
+
+                            visitedPointIds.add((-customPointId).toLong())
+
+                            prevCustomPointLinkId = linkId
+                            prevCustomPointRoundedFraction = roundedFraction
+                        }
+
+                        if (prevCustomPointLinkId == null || prevCustomPointRoundedFraction == null) {
+                            addCustomPoint()
+                        } else { // prevCustomPointLinkId != null && prevCustomPointRoundedFraction != null
+
+                            // When point distribution is too dense multiple points may round to same
+                            // location. Strip out points that round to same location as their
+                            // predecessor. This is done in order to have SQL query not fail due to
+                            // consecutive duplicate fractional locations on one link.
+
+                            val isPointAConsecutiveDuplicateAfterRounding: Boolean = linkId == prevCustomPointLinkId &&
+                                roundedFraction.isWithinTolerance(prevCustomPointRoundedFraction!!, roundingTolerance)
+
+                            if (!isPointAConsecutiveDuplicateAfterRounding) {
+                                addCustomPoint()
+                            }
+                        }
                     }
-
-                    linkIdsForCustomPoints.add(point.linkId.value)
-                    fractionalLocations.add(point.fractionalLocation)
-                    linkSides.add(side)
-
-                    // In pgRouting, custom point (relative location along infrastructure link) is
-                    // referenced by negative ID value.
-                    val customPointId: Int = nextCustomPointId++
-
-                    visitedPointIds.add((-customPointId).toLong())
                 }
             }
         }
@@ -170,7 +229,8 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             }
         }
 
-        val queryString: String = getQueryForFindingRouteViaPoints(bufferAreaRestriction)
+        val queryString: String = getQueryForFindingRouteViaPoints(roundedFractionDecimalPrecision,
+                                                                   bufferAreaRestriction)
 
         return executeQueryAndTransformToResult(queryString, parameterSetter)
     }
@@ -391,6 +451,10 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          * that are considered viable when finding the shortest path. The embedded query has its own
          * set of parameters that are handled in [PgRoutingEdgeQueries] object.
          *
+         * There is also a decimal precision parameter that is used to round fractional locations
+         * along infrastructure links. The rounding is done as an optimisation to shorten the
+         * internally built query that generates the visited points data as an SQL query.
+         *
          * The query utilises pgRouting's pgr_withPointsVia function.
          *
          * The query contains sub-queries that process the output of pgRouting in several stages.
@@ -496,7 +560,8 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          *    4 | 238712 | t                     |            0.0 |          1.0
          *    5 | 238707 | t                     |            0.0 |         0.66
          */
-        private fun getQueryForFindingRouteViaPoints(bufferAreaRestriction: BufferAreaRestriction?) =
+        private fun getQueryForFindingRouteViaPoints(roundedFractionDecimalPrecision: Int,
+                                                     bufferAreaRestriction: BufferAreaRestriction?) =
             """
             WITH point_params AS (
                 SELECT
@@ -512,7 +577,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     edge_index + 2 AS pid,
                     edge_id,
                     fraction,
-                    round(fraction, 5) AS rounded_fraction,
+                    round(fraction, $roundedFractionDecimalPrecision) AS rounded_fraction,
                     side::char
                 FROM (
                     SELECT *, row_number() OVER () AS edge_index
