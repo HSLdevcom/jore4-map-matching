@@ -20,7 +20,8 @@ sealed interface PgRoutingPoint {
             else
                 FractionalLocationAlongLink(pointOnLink.infrastructureLinkId,
                                             pointOnLink.closestPointFractionalMeasure,
-                                            LinkSide.BOTH)
+                                            LinkSide.BOTH,
+                                            pointOnLink.closerNodeId)
         }
     }
 }
@@ -29,4 +30,5 @@ data class NetworkNode(val nodeId: InfrastructureNodeId) : PgRoutingPoint
 
 data class FractionalLocationAlongLink(val linkId: InfrastructureLinkId,
                                        val fractionalLocation: Double,
-                                       val side: LinkSide) : PgRoutingPoint
+                                       val side: LinkSide,
+                                       val closerNodeId: InfrastructureNodeId) : PgRoutingPoint
