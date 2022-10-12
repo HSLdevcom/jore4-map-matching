@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
 import fi.hsl.jore4.mapmatching.model.ExternalLinkReference
-import fi.hsl.jore4.mapmatching.model.GeomTraversal
+import fi.hsl.jore4.mapmatching.model.InfrastructureLinkId
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureNodeId
 import fi.hsl.jore4.mapmatching.model.LinkSide
@@ -15,8 +15,10 @@ import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
 import fi.hsl.jore4.mapmatching.util.MultilingualString
 import fi.hsl.jore4.mapmatching.util.component.IJsonbConverter
 import org.geolatte.geom.G2D
+import org.geolatte.geom.Geometries.mkLineString
 import org.geolatte.geom.Geometry
 import org.geolatte.geom.LineString
+import org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84
 import org.jooq.JSONB
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.PreparedStatementSetter
@@ -26,9 +28,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.util.stream.Collectors.groupingBy
-import java.util.stream.Collectors.mapping
-import java.util.stream.Collectors.toList
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -36,6 +35,29 @@ import kotlin.math.roundToInt
 class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameterJdbcTemplate,
                                                    val jsonbConverter: IJsonbConverter)
     : IRoutingRepository {
+
+    sealed interface ResultItem
+
+    /**
+     * Models full traversal of infrastructure link (from end-to-end) as a route link.
+     */
+    private data class RouteLinkResultItem(val routeSeqNum: Int,
+                                           val linkId: InfrastructureLinkId,
+                                           val linkGeometry: LineString<G2D>,
+                                           val linkLength: Double,
+                                           val isTraversalForwards: Boolean,
+                                           val externalLinkRef: ExternalLinkReference,
+                                           val linkName: MultilingualString
+    ) : ResultItem
+
+    /**
+     * Models partial traversal of infrastructure link (not end-to-end) as a route link.
+     */
+    private data class TrimmedRouteLinkResultItem(val routeSeqNum: Int,
+                                                  val linkId: InfrastructureLinkId,
+                                                  val traversedGeometry: LineString<G2D>,
+                                                  val traversedDistance: Double
+    ) : ResultItem
 
     @Transactional(readOnly = true)
     override fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
@@ -264,50 +286,101 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     private fun executeQueryAndTransformToResult(queryString: String,
                                                  parameterSetter: PreparedStatementSetter): RouteDTO {
 
-        val queryResults: Map<Boolean, List<RouteLinkDTO>> = jdbcTemplate.jdbcOperations
-            .queryForStream(queryString, parameterSetter) { rs: ResultSet, _: Int ->
+        // This flat list contains result items for both (1) fully traversed infrastructure links
+        // (with whole link geometries) and (2) partially traversed links (with trimmed geometries).
+        // They are separated by the "trimmed" column of the result set. Each partially traversed
+        // link has a fully-traversed counterpart in the result set (with same sequence number) but
+        // not the other way around.
+        val queryResults: List<ResultItem> = jdbcTemplate.jdbcOperations
+            .query(queryString, parameterSetter) { rs: ResultSet, _: Int ->
                 val trimmed = rs.getBoolean("trimmed")
 
                 val routeSeqNum = rs.getInt("seq")
 
-                val infrastructureLinkId = rs.getLong("infrastructure_link_id")
-                val forwardTraversal = rs.getBoolean("is_traversal_forwards")
+                val infrastructureLinkId = InfrastructureLinkId(rs.getLong("infrastructure_link_id"))
                 val cost = rs.getDouble("cost")
-
-                val infrastructureSource = rs.getString("infrastructure_source_name")
-                val externalLinkId = rs.getString("external_link_id")
-
-                val linkNameJson = JSONB.jsonb(rs.getString("link_name"))
-                val linkName = jsonbConverter.fromJson(linkNameJson, MultilingualString::class.java)
 
                 val linkBytes: ByteArray = rs.getBytes("geom")
 
                 val geom: Geometry<*> = fromEwkb(linkBytes)
                 val lineString: LineString<G2D> = extractLineStringG2D(geom)
 
-                trimmed to RouteLinkDTO(routeSeqNum,
-                                        InfrastructureLinkTraversal(
-                                            infrastructureLinkId,
-                                            ExternalLinkReference(infrastructureSource, externalLinkId),
-                                            GeomTraversal(lineString, forwardTraversal),
-                                            cost,
-                                            linkName))
+                when (trimmed) {
+                    true -> TrimmedRouteLinkResultItem(routeSeqNum,
+                                                       infrastructureLinkId,
+                                                       lineString,
+                                                       cost)
 
+                    false -> {
+                        val isTraversalForwards = rs.getBoolean("is_traversal_forwards")
+
+                        val infrastructureSource = rs.getString("infrastructure_source_name")
+                        val externalLinkId = rs.getString("external_link_id")
+
+                        val linkNameJson = JSONB.jsonb(rs.getString("link_name"))
+                        val linkName = jsonbConverter.fromJson(linkNameJson, MultilingualString::class.java)
+
+                        RouteLinkResultItem(routeSeqNum,
+                                            infrastructureLinkId,
+                                            lineString,
+                                            cost,
+                                            isTraversalForwards,
+                                            ExternalLinkReference(infrastructureSource, externalLinkId),
+                                            linkName
+                        )
+                    }
+                }
             }
-            .collect(groupingBy({ it.first },
-                                mapping({ it.second }, toList())))
+
+        // Collect partially traversed links from the result set and index them by the sequence
+        // number of route link.
+        val routeSeqNumToTrimmedRouteLink: Map<Int, TrimmedRouteLinkResultItem> = queryResults
+            .mapNotNull { if (it is TrimmedRouteLinkResultItem) it else null }
+            .associateBy { it.routeSeqNum }
 
         val routeLinks: List<RouteLinkDTO> = queryResults
-            .getOrDefault(false, emptyList())
+            .mapNotNull { path ->
+                when (path) {
+                    // Filtered out since trimmed versions (partial link traversals) were already
+                    // collected to a Map.
+                    is TrimmedRouteLinkResultItem -> null
+
+                    is RouteLinkResultItem -> {
+                        val seqNum: Int = path.routeSeqNum
+                        val trimmedRouteLink: TrimmedRouteLinkResultItem? = routeSeqNumToTrimmedRouteLink[seqNum]
+
+                        // If a trimmed version exists, then use its geometry as the traversed
+                        // geometry. Otherwise, use whole link geometry as the traversed geometry
+                        // (already reversed in SQL in case of backwards traversal).
+                        val traversedGeometry: LineString<G2D> = trimmedRouteLink
+                            ?.let { it.traversedGeometry }
+                            ?: when (path.isTraversalForwards) {
+                                true -> path.linkGeometry
+                                false -> mkLineString(path.linkGeometry.positions.reverse(), WGS84)
+                            }
+
+                        // If a trimmed version exists, then use the length of its geometry as the
+                        // traversed distance. Otherwise, use the length of whole link geometry as
+                        // the traversed distance.
+                        val traversedDistance: Double = trimmedRouteLink
+                            ?.let { it.traversedDistance }
+                            ?: path.linkLength
+
+                        RouteLinkDTO(seqNum,
+                                     InfrastructureLinkTraversal(path.linkId,
+                                                                 path.externalLinkRef,
+                                                                 path.linkGeometry,
+                                                                 traversedGeometry,
+                                                                 path.isTraversalForwards,
+                                                                 path.linkLength,
+                                                                 traversedDistance,
+                                                                 path.linkName))
+                    }
+                }
+            }
             .sortedBy(RouteLinkDTO::routeSeqNum)
 
-        val trimmedTerminusLinks: List<RouteLinkDTO> = queryResults
-            .getOrDefault(true, emptyList())
-            .sortedBy(RouteLinkDTO::routeSeqNum)
-
-        return RouteDTO(routeLinks,
-                        trimmedTerminusLinks.firstOrNull()?.takeIf { it.routeSeqNum == 1 },
-                        trimmedTerminusLinks.lastOrNull()?.takeUnless { it.routeSeqNum == 1 })
+        return RouteDTO(routeLinks)
     }
 
     companion object {
@@ -362,30 +435,26 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 SELECT
                     seq,
                     infrastructure_link_id,
-                    is_traversal_forwards,
-                    infrastructure_source_name,
-                    external_link_id,
-                    link_name,
                     CASE
                         WHEN max_seq = 1 THEN CASE -- only one link
                             WHEN is_traversal_forwards = true AND start_link_fractional < end_link_fractional 
                                 THEN ST_LineSubstring(geom, start_link_fractional, end_link_fractional)
                             WHEN is_traversal_forwards = false AND start_link_fractional > end_link_fractional 
-                                THEN ST_LineSubstring(geom, end_link_fractional, start_link_fractional)
+                                THEN ST_Reverse(ST_LineSubstring(geom, end_link_fractional, start_link_fractional))
                             ELSE NULL
                         END
                         WHEN seq = 1 THEN CASE -- start link
                             WHEN is_traversal_forwards = true AND start_link_fractional < 1.0
                                 THEN ST_LineSubstring(geom, start_link_fractional, 1.0)
                             WHEN is_traversal_forwards = false AND start_link_fractional > 0.0
-                                THEN ST_LineSubstring(geom, 0.0, start_link_fractional)
+                                THEN ST_Reverse(ST_LineSubstring(geom, 0.0, start_link_fractional))
                             ELSE NULL
                         END
                         ELSE CASE -- end link
                             WHEN is_traversal_forwards = true AND end_link_fractional > 0.0
                                 THEN ST_LineSubstring(geom, 0.0, end_link_fractional)
                             WHEN is_traversal_forwards = false AND end_link_fractional < 1.0
-                                THEN ST_LineSubstring(geom, end_link_fractional, 1.0)
+                                THEN ST_Reverse(ST_LineSubstring(geom, end_link_fractional, 1.0))
                             ELSE NULL
                         END
                     END AS geom
@@ -414,11 +483,11 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 SELECT true AS trimmed,
                     ttl.seq,
                     ttl.infrastructure_link_id,
-                    ttl.is_traversal_forwards,
+                    NULL::bool AS is_traversal_forwards,
                     ST_Length(ttl.geom) AS cost,
-                    ttl.infrastructure_source_name,
-                    ttl.external_link_id,
-                    ttl.link_name,
+                    NULL::text AS infrastructure_source_name,
+                    NULL::text AS external_link_id,
+                    NULL::jsonb AS link_name,
                     ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
                 FROM trimmed_terminus_link ttl
                 WHERE ttl.geom IS NOT NULL
@@ -432,9 +501,9 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          * (B) "custom point", that is, a point along infrastructure link that does not coincide
          * with link's endpoints. The resulting route is returned as a sequence of route links
          * each of which refers to an infrastructure link. For each route link, the geometry of the
-         * whole infrastructure link is returned. For terminus links, in case they are traversed
-         * only partially, also a trimmed version of the infrastructure link geometry is returned
-         * that models the real traversed path.
+         * whole infrastructure link is returned. For only partially traversed infrastructure links
+         * also a trimmed version of the infrastructure link geometry is returned that models the
+         * real traversed path on the route.
          *
          * Custom points are bound to the query via array parameters. There are three arrays for
          * custom points to be bound while preparing the query. Each custom point is effectively a
@@ -678,15 +747,6 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 LEFT JOIN custom_point p1 ON (pgr.start_point < 0 AND p1.pid = -pgr.start_point)
                 LEFT JOIN custom_point p2 ON (pgr.end_point < 0 AND p2.pid = -pgr.end_point)
             ),
-            terminus_fractions AS (
-                SELECT first.start_fraction AS first_start_fraction, last.end_fraction AS last_end_fraction
-                FROM (
-                    SELECT start_fraction FROM pgr_transform2 WHERE seq = 1
-                ) first
-                CROSS JOIN (
-                    SELECT end_fraction FROM pgr_transform2 WHERE seq = (SELECT max(seq) FROM pgr_transform2)
-                ) last
-            ),
             pgr_transform3 AS (
                 SELECT seq, path_id, edge, (end_fraction > start_fraction) AS is_traversal_forwards, start_fraction, end_fraction
                 FROM pgr_transform2
@@ -722,7 +782,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                         )
                         WHEN next_edge <> edge THEN ( CASE WHEN is_traversal_forwards THEN 1.0 ELSE 0.0 END )
                         ELSE ( -- next_edge IS NULL
-                            SELECT last_end_fraction FROM terminus_fractions
+                            SELECT end_fraction AS last_end_fraction FROM pgr_transform2 ORDER BY seq DESC LIMIT 1 
                         )
                     END AS end_fraction
                 FROM pgr_transform4 pgr
@@ -751,42 +811,17 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 INNER JOIN routing.infrastructure_link link ON link.infrastructure_link_id = pgr.edge
                 INNER JOIN routing.infrastructure_source src ON src.infrastructure_source_id = link.infrastructure_source_id
             ),
-            trimmed_terminus_link AS (
+            trimmed_route_link AS (
                 SELECT
-                    seq,
-                    infrastructure_link_id,
-                    is_traversal_forwards,
-                    infrastructure_source_name,
-                    external_link_id,
-                    link_name,
+                    pgr.seq,
+                    link.infrastructure_link_id,
                     CASE
-                        WHEN max_seq = 1 THEN CASE -- single link route
-                            WHEN is_traversal_forwards AND first_start_fraction < last_end_fraction 
-                                THEN ST_LineSubstring(geom, first_start_fraction, last_end_fraction)
-                            WHEN NOT is_traversal_forwards AND first_start_fraction > last_end_fraction 
-                                THEN ST_LineSubstring(geom, last_end_fraction, first_start_fraction)
-                            ELSE NULL
-                        END
-                        WHEN seq = 1 THEN CASE -- start link
-                            WHEN is_traversal_forwards AND first_start_fraction < 1.0
-                                THEN ST_LineSubstring(geom, first_start_fraction, 1.0)
-                            WHEN NOT is_traversal_forwards AND first_start_fraction > 0.0
-                                THEN ST_LineSubstring(geom, 0.0, first_start_fraction)
-                            ELSE NULL
-                        END
-                        ELSE CASE -- end link
-                            WHEN is_traversal_forwards AND last_end_fraction > 0.0
-                                THEN ST_LineSubstring(geom, 0.0, last_end_fraction)
-                            WHEN NOT is_traversal_forwards AND last_end_fraction < 1.0
-                                THEN ST_LineSubstring(geom, last_end_fraction, 1.0)
-                            ELSE NULL
-                        END
+                        WHEN pgr.is_traversal_forwards THEN ST_LineSubstring(link.geom, pgr.start_fraction, pgr.end_fraction)
+                        ELSE ST_Reverse(ST_LineSubstring(link.geom, pgr.end_fraction, pgr.start_fraction))
                     END AS geom
-                FROM terminus_fractions
-                CROSS JOIN (
-                    SELECT min(seq) AS min_seq, max(seq) AS max_seq FROM route_link
-                ) min_max_seq
-                INNER JOIN route_link ON seq IN (min_seq, max_seq)
+                FROM pgr_transform5 pgr
+                INNER JOIN routing.infrastructure_link link ON link.infrastructure_link_id = pgr.edge
+                WHERE pgr.start_fraction NOT IN (0.0, 1.0) OR pgr.end_fraction NOT IN (0.0, 1.0)
             )
             SELECT *
             FROM (
@@ -802,16 +837,15 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 FROM route_link rl
                 UNION ALL
                 SELECT true AS trimmed,
-                    ttl.seq,
-                    ttl.infrastructure_link_id,
-                    ttl.is_traversal_forwards,
-                    ST_Length(ttl.geom) AS cost,
-                    ttl.infrastructure_source_name,
-                    ttl.external_link_id,
-                    ttl.link_name,
-                    ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
-                FROM trimmed_terminus_link ttl
-                WHERE ttl.geom IS NOT NULL
+                    trl.seq,
+                    trl.infrastructure_link_id,
+                    NULL::bool AS is_traversal_forwards,
+                    ST_Length(trl.geom) AS cost,
+                    NULL::text AS infrastructure_source_name,
+                    NULL::text AS external_link_id,
+                    NULL::jsonb AS link_name,
+                    ST_AsEWKB(ST_Transform(trl.geom, 4326)) as geom
+                FROM trimmed_route_link trl
             ) combined
             ORDER BY seq, trimmed;
             """.trimIndent()

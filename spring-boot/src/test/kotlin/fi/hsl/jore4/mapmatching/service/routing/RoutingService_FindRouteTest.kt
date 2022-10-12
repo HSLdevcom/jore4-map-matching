@@ -283,7 +283,7 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                 val expectedCoordinates = PositionSequenceBuilders.variableSized(G2D::class.java)
                     .add(24.98955, 60.2772)
                     .add(24.98884, 60.27709)
-                    .add(24.98772, 60.27693)
+                    .add(24.98804, 60.27698)
                     .add(24.98884, 60.27709)
                     .add(24.98964, 60.27721)
                     .add(24.98979, 60.27724)
@@ -352,6 +352,62 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                 assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
                     "441872" to true
                 ))
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("When traversing closed-loop links")
+    inner class WhenTraversingClosedLoopLinks {
+
+        @Nested
+        @DisplayName("When traversing back and forth a bi-directional closed-loop link")
+        inner class WhenTraversingBackAndForthABirectionalClosedLoopLink {
+
+            private val requestRoutePoints: List<Point<G2D>> = listOf(toPoint(g(24.56306, 60.16016)),
+                                                                      toPoint(g(24.56373, 60.16019)),
+                                                                      toPoint(g(24.56220, 60.16039)))
+
+            @Test
+            fun shouldReturnExpectedGeometry() {
+                findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+
+                    val expectedCoordinates = PositionSequenceBuilders.variableSized(G2D::class.java)
+                        .add(24.56305, 60.16016)
+                        .add(24.56307, 60.16021)
+                        .add(24.56354, 60.16019)
+                        .add(24.56373, 60.16019)
+                        .add(24.56354, 60.16019)
+                        .add(24.56307, 60.16021)
+                        .add(24.56291, 60.16022)
+                        .add(24.56269, 60.16024)
+                        .add(24.56245, 60.16029)
+                        .add(24.56223, 60.16039)
+                        .add(24.56221, 60.16040)
+
+                    val expectedGeometry: LineString<G2D> =
+                        mkLineString(expectedCoordinates.toPositionSequence(), WGS84)
+
+                    val actualGeometry: LineString<G2D> = resp.routes.first().geometry
+
+                    assertThat(roundCoordinates(actualGeometry, 5)).isEqualTo(expectedGeometry)
+                }
+            }
+
+            @Test
+            fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
+                findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+
+                    val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
+                        getExternalLinkIdsAndTraversalDirections(resp)
+
+                    assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
+                        "11392370" to true,
+                        "12538103" to true,
+                        "12538103" to false,
+                        "12538103" to false
+                    ))
+                }
             }
         }
     }
