@@ -57,7 +57,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     override fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
                                           vehicleType: VehicleType,
                                           bufferAreaRestriction: BufferAreaRestriction?)
-        : RouteDTO {
+        : List<RouteLinkDTO> {
 
         return findRouteViaNetworkNodesInternal(nodeIdSequence, vehicleType, null, null, bufferAreaRestriction)
     }
@@ -68,7 +68,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                           fractionalStartLocationOnFirstLink: Double,
                                           fractionalEndLocationOnLastLink: Double,
                                           bufferAreaRestriction: BufferAreaRestriction?)
-        : RouteDTO {
+        : List<RouteLinkDTO> {
 
         return findRouteViaNetworkNodesInternal(nodeIdSequence,
                                                 vehicleType,
@@ -82,10 +82,10 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                          fractionalStartLocationOnFirstLink: Double?,
                                          fractionalEndLocationOnLastLink: Double?,
                                          bufferAreaRestriction: BufferAreaRestriction?)
-        : RouteDTO {
+        : List<RouteLinkDTO> {
 
         if (nodeIdSequence.isEmpty()) {
-            return RouteDTO.EMPTY
+            return emptyList()
         }
 
         val parameterSetter = PreparedStatementSetter { pstmt ->
@@ -122,10 +122,10 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     override fun findRouteViaPoints(points: List<PgRoutingPoint>,
                                     vehicleType: VehicleType,
                                     bufferAreaRestriction: BufferAreaRestriction?)
-        : RouteDTO {
+        : List<RouteLinkDTO> {
 
         if (points.isEmpty()) {
-            return RouteDTO.EMPTY
+            return emptyList()
         }
 
         // These three lists must have equal amount of items. Each list contains certain property
@@ -278,7 +278,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     }
 
     private fun executeQueryAndTransformToResult(queryString: String,
-                                                 parameterSetter: PreparedStatementSetter): RouteDTO {
+                                                 parameterSetter: PreparedStatementSetter): List<RouteLinkDTO> {
 
         val queryResults: List<ResultItem> = jdbcTemplate.jdbcOperations
             .query(queryString, parameterSetter) { rs: ResultSet, _: Int ->
@@ -359,7 +359,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             }
             .sortedBy(RouteLinkDTO::routeSeqNum)
 
-        return RouteDTO(routeLinks)
+        return routeLinks
     }
 
     companion object {
