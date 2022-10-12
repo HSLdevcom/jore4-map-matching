@@ -61,7 +61,7 @@ class MatchingService_FindMatchForPublicTransportRouteTest @Autowired constructo
                 checkAssertions(response)
             }
 
-            else -> fail<Void>("RoutingResponse is not a success response as expected")
+            else -> fail<Void>("RoutingResponse is not a success response as expected: $response")
         }
     }
 

@@ -34,7 +34,7 @@
             position: absolute;
             margin: 20px;
             width: 15%;
-            max-width: 320px;
+            max-width: 400px;
             height: auto;
             top: 0;
             bottom: 20px;
@@ -307,11 +307,15 @@
             // Output summary for each infrastructure link of route in the response object.
             if (route.paths) {
                 for (const path of route.paths) {
-                    routeLinks += `<li>${path.infrastructureLinkName.fi}, ${path.distance.toFixed(1)} m</li>`;
+                    routeLinks += `<li>${path.infrastructureLinkName.fi}, ${path.isTraversalForwards ? 'F' : 'B'}, ${path.weight.toFixed(1)} m`;
+                    if (path.weight < path.distance) {
+                        routeLinks += ` (${path.distance.toFixed(1)} m)`
+                    }
+                    routeLinks += '</li>'
                 }
             }
 
-            routeInfo.innerHTML = `<p><strong>Route distance: ${Math.floor(route.distance)} m</strong></p>`
+            routeInfo.innerHTML = `<p><div><strong>Route length: ${Math.floor(route.weight)} m</strong></div><div><strong>Sum of link lengths: ${Math.floor(route.distance)} m</strong></div></p>`
 
             if (routeLinks) {
                 routeInfo.innerHTML += `<strong>Infrastructure links:</strong><ol>${routeLinks}</ol>`;
