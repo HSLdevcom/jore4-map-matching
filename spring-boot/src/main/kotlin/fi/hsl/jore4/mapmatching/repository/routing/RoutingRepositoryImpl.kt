@@ -456,45 +456,41 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 SELECT seq, edge,
                     CASE
                         WHEN pgr.start_point < 0 THEN p1.fraction
-                        ELSE CASE
-                            WHEN l.start_node_id = l.end_node_id THEN ( -- closed loop
-                                CASE
-                                    WHEN l.traffic_flow_direction_type = 3 THEN 1.0
-                                    WHEN l.traffic_flow_direction_type = 4 THEN 0.0
-                                    ELSE ( -- bi-directional closed loop, determine direction by matching to pgr cost
-                                        SELECT CASE WHEN forward_cost_diff < backward_cost_diff THEN 0.0 ELSE 1.0 END
-                                        FROM (
-                                            SELECT
-                                                abs(pgr.cost - l.cost * p2.fraction) AS forward_cost_diff,
-                                                abs(pgr.cost - l.cost * (1.0 - p2.fraction)) AS backward_cost_diff
-                                        ) diffs
-                                    )
-                                END
-                            )
-                            WHEN pgr.start_point = l.start_node_id THEN 0.0
-                            ELSE 1.0
-                        END
+                        WHEN l.start_node_id = l.end_node_id THEN ( -- closed loop
+                            CASE
+                                WHEN l.traffic_flow_direction_type = 3 THEN 1.0
+                                WHEN l.traffic_flow_direction_type = 4 THEN 0.0
+                                ELSE ( -- bi-directional closed loop, determine direction by matching to pgr cost
+                                    SELECT CASE WHEN forward_cost_diff < backward_cost_diff THEN 0.0 ELSE 1.0 END
+                                    FROM (
+                                        SELECT
+                                            abs(pgr.cost - l.cost * p2.fraction) AS forward_cost_diff,
+                                            abs(pgr.cost - l.cost * (1.0 - p2.fraction)) AS backward_cost_diff
+                                    ) diffs
+                                )
+                            END
+                        )
+                        WHEN pgr.start_point = l.start_node_id THEN 0.0
+                        ELSE 1.0
                     END AS start_fraction,
                     CASE
                         WHEN pgr.end_point < 0 THEN p2.fraction
-                        ELSE CASE
-                            WHEN l.start_node_id = l.end_node_id THEN ( -- closed loop
-                                CASE
-                                    WHEN l.traffic_flow_direction_type = 3 THEN 0.0
-                                    WHEN l.traffic_flow_direction_type = 4 THEN 1.0
-                                    ELSE ( -- bi-directional closed loop, determine direction by matching to pgr cost
-                                        SELECT CASE WHEN forward_cost_diff < backward_cost_diff THEN 1.0 ELSE 0.0 END
-                                        FROM (
-                                            SELECT
-                                                abs(pgr.cost - l.cost * (1.0 - p1.fraction)) AS forward_cost_diff,
-                                                abs(pgr.cost - l.cost * p1.fraction) AS backward_cost_diff
-                                        ) diffs
-                                    )
-                                END
-                            )
-                            WHEN pgr.end_point = l.start_node_id THEN 0.0
-                            ELSE 1.0
-                        END
+                        WHEN l.start_node_id = l.end_node_id THEN ( -- closed loop
+                            CASE
+                                WHEN l.traffic_flow_direction_type = 3 THEN 0.0
+                                WHEN l.traffic_flow_direction_type = 4 THEN 1.0
+                                ELSE ( -- bi-directional closed loop, determine direction by matching to pgr cost
+                                    SELECT CASE WHEN forward_cost_diff < backward_cost_diff THEN 1.0 ELSE 0.0 END
+                                    FROM (
+                                        SELECT
+                                            abs(pgr.cost - l.cost * (1.0 - p1.fraction)) AS forward_cost_diff,
+                                            abs(pgr.cost - l.cost * p1.fraction) AS backward_cost_diff
+                                    ) diffs
+                                )
+                            END
+                        )
+                        WHEN pgr.end_point = l.start_node_id THEN 0.0
+                        ELSE 1.0
                     END AS end_fraction
                 FROM pgr_transform1 pgr
                 INNER JOIN routing.infrastructure_link l ON l.infrastructure_link_id = pgr.edge
