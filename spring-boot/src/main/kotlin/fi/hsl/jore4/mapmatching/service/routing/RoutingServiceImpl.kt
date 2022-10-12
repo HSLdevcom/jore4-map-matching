@@ -5,7 +5,7 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
-import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
@@ -49,9 +49,10 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         val sourceRoutePoints: List<PgRoutingPoint> =
             closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.link) }
 
-        val resultRoute: RouteDTO = routingServiceInternal.findRouteViaPoints(sourceRoutePoints, vehicleType)
+        val resultRouteLinks: List<RouteLinkDTO> =
+            routingServiceInternal.findRouteViaPoints(sourceRoutePoints, vehicleType)
 
-        return RoutingResponseCreator.create(resultRoute)
+        return RoutingResponseCreator.create(resultRouteLinks)
     }
 
     private fun findClosestInfrastructureLinks(points: List<Point<G2D>>,

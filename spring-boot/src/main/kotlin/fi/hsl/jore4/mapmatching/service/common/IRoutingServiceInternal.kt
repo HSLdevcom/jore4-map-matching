@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
-import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 
 interface IRoutingServiceInternal {
 
@@ -28,17 +28,17 @@ interface IRoutingServiceInternal {
      * restriction for the target set of infrastructure links can be defined
      * while finding route through infrastructure network.
      *
-     * @return a DTO holding a list of route links that together constitute the
-     * resulting route. Each route link contains a path element that consists of
-     * a reference to an infrastructure link and the direction of traversal on
-     * it. If a route could not be found then an empty list is returned.
+     * @return a list of route links that together constitute the resulting
+     * route. Each route link contains a path element that consists of a
+     * reference to an infrastructure link and the direction of traversal on it.
+     * If a route could not be found then an empty list is returned.
      */
     fun findRouteViaNodes(nodeIdSequence: NodeIdSequence,
                           vehicleType: VehicleType,
                           fractionalStartLocationOnFirstLink: Double,
                           fractionalEndLocationOnLastLink: Double,
                           bufferAreaRestriction: BufferAreaRestriction? = null)
-        : RouteDTO
+        : List<RouteLinkDTO>
 
     /**
      * Find the shortest route through infrastructure network via given points
@@ -52,13 +52,13 @@ interface IRoutingServiceInternal {
      * restriction for the target set of infrastructure links can be defined
      * while finding route through infrastructure network.
      *
-     * @return a DTO holding a list of route links that together constitute the
-     * resulting route. Each route link contains a path element that consists of
-     * a reference to an infrastructure link and the direction of traversal on
-     * it. If a route could not be found then an empty list is returned.
+     * @return a list of route links that together constitute the resulting
+     * route. Each route link contains a path element that consists of a
+     * reference to an infrastructure link and the direction of traversal on it.
+     * If a route could not be found then an empty list is returned.
      */
     fun findRouteViaPoints(points: List<PgRoutingPoint>,
                            vehicleType: VehicleType,
                            bufferAreaRestriction: BufferAreaRestriction? = null)
-        : RouteDTO
+        : List<RouteLinkDTO>
 }

@@ -7,7 +7,7 @@ import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
 import fi.hsl.jore4.mapmatching.repository.routing.NetworkNode
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
-import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,15 +26,15 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
                                    fractionalStartLocationOnFirstLink: Double,
                                    fractionalEndLocationOnLastLink: Double,
                                    bufferAreaRestriction: BufferAreaRestriction?)
-        : RouteDTO {
+        : List<RouteLinkDTO> {
 
         return routingRepository.findRouteViaNetworkNodes(nodeIdSequence,
                                                           vehicleType,
                                                           fractionalStartLocationOnFirstLink,
                                                           fractionalEndLocationOnLastLink,
                                                           bufferAreaRestriction)
-            .also { route: RouteDTO ->
-                LOGGER.debug { "Got route links for nodes $nodeIdSequence: ${joinToLogString(route.routeLinks)}" }
+            .also { routeLinks: List<RouteLinkDTO> ->
+                LOGGER.debug { "Got route links for nodes $nodeIdSequence: ${joinToLogString(routeLinks)}" }
             }
     }
 
@@ -42,7 +42,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
     override fun findRouteViaPoints(points: List<PgRoutingPoint>,
                                     vehicleType: VehicleType,
                                     bufferAreaRestriction: BufferAreaRestriction?)
-        : RouteDTO {
+        : List<RouteLinkDTO> {
 
         return when (points.all { it is NetworkNode }) {
 
@@ -54,9 +54,9 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
 
                 routingRepository
                     .findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
-                    .also { route: RouteDTO ->
+                    .also { routeLinks: List<RouteLinkDTO> ->
                         LOGGER.debug {
-                            "Got route links for nodes $nodeIdSequence: ${joinToLogString(route.routeLinks)}"
+                            "Got route links for nodes $nodeIdSequence: ${joinToLogString(routeLinks)}"
                         }
                     }
             }
@@ -64,8 +64,8 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
             false -> {
                 routingRepository
                     .findRouteViaPoints(points, vehicleType, bufferAreaRestriction)
-                    .also { route: RouteDTO ->
-                        LOGGER.debug { "Got route links: ${joinToLogString(route.routeLinks)}" }
+                    .also { routeLinks: List<RouteLinkDTO> ->
+                        LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
                     }
             }
         }
