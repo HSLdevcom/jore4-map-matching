@@ -292,7 +292,7 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                 val expectedCoordinates = PositionSequenceBuilders.variableSized(G2D::class.java)
                     .add(24.98955, 60.2772)
                     .add(24.98884, 60.27709)
-                    .add(24.98772, 60.27693)
+                    .add(24.98804, 60.27698)
                     .add(24.98884, 60.27709)
                     .add(24.98964, 60.27721)
                     .add(24.98979, 60.27724)

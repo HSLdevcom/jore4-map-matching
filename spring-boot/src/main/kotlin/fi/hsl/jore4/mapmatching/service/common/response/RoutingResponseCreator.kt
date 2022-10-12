@@ -1,10 +1,9 @@
 package fi.hsl.jore4.mapmatching.service.common.response
 
-import fi.hsl.jore4.mapmatching.model.GeomTraversal
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
-import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousTraversals
+import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousLines
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
@@ -15,19 +14,20 @@ object RoutingResponseCreator {
             return RoutingResponse.noSegment("Could not find a matching route")
         }
 
-        val trimmedTerminiTraversals: List<InfrastructureLinkTraversal> = route
-            .getRouteLinksWithTrimmedTermini()
-            .map(RouteLinkDTO::linkTraversal)
+        val linkTraversals: List<InfrastructureLinkTraversal> = route.routeLinks.map(RouteLinkDTO::linkTraversal)
 
-        val totalCost = trimmedTerminiTraversals.fold(0.0) { accumulatedCost, link ->
-            accumulatedCost + link.cost
+        val totalWeight = linkTraversals.fold(0.0) { accumulatedWeight, link ->
+            accumulatedWeight + link.traversedDistance
         }
 
-        val geomTraversals: List<GeomTraversal> =
-            trimmedTerminiTraversals.map(InfrastructureLinkTraversal::geomTraversal)
+        val sumOfLinkLengths = linkTraversals.fold(0.0) { accumulatedLength, link ->
+            accumulatedLength + link.linkLength
+        }
+
+        val linesToMerge: List<LineString<G2D>> = linkTraversals.map(InfrastructureLinkTraversal::traversedGeometry)
 
         val mergedLine: LineString<G2D> = try {
-            mergeContinuousTraversals(geomTraversals)
+            mergeContinuousLines(linesToMerge)
         } catch (ex: Exception) {
             return RoutingResponse.noSegment(
                 ex.message ?: "Merging compound LineString from multiple infrastructure link geometries failed")
@@ -37,7 +37,7 @@ object RoutingResponseCreator {
             .map(RouteLinkDTO::linkTraversal)
             .map(LinkTraversalDTO::from)
 
-        val routeResult = RouteResultDTO(mergedLine, totalCost, totalCost, individualLinks)
+        val routeResult = RouteResultDTO(mergedLine, totalWeight, sumOfLinkLengths, individualLinks)
 
         return RoutingResponse.ok(routeResult)
     }
