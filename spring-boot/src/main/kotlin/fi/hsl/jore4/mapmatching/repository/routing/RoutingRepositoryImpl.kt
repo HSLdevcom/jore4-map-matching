@@ -69,7 +69,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     }
 
     @Transactional(readOnly = true)
-    override fun findRouteViaPoints(points: List<RoutingPoint>,
+    override fun findRouteViaPoints(points: List<PgRoutingPoint>,
                                     vehicleType: VehicleType,
                                     bufferAreaRestriction: BufferAreaRestriction?)
         : RouteDTO {

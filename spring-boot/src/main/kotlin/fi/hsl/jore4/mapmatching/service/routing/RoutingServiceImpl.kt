@@ -4,13 +4,13 @@ import fi.hsl.jore4.mapmatching.Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METE
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
-import fi.hsl.jore4.mapmatching.repository.routing.RoutingPoint
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.toRoutingPoint
+import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.toPgRoutingPoint
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
@@ -47,7 +47,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
         }
 
-        val routePoints: List<RoutingPoint> = closestLinks.map { toRoutingPoint(it.link) }
+        val routePoints: List<PgRoutingPoint> = closestLinks.map { toPgRoutingPoint(it.link) }
 
         val route: RouteDTO = routingServiceInternal.findRouteViaPoints(routePoints, vehicleType)
 

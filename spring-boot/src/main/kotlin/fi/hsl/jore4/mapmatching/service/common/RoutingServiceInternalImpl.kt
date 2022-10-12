@@ -4,8 +4,8 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
+import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
-import fi.hsl.jore4.mapmatching.repository.routing.RoutingPoint
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +37,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
     }
 
     @Transactional(readOnly = true)
-    override fun findRouteViaPoints(points: List<RoutingPoint>,
+    override fun findRouteViaPoints(points: List<PgRoutingPoint>,
                                     vehicleType: VehicleType,
                                     bufferAreaRestriction: BufferAreaRestriction?)
         : RouteDTO {

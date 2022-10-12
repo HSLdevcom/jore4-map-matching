@@ -54,7 +54,7 @@ interface IRoutingRepository {
      * a reference to an infrastructure link and the direction of traversal on
      * it. If a route could not be found then an empty list is returned.
      */
-    fun findRouteViaPoints(points: List<RoutingPoint>,
+    fun findRouteViaPoints(points: List<PgRoutingPoint>,
                            vehicleType: VehicleType,
                            bufferAreaRestriction: BufferAreaRestriction? = null)
         : RouteDTO
