@@ -2,6 +2,8 @@ package fi.hsl.jore4.mapmatching.service.matching.test
 
 import fi.hsl.jore4.mapmatching.model.VehicleType.GENERIC_BUS
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
+import fi.hsl.jore4.mapmatching.service.common.response.LinkTraversalDTO
+import fi.hsl.jore4.mapmatching.service.common.response.RouteResultDTO
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.matching.IMatchingService
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters
@@ -165,8 +167,9 @@ class MapMatchingBulkTester(
             val bufferRadius = BufferRadius(radius)
 
             if (response is RoutingResponse.RoutingSuccessDTO) {
-                val resultGeometry: LineString<G2D> = response.routes[0].geometry
-                val lengthOfMatchedRoute: Double = length(resultGeometry)
+                val route: RouteResultDTO = response.routes[0]
+                val lengthOfMatchedRoute: Double = calculateLengthOfRoute(route)
+                // val lengthOfMatchedRoute: Double = length(route.geometry)
 
                 lengthsOfMatchedRoutes.add(bufferRadius to lengthOfMatchedRoute)
             } else {
@@ -205,6 +208,23 @@ class MapMatchingBulkTester(
                 fallbackToViaNodesAlgorithm = true,
                 roadJunctionMatching = roadJunctionMatchingParams
             )
+        }
+
+        private fun calculateLengthOfRoute(route: RouteResultDTO): Double {
+            val linkTraversals: List<LinkTraversalDTO> = route.paths
+
+            return when (linkTraversals.size) {
+                0 -> 0.0
+                1, 2 -> route.weight
+                else -> {
+                    val sumOfInterimLinkLengths: Double =
+                        linkTraversals.drop(1).dropLast(1).map { it.distance }.fold(0.0) { acc, distance ->
+                            acc + distance
+                        }
+
+                    linkTraversals.first().weight + sumOfInterimLinkLengths + linkTraversals.last().weight
+                }
+            }
         }
     }
 }
