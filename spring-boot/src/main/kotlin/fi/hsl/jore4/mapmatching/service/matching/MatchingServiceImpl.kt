@@ -23,7 +23,7 @@ import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
-import fi.hsl.jore4.mapmatching.repository.routing.RouteDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 import fi.hsl.jore4.mapmatching.repository.routing.SnapPointToNodesDTO
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
@@ -130,7 +130,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                 val startLink: SnappedLinkState = nodeSeqResult.startLink
                 val endLink: SnappedLinkState = nodeSeqResult.endLink
 
-                val route: RouteDTO =
+                val routeLinks: List<RouteLinkDTO> =
                     routingService.findRouteViaNodes(nodeIdSequence,
                                                      vehicleType,
                                                      startLink.closestPointFractionalMeasure,
@@ -140,7 +140,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                                                 startLink,
                                                                                 endLink))
 
-                RoutingResponseCreator.create(route)
+                RoutingResponseCreator.create(routeLinks)
             }
             is NodeSequenceResolutionFailed -> {
                 LOGGER.warn(nodeSeqResult.message)

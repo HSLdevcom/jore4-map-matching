@@ -19,15 +19,15 @@ interface IRoutingRepository {
      * restriction for the target set of infrastructure links can be defined
      * while finding route through infrastructure network.
      *
-     * @return a DTO holding a list of route links that together constitute the
-     * resulting route. Each route link contains a path element that consists of
-     * a reference to an infrastructure link and the direction of traversal on
-     * it. If a route could not be found then an empty list is returned.
+     * @return a list of route links that together constitute the resulting
+     * route. Each route link contains a path element that consists of a
+     * reference to an infrastructure link and the direction of traversal on it.
+     * If a route could not be found then an empty list is returned.
      */
     fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
                                  vehicleType: VehicleType,
                                  bufferAreaRestriction: BufferAreaRestriction? = null)
-        : RouteDTO
+        : List<RouteLinkDTO>
 
     /**
      * Find the shortest route through infrastructure network via given nodes
@@ -49,17 +49,17 @@ interface IRoutingRepository {
      * restriction for the target set of infrastructure links can be defined
      * while finding route through infrastructure network.
      *
-     * @return a DTO holding a list of route links that together constitute the
-     * resulting route. Each route link contains a path element that consists of
-     * a reference to an infrastructure link and the direction of traversal on
-     * it. If a route could not be found then an empty list is returned.
+     * @return a list of route links that together constitute the resulting
+     * route. Each route link contains a path element that consists of a
+     * reference to an infrastructure link and the direction of traversal on it.
+     * If a route could not be found then an empty list is returned.
      */
     fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
                                  vehicleType: VehicleType,
                                  fractionalStartLocationOnFirstLink: Double,
                                  fractionalEndLocationOnLastLink: Double,
                                  bufferAreaRestriction: BufferAreaRestriction? = null)
-        : RouteDTO
+        : List<RouteLinkDTO>
 
     /**
      * Find the shortest route through infrastructure network via given points
@@ -75,13 +75,13 @@ interface IRoutingRepository {
      * restriction for the target set of infrastructure links can be defined
      * while finding route through infrastructure network.
      *
-     * @return a DTO holding a list of route links that together constitute the
-     * resulting route. Each route link contains a path element that consists of
-     * a reference to an infrastructure link and the direction of traversal on
-     * it. If a route could not be found then an empty list is returned.
+     * @return a list of route links that together constitute the resulting
+     * route. Each route link contains a path element that consists of a
+     * reference to an infrastructure link and the direction of traversal on it.
+     * If a route could not be found then an empty list is returned.
      */
     fun findRouteViaPoints(points: List<PgRoutingPoint>,
                            vehicleType: VehicleType,
                            bufferAreaRestriction: BufferAreaRestriction? = null)
-        : RouteDTO
+        : List<RouteLinkDTO>
 }
