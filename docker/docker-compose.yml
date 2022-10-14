@@ -18,7 +18,7 @@ services:
 
   # pre-populated with infrastructure network data and pgRouting topology
   jore4-mapmatchingdb:
-    image: hsldevcom/jore4-postgres:mapmatching-main--20221007-ed25312cca8f4c3d8ca5843caa5510dda4ea54fb
+    image: hsldevcom/jore4-postgres:mapmatching-main--20221021-5d79cff3c07193f524a9ef64a68000079e7f2f24
     container_name: mapmatchingdb
     restart: "unless-stopped"
     networks:

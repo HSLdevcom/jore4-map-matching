@@ -1,5 +1,5 @@
 # builder image
-FROM postgis/postgis:14-3.3 AS pgrouting
+FROM postgis/postgis:15-3.3 AS pgrouting
 
 # PG_MAJOR environment variable is made available by postgis image. It is used
 # while building pgRouting extension.
