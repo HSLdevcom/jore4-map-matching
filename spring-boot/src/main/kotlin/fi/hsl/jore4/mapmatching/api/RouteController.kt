@@ -74,7 +74,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         return findRoute(vehicleType, coords, linkSearchRadius)
     }
 
-    @PostMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun findRoute(@PathVariable transportationMode: String,
                   @PathVariable vehicleTypeParam: String,
                   @Valid @RequestBody request: PublicTransportRouteFindRequestDTO)
