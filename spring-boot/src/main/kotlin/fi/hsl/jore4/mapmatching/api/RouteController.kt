@@ -36,7 +36,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         val vehicleType: VehicleType = findVehicleType(transportationMode, null)
             ?: return RoutingResponse.invalidTransportationMode(transportationMode)
 
-        return findRoute(vehicleType, coords, linkSearchRadius)
+        return findRouteInternal(coords, vehicleType, linkSearchRadius)
     }
 
     @PostMapping("/$TRANSPORTATION_MODE_PARAM", consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -50,10 +50,9 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         val vehicleType: VehicleType = findVehicleType(transportationMode, null)
             ?: return RoutingResponse.invalidTransportationMode(transportationMode)
 
-        return routingService.findRoute(
-            toPoints(request.routePoints),
-            vehicleType,
-            request.linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS)
+        return findRouteInternal(request.routePoints,
+                                 vehicleType,
+                                 request.linkSearchRadius)
     }
 
     @Deprecated("GET request should be replaced with POST")
@@ -71,7 +70,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         val vehicleType: VehicleType = findVehicleType(transportationMode, vehicleTypeParam)
             ?: return RoutingResponse.invalidTransportationProfile(transportationMode, vehicleTypeParam)
 
-        return findRoute(vehicleType, coords, linkSearchRadius)
+        return findRouteInternal(coords, vehicleType, linkSearchRadius)
     }
 
     @PostMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM", consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -86,13 +85,14 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         val vehicleType: VehicleType = findVehicleType(transportationMode, vehicleTypeParam)
             ?: return RoutingResponse.invalidTransportationProfile(transportationMode, vehicleTypeParam)
 
-        return routingService.findRoute(
-            toPoints(request.routePoints),
-            vehicleType,
-            request.linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS)
+        return findRouteInternal(request.routePoints,
+                                 vehicleType,
+                                 request.linkSearchRadius)
     }
 
-    private fun findRoute(vehicleType: VehicleType, coords: String, linkSearchRadius: Int?): RoutingResponse {
+    private fun findRouteInternal(coords: String, vehicleType: VehicleType, linkSearchRadius: Int?)
+        : RoutingResponse {
+
         val parsedCoordinates: List<LatLng>
 
         try {
@@ -101,7 +101,13 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
             return RoutingResponse.invalidUrl(ex.message ?: "Failed to parse coordinates")
         }
 
-        return routingService.findRoute(toPoints(parsedCoordinates),
+        return findRouteInternal(parsedCoordinates, vehicleType, linkSearchRadius)
+    }
+
+    private fun findRouteInternal(coords: List<LatLng>, vehicleType: VehicleType, linkSearchRadius: Int?)
+        : RoutingResponse {
+
+        return routingService.findRoute(toPoints(coords),
                                         vehicleType,
                                         linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS)
     }
