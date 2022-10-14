@@ -47,7 +47,9 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                            val linkLength: Double,
                                            val isTraversalForwards: Boolean,
                                            val externalLinkRef: ExternalLinkReference,
+                                           val isClosedLoop: Boolean,
                                            val linkName: MultilingualString
+
     ) : ResultItem
 
     /**
@@ -320,14 +322,16 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                         val linkNameJson = JSONB.jsonb(rs.getString("link_name"))
                         val linkName = jsonbConverter.fromJson(linkNameJson, MultilingualString::class.java)
 
+                        val isClosedLoop = rs.getBoolean("is_closed_loop")
+
                         RouteLinkResultItem(routeSeqNum,
                                             infrastructureLinkId,
                                             lineString,
                                             cost,
                                             isTraversalForwards,
                                             ExternalLinkReference(infrastructureSource, externalLinkId),
-                                            linkName
-                        )
+                                            isClosedLoop,
+                                            linkName)
                     }
                 }
             }
@@ -374,6 +378,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                                                  path.isTraversalForwards,
                                                                  path.linkLength,
                                                                  traversedDistance,
+                                                                 path.isClosedLoop,
                                                                  path.linkName))
                     }
                 }
@@ -420,6 +425,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     src.infrastructure_source_name,
                     link.external_link_id,
                     link.name AS link_name,
+                    link.start_node_id = link.end_node_id AS is_closed_loop,
                     link.geom
                 FROM pgr_dijkstraVia(
                     ${createLinkSelectionQueryForPgRouting(bufferAreaRestriction)},
@@ -477,6 +483,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     rl.infrastructure_source_name,
                     rl.external_link_id,
                     rl.link_name,
+                    rl.is_closed_loop,
                     ST_AsEWKB(ST_Transform(rl.geom, 4326)) as geom
                 FROM route_link rl
                 UNION ALL
@@ -488,6 +495,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     NULL::text AS infrastructure_source_name,
                     NULL::text AS external_link_id,
                     NULL::jsonb AS link_name,
+                    NULL::bool AS is_closed_loop,
                     ST_AsEWKB(ST_Transform(ttl.geom, 4326)) as geom
                 FROM trimmed_terminus_link ttl
                 WHERE ttl.geom IS NOT NULL
@@ -806,6 +814,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     src.infrastructure_source_name,
                     link.external_link_id,
                     link.name AS link_name,
+                    link.start_node_id = link.end_node_id AS is_closed_loop,
                     link.geom
                 FROM pgr_transform5 pgr
                 INNER JOIN routing.infrastructure_link link ON link.infrastructure_link_id = pgr.edge
@@ -833,6 +842,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     rl.infrastructure_source_name,
                     rl.external_link_id,
                     rl.link_name,
+                    rl.is_closed_loop,
                     ST_AsEWKB(ST_Transform(rl.geom, 4326)) as geom
                 FROM route_link rl
                 UNION ALL
@@ -844,6 +854,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     NULL::text AS infrastructure_source_name,
                     NULL::text AS external_link_id,
                     NULL::jsonb AS link_name,
+                    NULL::bool AS is_closed_loop,
                     ST_AsEWKB(ST_Transform(trl.geom, 4326)) as geom
                 FROM trimmed_route_link trl
             ) combined

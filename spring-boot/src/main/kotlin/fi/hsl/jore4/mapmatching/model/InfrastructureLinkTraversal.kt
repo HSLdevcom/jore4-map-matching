@@ -11,4 +11,5 @@ data class InfrastructureLinkTraversal(val infrastructureLinkId: InfrastructureL
                                        val isTraversalForwards: Boolean,
                                        val linkLength: Double,
                                        val traversedDistance: Double,
+                                       val isClosedLoop: Boolean,
                                        val infrastructureLinkName: MultilingualString)
