@@ -31,7 +31,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
     @Transactional(readOnly = true)
     override fun findRoute(viaPoints: List<Point<G2D>>,
                            vehicleType: VehicleType,
-                           linkQueryDistance: Int)
+                           extraParameters: RoutingExtraParameters)
         : RoutingResponse {
 
         val filteredPoints = filterOutConsecutiveDuplicates(viaPoints)
@@ -41,7 +41,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         }
 
         val closestLinks: Collection<SnapPointToLinkDTO> =
-            findClosestInfrastructureLinks(filteredPoints, vehicleType, linkQueryDistance)
+            findClosestInfrastructureLinks(filteredPoints, vehicleType, extraParameters.linkQueryDistance)
 
         if (closestLinks.size < filteredPoints.size) {
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
@@ -50,7 +50,9 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         val sourceRoutePoints: List<PgRoutingPoint> = closestLinks.map { toPgRoutingPoint(it.link) }
 
         val resultRouteLinks: List<RouteLinkDTO> =
-            routingServiceInternal.findRouteViaPoints(sourceRoutePoints, vehicleType)
+            routingServiceInternal.findRouteViaPoints(sourceRoutePoints,
+                                                      vehicleType,
+                                                      extraParameters.simplifyConsecutiveClosedLoopTraversals)
 
         return RoutingResponseCreator.create(resultRouteLinks)
     }

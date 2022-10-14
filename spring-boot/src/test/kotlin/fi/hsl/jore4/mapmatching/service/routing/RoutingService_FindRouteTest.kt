@@ -28,17 +28,18 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
 
     private fun findRoute(routeViaPoints: List<Point<G2D>>,
                           vehicleType: VehicleType = VehicleType.GENERIC_BUS,
-                          linkQueryDistance: Int = 50)
-        : RoutingResponse = routingService.findRoute(routeViaPoints,
-                                                     vehicleType,
-                                                     linkQueryDistance)
+                          routingParams: RoutingExtraParameters = DEFAULT_ROUTING_EXTRA_PARAMETERS)
+        : RoutingResponse {
+
+        return routingService.findRoute(routeViaPoints, vehicleType, routingParams)
+    }
 
     private fun findRouteAndCheckAssertionsOnSuccessResponse(routeViaPoints: List<Point<G2D>>,
                                                              vehicleType: VehicleType = VehicleType.GENERIC_BUS,
-                                                             linkQueryDistance: Int = 50,
+                                                             routingParams: RoutingExtraParameters = DEFAULT_ROUTING_EXTRA_PARAMETERS,
                                                              checkAssertions: (response: RoutingResponse.RoutingSuccessDTO) -> Unit) {
 
-        when (val response: RoutingResponse = findRoute(routeViaPoints, vehicleType, linkQueryDistance)) {
+        when (val response: RoutingResponse = findRoute(routeViaPoints, vehicleType, routingParams)) {
             is RoutingResponse.RoutingSuccessDTO -> {
                 // Verify common assertions.
                 assertThat(response.code).isEqualTo(ResponseCode.Ok)
@@ -54,10 +55,10 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
 
     private fun findRouteAndCheckAssertionsOnFailureResponse(routeViaPoints: List<Point<G2D>>,
                                                              vehicleType: VehicleType = VehicleType.GENERIC_BUS,
-                                                             linkQueryDistance: Int = 50,
+                                                             routingParams: RoutingExtraParameters = DEFAULT_ROUTING_EXTRA_PARAMETERS,
                                                              checkAssertions: (response: RoutingResponse.RoutingFailureDTO) -> Unit) {
 
-        when (val response: RoutingResponse = findRoute(routeViaPoints, vehicleType, linkQueryDistance)) {
+        when (val response: RoutingResponse = findRoute(routeViaPoints, vehicleType, routingParams)) {
             is RoutingResponse.RoutingFailureDTO -> {
                 // Verify common assertion(s).
                 assertThat(response.code).isNotEqualTo(ResponseCode.Ok)
@@ -369,5 +370,11 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                 ))
             }
         }
+    }
+
+    companion object {
+        private val DEFAULT_ROUTING_EXTRA_PARAMETERS =
+            RoutingExtraParameters(linkQueryDistance = 50,
+                                   simplifyConsecutiveClosedLoopTraversals = true)
     }
 }
