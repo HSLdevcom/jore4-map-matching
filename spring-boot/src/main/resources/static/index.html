@@ -254,7 +254,7 @@
 
             try {
                 const query = await fetch(
-                    `/api/route/v1/bus/${coordinates}?linkSearchRadius=100`,
+                    `/api/route/v1/bus/${coordinates}?linkSearchRadius=100&simplifyClosedLoopTraversals=false`,
                     { method: 'GET' }
                 );
                 const data = await query.json();

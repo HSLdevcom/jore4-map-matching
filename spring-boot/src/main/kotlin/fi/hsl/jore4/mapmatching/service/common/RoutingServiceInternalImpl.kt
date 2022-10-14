@@ -41,6 +41,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
     @Transactional(readOnly = true)
     override fun findRouteViaPoints(points: List<PgRoutingPoint>,
                                     vehicleType: VehicleType,
+                                    simplifyConsecutiveClosedLoopTraversals: Boolean,
                                     bufferAreaRestriction: BufferAreaRestriction?)
         : List<RouteLinkDTO> {
 
@@ -52,6 +53,8 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
 
                 val nodeIdSequence = NodeIdSequence(nodeIdList).duplicatesRemoved()
 
+                // Closed-loop post-processing is not relevant when find route via network nodes.
+
                 routingRepository
                     .findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
                     .also { routeLinks: List<RouteLinkDTO> ->
@@ -62,8 +65,15 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
             }
 
             false -> {
-                routingRepository
-                    .findRouteViaPoints(points, vehicleType, bufferAreaRestriction)
+                val routeLinks: List<RouteLinkDTO> =
+                    routingRepository.findRouteViaPoints(points, vehicleType, bufferAreaRestriction)
+
+                val resultsRouteLinks: List<RouteLinkDTO> = if (simplifyConsecutiveClosedLoopTraversals)
+                    ClosedLoopPostProcessor.simplifyConsecutiveClosedLoopTraversals(routeLinks)
+                else
+                    routeLinks
+
+                return resultsRouteLinks
                     .also { routeLinks: List<RouteLinkDTO> ->
                         LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
                     }

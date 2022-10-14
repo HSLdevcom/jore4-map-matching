@@ -28,17 +28,18 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
 
     private fun findRoute(routeViaPoints: List<Point<G2D>>,
                           vehicleType: VehicleType = VehicleType.GENERIC_BUS,
-                          linkQueryDistance: Int = 50)
-        : RoutingResponse = routingService.findRoute(routeViaPoints,
-                                                     vehicleType,
-                                                     linkQueryDistance)
+                          routingParams: RoutingExtraParameters = DEFAULT_ROUTING_EXTRA_PARAMETERS)
+        : RoutingResponse {
+
+        return routingService.findRoute(routeViaPoints, vehicleType, routingParams)
+    }
 
     private fun findRouteAndCheckAssertionsOnSuccessResponse(routeViaPoints: List<Point<G2D>>,
                                                              vehicleType: VehicleType = VehicleType.GENERIC_BUS,
-                                                             linkQueryDistance: Int = 50,
+                                                             routingParams: RoutingExtraParameters = DEFAULT_ROUTING_EXTRA_PARAMETERS,
                                                              checkAssertions: (response: RoutingResponse.RoutingSuccessDTO) -> Unit) {
 
-        when (val response: RoutingResponse = findRoute(routeViaPoints, vehicleType, linkQueryDistance)) {
+        when (val response: RoutingResponse = findRoute(routeViaPoints, vehicleType, routingParams)) {
             is RoutingResponse.RoutingSuccessDTO -> {
                 // Verify common assertions.
                 assertThat(response.code).isEqualTo(ResponseCode.Ok)
@@ -54,10 +55,10 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
 
     private fun findRouteAndCheckAssertionsOnFailureResponse(routeViaPoints: List<Point<G2D>>,
                                                              vehicleType: VehicleType = VehicleType.GENERIC_BUS,
-                                                             linkQueryDistance: Int = 50,
+                                                             routingParams: RoutingExtraParameters = DEFAULT_ROUTING_EXTRA_PARAMETERS,
                                                              checkAssertions: (response: RoutingResponse.RoutingFailureDTO) -> Unit) {
 
-        when (val response: RoutingResponse = findRoute(routeViaPoints, vehicleType, linkQueryDistance)) {
+        when (val response: RoutingResponse = findRoute(routeViaPoints, vehicleType, routingParams)) {
             is RoutingResponse.RoutingFailureDTO -> {
                 // Verify common assertion(s).
                 assertThat(response.code).isNotEqualTo(ResponseCode.Ok)
@@ -368,51 +369,88 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                                                                       toPoint(g(24.56373, 60.16019)),
                                                                       toPoint(g(24.56220, 60.16039)))
 
-            @Test
-            fun shouldReturnExpectedGeometry() {
-                findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+            @Nested
+            @DisplayName("Without simplifying consecutive closed loop traversals")
+            inner class WithoutSimplifyingConsecutiveClosedLoopTraversals {
 
-                    val expectedCoordinates = PositionSequenceBuilders.variableSized(G2D::class.java)
-                        .add(24.56305, 60.16016)
-                        .add(24.56307, 60.16021)
-                        .add(24.56354, 60.16019)
-                        .add(24.56373, 60.16019)
-                        .add(24.56354, 60.16019)
-                        .add(24.56307, 60.16021)
-                        .add(24.56291, 60.16022)
-                        .add(24.56269, 60.16024)
-                        .add(24.56245, 60.16029)
-                        .add(24.56223, 60.16039)
-                        .add(24.56221, 60.16040)
+                @Test
+                fun shouldReturnExpectedGeometry() {
+                    findRouteAndCheckAssertionsOnSuccessResponse(
+                        routeViaPoints = requestRoutePoints,
+                        routingParams = DEFAULT_ROUTING_EXTRA_PARAMETERS) { resp ->
 
-                    val expectedGeometry: LineString<G2D> =
-                        mkLineString(expectedCoordinates.toPositionSequence(), WGS84)
+                        val expectedCoordinates = PositionSequenceBuilders.variableSized(G2D::class.java)
+                            .add(24.56305, 60.16016)
+                            .add(24.56307, 60.16021)
+                            .add(24.56354, 60.16019)
+                            .add(24.56373, 60.16019)
+                            .add(24.56354, 60.16019)
+                            .add(24.56307, 60.16021)
+                            .add(24.56291, 60.16022)
+                            .add(24.56269, 60.16024)
+                            .add(24.56245, 60.16029)
+                            .add(24.56223, 60.16039)
+                            .add(24.56221, 60.16040)
 
-                    val actualGeometry: LineString<G2D> = resp.routes.first().geometry
+                        val expectedGeometry: LineString<G2D> =
+                            mkLineString(expectedCoordinates.toPositionSequence(), WGS84)
 
-                    assertThat(roundCoordinates(actualGeometry, 5)).isEqualTo(expectedGeometry)
+                        val actualGeometry: LineString<G2D> = resp.routes.first().geometry
+
+                        assertThat(roundCoordinates(actualGeometry, 5)).isEqualTo(expectedGeometry)
+                    }
+                }
+
+                @Test
+                fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
+                    findRouteAndCheckAssertionsOnSuccessResponse(
+                        routeViaPoints = requestRoutePoints,
+                        routingParams = DEFAULT_ROUTING_EXTRA_PARAMETERS) { resp ->
+
+                        val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
+                            getExternalLinkIdsAndTraversalDirections(resp)
+
+                        assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
+                            "11392370" to true,
+                            "12538103" to true,
+                            "12538103" to false,
+                            "12538103" to false
+                        ))
+                    }
                 }
             }
 
-            @Test
-            fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
-                findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
+            @Nested
+            @DisplayName("When closed loop traversals are simplified")
+            inner class WhenClosedLoopTraversalsAreSimplified {
 
-                    val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
-                        getExternalLinkIdsAndTraversalDirections(resp)
+                private val routingExtraParams = RoutingExtraParameters(linkQueryDistance = 50,
+                                                                        simplifyConsecutiveClosedLoopTraversals = true)
 
-                    assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
-                        "11392370" to true,
-                        "12538103" to true,
-                        "12538103" to false,
-                        "12538103" to false
-                    ))
+                @Test
+                fun shouldReturnExpectedInfrastructureLinksWithTraversalDirections() {
+                    findRouteAndCheckAssertionsOnSuccessResponse(routeViaPoints = requestRoutePoints,
+                                                                 routingParams = routingExtraParams) { resp ->
+
+                        val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
+                            getExternalLinkIdsAndTraversalDirections(resp)
+
+                        // shorter list than without simplifying, the closed-loop link appears only once
+                        assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(listOf(
+                            "11392370" to true,
+                            "12538103" to true
+                        ))
+                    }
                 }
             }
         }
     }
 
     companion object {
+
+        private val DEFAULT_ROUTING_EXTRA_PARAMETERS =
+            RoutingExtraParameters(linkQueryDistance = 50,
+                                   simplifyConsecutiveClosedLoopTraversals = false)
 
         private fun getExternalLinkIdsAndTraversalDirections(response: RoutingResponse.RoutingSuccessDTO)
             : List<Pair<String, Boolean>> {

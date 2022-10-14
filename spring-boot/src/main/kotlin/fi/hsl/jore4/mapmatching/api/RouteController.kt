@@ -4,6 +4,7 @@ import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.routing.IRoutingService
+import fi.hsl.jore4.mapmatching.service.routing.RoutingExtraParameters
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toPoints
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
@@ -27,7 +28,8 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
                 "/$TRANSPORTATION_MODE_PARAM/{coords}.json")
     fun findRoute(@PathVariable transportationMode: String,
                   @Pattern(regexp = ParameterUtils.COORDINATE_LIST) @PathVariable coords: String,
-                  @RequestParam(required = false) linkSearchRadius: Int?
+                  @RequestParam(required = false) linkSearchRadius: Int?,
+                  @RequestParam(required = false) simplifyClosedLoopTraversals: Boolean?
     ): RoutingResponse {
 
         LOGGER.debug { "Given transportation mode: $transportationMode" }
@@ -36,7 +38,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         val vehicleType: VehicleType = findVehicleType(transportationMode, null)
             ?: return RoutingResponse.invalidTransportationMode(transportationMode)
 
-        return findRouteInternal(coords, vehicleType, linkSearchRadius)
+        return findRouteInternal(coords, vehicleType, linkSearchRadius, simplifyClosedLoopTraversals)
     }
 
     @PostMapping("/$TRANSPORTATION_MODE_PARAM", consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -52,7 +54,8 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
 
         return findRouteInternal(request.routePoints,
                                  vehicleType,
-                                 request.linkSearchRadius)
+                                 request.linkSearchRadius,
+                                 request.simplifyClosedLoopTraversals)
     }
 
     @Deprecated("GET request should be replaced with POST")
@@ -61,7 +64,8 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
     fun findRoute(@PathVariable transportationMode: String,
                   @PathVariable vehicleTypeParam: String,
                   @Pattern(regexp = ParameterUtils.COORDINATE_LIST) @PathVariable coords: String,
-                  @RequestParam(required = false) linkSearchRadius: Int?)
+                  @RequestParam(required = false) linkSearchRadius: Int?,
+                  @RequestParam(required = false) simplifyClosedLoopTraversals: Boolean?)
         : RoutingResponse {
 
         LOGGER.debug { "Given profile: $transportationMode/$vehicleTypeParam" }
@@ -70,7 +74,7 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         val vehicleType: VehicleType = findVehicleType(transportationMode, vehicleTypeParam)
             ?: return RoutingResponse.invalidTransportationProfile(transportationMode, vehicleTypeParam)
 
-        return findRouteInternal(coords, vehicleType, linkSearchRadius)
+        return findRouteInternal(coords, vehicleType, linkSearchRadius, simplifyClosedLoopTraversals)
     }
 
     @PostMapping("/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM", consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -87,10 +91,14 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
 
         return findRouteInternal(request.routePoints,
                                  vehicleType,
-                                 request.linkSearchRadius)
+                                 request.linkSearchRadius,
+                                 request.simplifyClosedLoopTraversals)
     }
 
-    private fun findRouteInternal(coords: String, vehicleType: VehicleType, linkSearchRadius: Int?)
+    private fun findRouteInternal(coords: String,
+                                  vehicleType: VehicleType,
+                                  linkSearchRadius: Int?,
+                                  simplifyClosedLoopTraversals: Boolean?)
         : RoutingResponse {
 
         val parsedCoordinates: List<LatLng>
@@ -101,15 +109,24 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
             return RoutingResponse.invalidUrl(ex.message ?: "Failed to parse coordinates")
         }
 
-        return findRouteInternal(parsedCoordinates, vehicleType, linkSearchRadius)
+        return findRouteInternal(parsedCoordinates,
+                                 vehicleType,
+                                 linkSearchRadius,
+                                 simplifyClosedLoopTraversals)
     }
 
-    private fun findRouteInternal(coords: List<LatLng>, vehicleType: VehicleType, linkSearchRadius: Int?)
+    private fun findRouteInternal(coords: List<LatLng>,
+                                  vehicleType: VehicleType,
+                                  linkSearchRadius: Int?,
+                                  simplifyClosedLoopTraversals: Boolean?)
         : RoutingResponse {
 
-        return routingService.findRoute(toPoints(coords),
-                                        vehicleType,
-                                        linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS)
+        return routingService.findRoute(
+            toPoints(coords),
+            vehicleType,
+            RoutingExtraParameters(
+                linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS,
+                simplifyClosedLoopTraversals ?: DEFAULT_SIMPLIFY_CLOSED_LOOP_TRAVERSALS))
     }
 
     companion object {
@@ -119,5 +136,6 @@ class RouteController @Autowired constructor(val routingService: IRoutingService
         private const val VEHICLE_TYPE_PARAM = "{vehicleTypeParam:[a-zA-Z-_]+}"
 
         private const val DEFAULT_LINK_SEARCH_RADIUS = 150
+        private const val DEFAULT_SIMPLIFY_CLOSED_LOOP_TRAVERSALS = true
     }
 }

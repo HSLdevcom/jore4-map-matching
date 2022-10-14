@@ -64,10 +64,11 @@ The table below describes the request parameters part of the URI path.
 
 The table below describes the main request body elements.
 
-| Element              | Description |
-| -------------------- | ----------- |
-| `routePoints`        | Latitude and longitude points of the route |
-| `linkSearchRadius`   | Optional parameter which limits search radius (in meters) while finding closest infrastructure link for each given coordinate. Defaults to `150` meters if not present. |
+| Element                        | Description |
+| ------------------------------ | ----------- |
+| `routePoints`                  | Latitude and longitude points of the route |
+| `linkSearchRadius`             | Optional parameter which limits search radius (in meters) while finding closest infrastructure link for each given coordinate. Defaults to `150` meters if not present. |
+| `simplifyClosedLoopTraversals` | Optional boolean parameter that indicates whether consecutive traversals (full, partial, reversed, reversed partial) on a closed-loop shaped infrastructure link should be replaced by one full traversal in the direction of the first traversal appearing per loop. The handling is applied for all appearances of closed loops in a route. This denotes a compatibility mode for Jore4 where route granularity is defined in terms of whole infrastructure link geometries. Therefore, we may want to prevent inadvertent multi-traversals in closed loops. Defaults to `true`. |
 
 The table below describes the supported profiles that consist of transportation mode and optional vehicle type. Profiles are used to constrain infrastructure links to those safely traversable for given combination of transportation mode and optional vehicle type.
 

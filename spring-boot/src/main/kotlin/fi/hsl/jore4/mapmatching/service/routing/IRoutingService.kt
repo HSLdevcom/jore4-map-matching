@@ -18,13 +18,16 @@ interface IRoutingService {
      * @param vehicleType vehicle type constraint for the resulting route. The
      * route must consist of only those infrastructure links that are safely
      * traversable by the given vehicle type.
-     * @param linkQueryDistance the distance in meters within which the closest
-     * infrastructure link is searched for each given point
+     * @param extraParameters contains additional extra parameters that affect
+     * routing.
      *
      * @return either a successful or failing routing response. A successfully
      * resolved route matches with the given points and vehicle type. If the
      * closest infrastructure link cannot be found for any of the given points
      * then a failure response is returned.
      */
-    fun findRoute(viaPoints: List<Point<G2D>>, vehicleType: VehicleType, linkQueryDistance: Int): RoutingResponse
+    fun findRoute(viaPoints: List<Point<G2D>>,
+                  vehicleType: VehicleType,
+                  extraParameters: RoutingExtraParameters)
+        : RoutingResponse
 }
