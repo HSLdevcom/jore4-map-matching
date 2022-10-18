@@ -9,27 +9,29 @@ import org.geolatte.geom.LineString
 interface IMatchingService {
 
     /**
-     * Find the shortest route that matches as closely as possible with the
-     * given input geometry. The resulting route must visit the infrastructure
-     * links that are associated with the public transport stop points appearing
-     * as route points of the input route. The public transport stop points are
-     * matched with their national identifiers. The resulting route must also be
-     * safely traversable by the given vehicle type.
+     * Finds the shortest route through the infrastructure network provided by
+     * the system that matches as closely as possible with the given source
+     * geometry. The given [sourceRoutePoints] are used as hints in a heuristic
+     * that selects the most likely infrastructure elements (links and nodes) to
+     * the resulting route. The resulting route must be safely traversable by
+     * the given vehicle type.
      *
-     * @param routeGeometry the input geometry as LineString for which a close
-     * match is to be resolved.
-     * @param routePoints the route points along the input geometry
+     * @param sourceRouteGeometry the source geometry as a LineString for which
+     * a closely matching target LineString geometry is to be resolved.
+     * @param sourceRoutePoints the route points along the source route
+     * geometry. Route points are tried to be connected to infrastructure links
+     * and nodes in the local database. The purpose of this is to help select
+     * the most locally appropriate path from among multiple options.
      * @param vehicleType vehicle type constraint for the resulting route. The
      * route must consist of only those infrastructure links that are safely
      * traversable by the given vehicle type.
      * @param matchingParameters contains parameters that can be adjusted for
-     * the purpose of getting optimal results in matching public transport
-     * routes against the infrastructure network provided by the system.
+     * the purpose of getting optimal matching results.
      *
      * @return either a successful or failure-marking routing response.
      */
-    fun findMatchForPublicTransportRoute(routeGeometry: LineString<G2D>,
-                                         routePoints: List<RoutePoint>,
+    fun findMatchForPublicTransportRoute(sourceRouteGeometry: LineString<G2D>,
+                                         sourceRoutePoints: List<RoutePoint>,
                                          vehicleType: VehicleType,
                                          matchingParameters: PublicTransportRouteMatchingParameters)
         : RoutingResponse
