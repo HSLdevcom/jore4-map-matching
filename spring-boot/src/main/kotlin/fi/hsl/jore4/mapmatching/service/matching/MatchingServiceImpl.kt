@@ -248,13 +248,13 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             }"
         }
 
-        fun getRouteTerminusPoint(routePoint: RoutePoint, terminusType: TerminusType): RouteTerminusPoint {
+        fun getRouteTerminusPoint(routePoint: RoutePoint, terminusType: TerminusType): SourceRouteTerminusPoint {
             val location: Point<G2D> =
                 toPoint(if (terminusType == START) routeGeometry.startPosition else routeGeometry.endPosition)
 
             return when (routePoint) {
-                is RouteStopPoint -> RouteTerminusPoint(location, terminusType, true, routePoint.nationalId)
-                else -> RouteTerminusPoint(location, terminusType, false, null)
+                is RouteStopPoint -> SourceRouteTerminusPoint(location, terminusType, true, routePoint.nationalId)
+                else -> SourceRouteTerminusPoint(location, terminusType, false, null)
             }
         }
 
@@ -279,8 +279,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
     /**
      * @throws [IllegalStateException]
      */
-    internal fun findTerminusLinkCandidates(routeStartPoint: RouteTerminusPoint,
-                                            routeEndPoint: RouteTerminusPoint,
+    internal fun findTerminusLinkCandidates(routeStartPoint: SourceRouteTerminusPoint,
+                                            routeEndPoint: SourceRouteTerminusPoint,
                                             linkQueryDistance: Double,
                                             linkQueryLimit: Int,
                                             vehicleType: VehicleType,
@@ -298,7 +298,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                              linkQueryDistance,
                                              linkQueryLimit)
 
-        fun getExceptionIfCandidatesNotFound(routeTerminusPoint: RouteTerminusPoint) =
+        fun getExceptionIfCandidatesNotFound(routeTerminusPoint: SourceRouteTerminusPoint) =
             IllegalStateException(
                 "Could not find infrastructure links within $linkQueryDistance meter distance from route " +
                     "${routeTerminusPoint.terminusType} point (${routeTerminusPoint.location}) while applying " +
@@ -310,7 +310,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val endLinkCandidates: List<SnappedLinkState> = linkSearchResults[2]?.closestLinks
             ?: throw getExceptionIfCandidatesNotFound(routeEndPoint)
 
-        fun createTerminusLinkCandidates(closestLinks: List<SnappedLinkState>, routeTerminusPoint: RouteTerminusPoint)
+        fun createTerminusLinkCandidates(closestLinks: List<SnappedLinkState>, routeTerminusPoint: SourceRouteTerminusPoint)
             : List<TerminusLinkCandidate> {
 
             val linkIdAssociatedWithStopPoint: InfrastructureLinkId? =

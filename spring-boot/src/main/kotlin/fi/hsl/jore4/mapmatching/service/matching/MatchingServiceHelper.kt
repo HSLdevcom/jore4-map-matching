@@ -29,7 +29,7 @@ object MatchingServiceHelper {
         return filterOutConsecutiveDuplicates(routePointLocations).size >= 2
     }
 
-    internal fun resolveTerminusLinkIfStopPoint(routeTerminusPoint: RouteTerminusPoint,
+    internal fun resolveTerminusLinkIfStopPoint(routeTerminusPoint: SourceRouteTerminusPoint,
                                                 fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState>)
         : SnappedLinkState? {
 
