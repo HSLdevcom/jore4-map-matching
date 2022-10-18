@@ -101,7 +101,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                   matchingParameters.maxStopLocationDeviation,
                                                   matchingParameters.roadJunctionMatching)
         } catch (ex: RuntimeException) {
-            val errMessage: String = ex.message ?: "Could not resolve terminus link candidates and via nodes"
+            val errMessage: String =
+                ex.message ?: "Could not resolve target terminus link candidates and/or target via nodes"
             LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
@@ -109,7 +110,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val nodeSequenceCandidates: List<NodeSequenceCandidatesBetweenSnappedLinks> = try {
             resolveNodeSequenceCandidates(startLinkCandidates, endLinkCandidates, viaNodeResolvers)
         } catch (ex: RuntimeException) {
-            val errMessage: String = ex.message ?: "Could not resolve node sequence candidates"
+            val errMessage: String =
+                ex.message ?: "Could not resolve node sequence candidates while map-matching via nodes (graph vertices)"
             LOGGER.warn(errMessage)
             return RoutingResponse.noSegment(errMessage)
         }
@@ -241,7 +243,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             .filterValues(fromStopNationalIdToInfrastructureLink::containsKey)
 
         LOGGER.debug {
-            "Matched following stop points from route points: ${
+            "Matched following public transport stop points from source route points: ${
                 joinToLogString(fromRoutePointIndexToMatchedStopNationalId.toSortedMap().entries) {
                     "Route point #${it.key + 1}: nationalId=${it.value}"
                 }
@@ -300,7 +302,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         fun getExceptionIfCandidatesNotFound(routeTerminusPoint: SourceRouteTerminusPoint) =
             IllegalStateException(
-                "Could not find infrastructure links within $linkQueryDistance meter distance from route " +
+                "Could not find any infrastructure link within $linkQueryDistance meter distance from source route " +
                     "${routeTerminusPoint.terminusType} point (${routeTerminusPoint.location}) while applying " +
                     "vehicle type constraint '$vehicleType'")
 
@@ -382,7 +384,7 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             }
             .also { routePointIndexToJunctionNode: List<Pair<Int, NodeProximity>> ->
                 LOGGER.debug {
-                    "Matched following road junction points from route points: ${
+                    "Matched following road junction points from source route points: ${
                         joinToLogString(routePointIndexToJunctionNode) {
                             "Route point #${it.first + 1}: ${it.second}"
                         }
