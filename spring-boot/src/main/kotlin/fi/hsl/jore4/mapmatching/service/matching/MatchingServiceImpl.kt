@@ -15,10 +15,8 @@ import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType.END
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType.START
-import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.IStopRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.PublicTransportStopMatchParameters
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinksDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
@@ -53,8 +51,8 @@ private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopRepository,
-                                                 val linkRepository: ILinkRepository,
                                                  val nodeRepository: INodeRepository,
+                                                 val closestTerminusLinksResolver: IClosestTerminusLinksResolver,
                                                  val nodeService: INodeServiceInternal,
                                                  val routingService: IRoutingServiceInternal)
     : IMatchingService {
@@ -292,25 +290,12 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         val routeStartLocation: Point<G2D> = routeStartPoint.location
         val routeEndLocation: Point<G2D> = routeEndPoint.location
 
-        // `findNClosestLinks` returns one-based index.
-        // The number of closest links considered as terminus link candidates is limited by `linkQueryLimit`.
-        val linkSearchResults: Map<Int, SnapPointToLinksDTO> =
-            linkRepository.findNClosestLinks(listOf(routeStartLocation, routeEndLocation),
-                                             vehicleType,
-                                             linkQueryDistance,
-                                             linkQueryLimit)
-
-        fun getExceptionIfCandidatesNotFound(routeTerminusPoint: SourceRouteTerminusPoint) =
-            IllegalStateException(
-                "Could not find any infrastructure link within $linkQueryDistance meter distance from source route " +
-                    "${routeTerminusPoint.terminusType} point (${routeTerminusPoint.location}) while applying " +
-                    "vehicle type constraint '$vehicleType'")
-
-        val startLinkCandidates: List<SnappedLinkState> = linkSearchResults[1]?.closestLinks
-            ?: throw getExceptionIfCandidatesNotFound(routeStartPoint)
-
-        val endLinkCandidates: List<SnappedLinkState> = linkSearchResults[2]?.closestLinks
-            ?: throw getExceptionIfCandidatesNotFound(routeEndPoint)
+        val (closestStartLinks: List<SnappedLinkState>, closestEndLinks: List<SnappedLinkState>) =
+            closestTerminusLinksResolver.findClosestInfrastructureLinksForRouteEndpoints(routeStartLocation,
+                                                                                         routeEndLocation,
+                                                                                         vehicleType,
+                                                                                         linkQueryDistance,
+                                                                                         linkQueryLimit)
 
         fun createTerminusLinkCandidates(closestLinks: List<SnappedLinkState>, routeTerminusPoint: SourceRouteTerminusPoint)
             : List<TerminusLinkCandidate> {
@@ -336,8 +321,8 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
             }
         }
 
-        return Pair(createTerminusLinkCandidates(startLinkCandidates, routeStartPoint),
-                    createTerminusLinkCandidates(endLinkCandidates, routeEndPoint))
+        return Pair(createTerminusLinkCandidates(closestStartLinks, routeStartPoint),
+                    createTerminusLinkCandidates(closestEndLinks, routeEndPoint))
     }
 
     internal fun getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(
