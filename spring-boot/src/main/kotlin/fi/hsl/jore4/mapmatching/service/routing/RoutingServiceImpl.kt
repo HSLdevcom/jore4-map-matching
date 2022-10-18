@@ -49,10 +49,15 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         val sourceRoutePoints: List<PgRoutingPoint> =
             closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.link) }
 
-        val resultRouteLinks: List<RouteLinkDTO> =
-            routingServiceInternal.findRouteViaPointsOnLinks(sourceRoutePoints,
-                                                             vehicleType,
-                                                             extraParameters.simplifyConsecutiveClosedLoopTraversals)
+        val resultRouteLinks: List<RouteLinkDTO> = routingServiceInternal
+            .findRouteViaPointsOnLinks(sourceRoutePoints,
+                                       vehicleType,
+                                       extraParameters.simplifyConsecutiveClosedLoopTraversals)
+            .also { routeLinks: List<RouteLinkDTO> ->
+                if (routeLinks.isNotEmpty()) {
+                    LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
+                }
+            }
 
         return RoutingResponseCreator.create(resultRouteLinks)
     }

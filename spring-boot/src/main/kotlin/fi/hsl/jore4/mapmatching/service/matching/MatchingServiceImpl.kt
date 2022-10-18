@@ -130,18 +130,24 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                 val startLink: SnappedLinkState = nodeSeqResult.startLink
                 val endLink: SnappedLinkState = nodeSeqResult.endLink
 
-                val routeLinks: List<RouteLinkDTO> =
-                    routingService.findRouteViaNodes(nodeIdSequence,
-                                                     vehicleType,
-                                                     startLink.closestPointFractionalMeasure,
-                                                     endLink.closestPointFractionalMeasure,
-                                                     BufferAreaRestriction.from(routeGeometry,
-                                                                                matchingParameters.bufferRadiusInMeters,
-                                                                                startLink,
-                                                                                endLink))
+                val routeLinks: List<RouteLinkDTO> = routingService
+                    .findRouteViaNodes(nodeIdSequence,
+                                       vehicleType,
+                                       startLink.closestPointFractionalMeasure,
+                                       endLink.closestPointFractionalMeasure,
+                                       BufferAreaRestriction.from(routeGeometry,
+                                                                  matchingParameters.bufferRadiusInMeters,
+                                                                  startLink,
+                                                                  endLink))
+                    .also { routeLinks: List<RouteLinkDTO> ->
+                        if (routeLinks.isNotEmpty()) {
+                            LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
+                        }
+                    }
 
                 RoutingResponseCreator.create(routeLinks)
             }
+
             is NodeSequenceResolutionFailed -> {
                 LOGGER.warn(nodeSeqResult.message)
                 RoutingResponse.noSegment(nodeSeqResult.message)

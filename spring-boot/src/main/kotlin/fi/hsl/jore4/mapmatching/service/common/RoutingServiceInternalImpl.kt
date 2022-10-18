@@ -8,13 +8,9 @@ import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RealNode
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
-import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
-import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-
-private val LOGGER = KotlinLogging.logger {}
 
 @Component
 class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: IRoutingRepository)
@@ -33,9 +29,6 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
                                                           fractionalStartLocationOnFirstLink,
                                                           fractionalEndLocationOnLastLink,
                                                           bufferAreaRestriction)
-            .also { routeLinks: List<RouteLinkDTO> ->
-                LOGGER.debug { "Got route links for nodes $nodeIdSequence: ${joinToLogString(routeLinks)}" }
-            }
     }
 
     @Transactional(readOnly = true)
@@ -55,28 +48,17 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
 
                 // Closed-loop post-processing is not relevant when find route via network nodes.
 
-                routingRepository
-                    .findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
-                    .also { routeLinks: List<RouteLinkDTO> ->
-                        LOGGER.debug {
-                            "Got route links for nodes $nodeIdSequence: ${joinToLogString(routeLinks)}"
-                        }
-                    }
+                routingRepository.findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
             }
 
             false -> {
                 val routeLinks: List<RouteLinkDTO> =
                     routingRepository.findRouteViaPointsOnLinks(points, vehicleType, bufferAreaRestriction)
 
-                val resultsRouteLinks: List<RouteLinkDTO> = if (simplifyConsecutiveClosedLoopTraversals)
+                return if (simplifyConsecutiveClosedLoopTraversals)
                     ClosedLoopPostProcessor.simplifyConsecutiveClosedLoopTraversals(routeLinks)
                 else
                     routeLinks
-
-                return resultsRouteLinks
-                    .also { routeLinks: List<RouteLinkDTO> ->
-                        LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
-                    }
             }
         }
     }
