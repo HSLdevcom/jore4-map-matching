@@ -55,14 +55,19 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
      * false, then road junction matching is disabled and parameters
      * [junctionNodeMatchDistance] and [junctionNodeClearingDistance] must be
      * null.
-     * @property junctionNodeMatchDistance the distance in meters within which
-     * an infrastructure network node must locate from a route point of road
-     * junction type in order to be matched with it.
-     * @property junctionNodeClearingDistance the distance in meters within
-     * which an infrastructure node must be the only node in proximity of a
-     * route point (of road junction type) in order to be accepted as the match
-     * for it. In other words, no other infrastructure network nodes are allowed
-     * to exist within this distance from the route point for a match to occur.
+     * @property junctionNodeMatchDistance the distance, in meters, within which
+     * a node in the infrastructure network must be located from a source route
+     * point at road junction, so that the node can be concluded to be the
+     * equivalent of the route point. This distance must be less than or equal
+     * to [junctionNodeClearingDistance].
+     * @property junctionNodeClearingDistance the distance, in meters, within
+     * which an infrastructure node must be the only node in the vicinity of a
+     * given source route point (at road junction) to be reliably accepted as
+     * its peer. In other words, there must be no other infrastructure network
+     * nodes at this distance from the route point in order to have a match with
+     * high certainty. Without this condition, the false one can be chosen from
+     * two (or more) nearby nodes. This distance must be greater than or equal
+     * to [junctionNodeMatchDistance].
      */
     data class MapMatchingParametersDTO(val bufferRadiusInMeters: Double?,
                                         val terminusLinkQueryDistance: Double?,

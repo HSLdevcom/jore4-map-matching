@@ -157,8 +157,8 @@ class MatchingService_FindMatchForPublicTransportRouteTest @Autowired constructo
             terminusLinkQueryLimit = 5,
             maxStopLocationDeviation = 80.0,
             roadJunctionMatching = JunctionMatchingParameters(
-                junctionNodeMatchDistance = 5.0,
-                junctionNodeClearingDistance = 30.0
+                matchDistance = 5.0,
+                clearingDistance = 30.0
             )
         )
     }

@@ -28,10 +28,9 @@ import java.lang.IllegalArgumentException
  * map-matching service). If the distance between these two type of locations
  * exceeds [maxStopLocationDeviation], then the affected stops are discarded
  * from the set of route points that are matched with infrastructure links.
- * @property roadJunctionMatching contains details for matching road junction
- * nodes. If missing, then road junction node matching is disabled. Road
- * junction points are identified as essential items in producing accurate match
- * results.
+ * @property roadJunctionMatching contains parameters for tuning heuristics to
+ * match source route points with infrastructure network nodes. If missing, then
+ * road junction node matching is disabled.
  *
  * @throws IllegalArgumentException
  */
@@ -42,26 +41,33 @@ data class PublicTransportRouteMatchingParameters(val bufferRadiusInMeters: Doub
                                                   val roadJunctionMatching: JunctionMatchingParameters?) {
 
     /**
-     * Contains two distance properties with which route points of road junction
-     * type are matched with infrastructure network nodes within map-matching.
+     * Contains distance properties to tune heuristics for matching route points
+     * with infrastructure network nodes (of road junction type). It is
+     * desirable to get as many matches as possible without false guesses that
+     * could ruin match results. Conservative values are recommended.
      *
-     * @property junctionNodeMatchDistance the distance in meters within which
-     * an infrastructure network node must locate from a route point of road
-     * junction type in order to be matched with it.
-     * @property junctionNodeClearingDistance the distance in meters within
-     * which an infrastructure node must be the only node in proximity of a
-     * route point (of road junction type) in order to be accepted as the match
-     * for it. In other words, no other infrastructure network nodes are allowed
-     * to exist within this distance from the route point for a match to occur.
+     * @property matchDistance the distance, in meters, within which a node in
+     * the infrastructure network must be located from a source route point at
+     * road junction, so that the node can be concluded to be the equivalent of
+     * the route point. This distance must be less than or equal to
+     * [clearingDistance].
+     * @property clearingDistance the distance, in meters, within which an
+     * infrastructure node must be the only node in the vicinity of a given
+     * source route point (at road junction) to be reliably accepted as its
+     * peer. In other words, there must be no other infrastructure network nodes
+     * at this distance from the route point in order to have a match with high
+     * certainty. Without this condition, the false one can be chosen from two
+     * (or more) nearby nodes. This distance must be greater than or equal to
+     * [matchDistance].
      *
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if match distance is greater than
+     * clearing distance
      */
-    data class JunctionMatchingParameters(val junctionNodeMatchDistance: Double,
-                                          val junctionNodeClearingDistance: Double) {
+    data class JunctionMatchingParameters(val matchDistance: Double, val clearingDistance: Double) {
 
         init {
-            require(junctionNodeMatchDistance <= junctionNodeClearingDistance) {
-                "junctionNodeMatchDistance must not be greater than junctionNodeClearingDistance"
+            require(matchDistance <= clearingDistance) {
+                "matchDistance must not be greater than clearingDistance"
             }
         }
     }

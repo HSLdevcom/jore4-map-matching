@@ -14,15 +14,12 @@ import fi.hsl.jore4.mapmatching.repository.infrastructure.PublicTransportStopMat
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
-import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
-import fi.hsl.jore4.mapmatching.repository.routing.SnapPointToNodesDTO
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.getSourceRouteTerminusPoint
 import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.validateInputForRouteMatching
-import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionFailed
@@ -42,8 +39,8 @@ private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopRepository,
-                                                 val nodeRepository: INodeRepository,
                                                  val closestTerminusLinksResolver: IClosestTerminusLinksResolver,
+                                                 val roadJunctionMatcher: IRoadJunctionMatcher,
                                                  val nodeService: INodeServiceInternal,
                                                  val routingService: IRoutingServiceInternal)
     : IMatchingService {
@@ -178,8 +175,11 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
 
         // Resolve infrastructure network nodes to visit on route derived from the given route points.
         val fromRoutePointIndexToRoadJunctionNode: Map<Int, NodeProximity?> = matchingParams.roadJunctionMatching
-            ?.let { params ->
-                getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(routePoints, vehicleType, params)
+            ?.let { (matchDistance, clearingDistance) ->
+                roadJunctionMatcher.findInfrastructureNodesMatchingRoadJunctions(routePoints,
+                                                                                 vehicleType,
+                                                                                 matchDistance,
+                                                                                 clearingDistance)
             }
             ?: emptyMap()
 
@@ -241,61 +241,5 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
         return InfrastructureLinksOnRoute(startLinkCandidates,
                                           endLinkCandidates,
                                           fromRouteStopPointIndexToInfrastructureLink)
-    }
-
-    internal fun getInfrastructureNodesByJunctionMatchingIndexedByRoutePointOrdering(
-        routePoints: List<RoutePoint>,
-        vehicleType: VehicleType,
-        roadJunctionMatching: JunctionMatchingParameters
-    ): Map<Int, NodeProximity?> {
-
-        val matchDistance: Double = roadJunctionMatching.junctionNodeMatchDistance
-        val clearingDistance: Double = roadJunctionMatching.junctionNodeClearingDistance
-
-        val junctionPointsWithRoutePointOrdering: List<IndexedValue<RoutePoint>> = routePoints
-            .withIndex()
-            .filter { it.value is RouteJunctionPoint }
-
-        val fromJunctionPointOneBasedIndexToRoutePointIndex: Map<Int, Int> = junctionPointsWithRoutePointOrdering
-            .map(IndexedValue<*>::index)
-            .withIndex()
-            .associateBy(keySelector = { it.index + 1 }, valueTransform = IndexedValue<Int>::value)
-
-        val pointCoordinates: List<Point<G2D>> = junctionPointsWithRoutePointOrdering.map { it.value.location }
-
-        val nClosestNodes: Map<Int, SnapPointToNodesDTO> = nodeRepository.findNClosestNodes(pointCoordinates,
-                                                                                            vehicleType,
-                                                                                            clearingDistance)
-
-        return nClosestNodes.entries
-            .mapNotNull { (junctionPointOneBasedIndex: Int, snap: SnapPointToNodesDTO) ->
-
-                val routePointIndex: Int = fromJunctionPointOneBasedIndexToRoutePointIndex[junctionPointOneBasedIndex]!!
-
-                val nodes: List<NodeProximity> = snap.nodes
-
-                when (nodes.size) {
-                    1 -> {
-                        val node: NodeProximity = nodes[0]
-
-                        if (node.distanceToNode <= matchDistance)
-                            routePointIndex to node
-                        else
-                            null
-                    }
-
-                    else -> null
-                }
-            }
-            .also { routePointIndexToJunctionNode: List<Pair<Int, NodeProximity>> ->
-                LOGGER.debug {
-                    "Matched following road junction points from source route points: ${
-                        joinToLogString(routePointIndexToJunctionNode) {
-                            "Route point #${it.first + 1}: ${it.second}"
-                        }
-                    }"
-                }
-            }
-            .toMap()
     }
 }
