@@ -8,15 +8,15 @@ import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RealNode
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.util.InternalService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
-@Component
+@InternalService
 class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: IRoutingRepository)
     : IRoutingServiceInternal {
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun findRouteViaNodes(nodeIdSequence: NodeIdSequence,
                                    vehicleType: VehicleType,
                                    fractionalStartLocationOnFirstLink: Double,
@@ -31,7 +31,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
                                                           bufferAreaRestriction)
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
                                            vehicleType: VehicleType,
                                            simplifyConsecutiveClosedLoopTraversals: Boolean,

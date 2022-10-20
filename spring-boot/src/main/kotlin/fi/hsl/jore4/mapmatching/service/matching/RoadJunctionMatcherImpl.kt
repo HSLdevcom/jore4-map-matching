@@ -6,17 +6,17 @@ import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
 import fi.hsl.jore4.mapmatching.repository.routing.SnapPointToNodesDTO
+import fi.hsl.jore4.mapmatching.util.InternalService
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 private val LOGGER = KotlinLogging.logger {}
 
-@Component
+@InternalService
 class RoadJunctionMatcherImpl @Autowired constructor(val nodeRepository: INodeRepository) : IRoadJunctionMatcher {
 
     @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
