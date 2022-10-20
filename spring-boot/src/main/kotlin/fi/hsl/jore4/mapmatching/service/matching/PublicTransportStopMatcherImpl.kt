@@ -5,17 +5,17 @@ import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.repository.infrastructure.IStopRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.PublicTransportStopMatchParameters
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
+import fi.hsl.jore4.mapmatching.util.InternalService
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 private val LOGGER = KotlinLogging.logger {}
 
-@Component
+@InternalService
 class PublicTransportStopMatcherImpl @Autowired constructor(val stopRepository: IStopRepository)
     : IPublicTransportStopMatcher {
 
