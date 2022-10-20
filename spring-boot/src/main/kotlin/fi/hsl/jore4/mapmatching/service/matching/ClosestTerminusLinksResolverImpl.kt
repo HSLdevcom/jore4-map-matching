@@ -5,13 +5,13 @@ import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinksDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
+import fi.hsl.jore4.mapmatching.util.InternalService
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
-@Component
+@InternalService
 class ClosestTerminusLinksResolverImpl @Autowired constructor(val linkRepository: ILinkRepository)
     : IClosestTerminusLinksResolver {
 
