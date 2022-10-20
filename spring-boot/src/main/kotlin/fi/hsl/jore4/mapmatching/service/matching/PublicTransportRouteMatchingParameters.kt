@@ -19,15 +19,13 @@ import java.lang.IllegalArgumentException
  * @property terminusLinkQueryLimit the maximum number of the closest
  * infrastructure links that are considered as terminus links at both ends of
  * route
- * @property maxStopLocationDeviation the maximum distance within which two
- * locations given for a public transport stop are allowed to be away from each
- * other, in order to include the stop in the set of route points that are
- * matched with infrastructure links. The first location is the one hosted in
- * this map-matching service (mostly originating from Digiroad) and the second
- * one is the location defined within the client system (invoking this
- * map-matching service). If the distance between these two type of locations
- * exceeds [maxStopLocationDeviation], then the affected stops are discarded
- * from the set of route points that are matched with infrastructure links.
+ * @property maxStopLocationDeviation the maximum distance between two
+ * locations defined for a public transport stop, one given in the
+ * map-matching request and the other in the local database, used as a
+ * condition for matching the stop point (represented by some route point)
+ * to infrastructure links in the local database. If the distance between
+ * these two type of locations exceeds [maxStopLocationDeviation] for a stop
+ * point, then the stop point is not included in the results.
  * @property roadJunctionMatching contains parameters for tuning heuristics to
  * match source route points with infrastructure network nodes. If missing, then
  * road junction node matching is disabled.

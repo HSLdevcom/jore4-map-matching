@@ -11,7 +11,6 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
-import fi.hsl.jore4.mapmatching.repository.infrastructure.PublicTransportStopMatchParameters
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCombinationsCreator
@@ -61,27 +60,6 @@ object MatchingServiceHelper {
 
             else -> SourceRouteTerminusNonStopPoint(terminusLocationFromRouteLine, terminusType)
         }
-    }
-
-    fun getMappingFromRoutePointIndexesToStopMatchParameters(routePoints: List<RoutePoint>):
-        Map<Int, PublicTransportStopMatchParameters> {
-
-        return routePoints
-            .mapIndexedNotNull { index: Int, routePoint: RoutePoint ->
-                when (routePoint) {
-                    is RouteStopPoint -> routePoint.nationalId?.let { nationalId ->
-
-                        // Prefer projected location because it is expected to be closer to
-                        // public transport stop location when compared to Digiroad locations.
-                        val sourceLocation: Point<G2D> = routePoint.projectedLocation ?: routePoint.location
-
-                        index to PublicTransportStopMatchParameters(nationalId, sourceLocation)
-                    }
-
-                    else -> null
-                }
-            }
-            .toMap()
     }
 
     fun resolveTerminusLinkCandidates(terminusLinkSelectionInput: TerminusLinkSelectionInput,
