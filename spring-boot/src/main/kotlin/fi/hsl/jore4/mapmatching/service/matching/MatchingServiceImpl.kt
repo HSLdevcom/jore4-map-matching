@@ -9,8 +9,6 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
-import fi.hsl.jore4.mapmatching.repository.infrastructure.IStopRepository
-import fi.hsl.jore4.mapmatching.repository.infrastructure.PublicTransportStopMatchParameters
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
@@ -38,8 +36,8 @@ import org.springframework.transaction.annotation.Transactional
 private val LOGGER = KotlinLogging.logger {}
 
 @Service
-class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopRepository,
-                                                 val closestTerminusLinksResolver: IClosestTerminusLinksResolver,
+class MatchingServiceImpl @Autowired constructor(val closestTerminusLinksResolver: IClosestTerminusLinksResolver,
+                                                 val publicTransportStopMatcher: IPublicTransportStopMatcher,
                                                  val roadJunctionMatcher: IRoadJunctionMatcher,
                                                  val nodeService: INodeServiceInternal,
                                                  val routingService: IRoutingServiceInternal)
@@ -203,39 +201,22 @@ class MatchingServiceImpl @Autowired constructor(val stopRepository: IStopReposi
                                                    maxStopLocationDeviation: Double)
         : InfrastructureLinksOnRoute {
 
-        val fromRoutePointIndexToStopMatchParams: Map<Int, PublicTransportStopMatchParameters> =
-            MatchingServiceHelper.getMappingFromRoutePointIndexesToStopMatchParameters(routePoints)
+        val fromRoutePointIndexToSnappedLinkOfMatchedStop: Map<Int, SnapStopToLinkDTO> = publicTransportStopMatcher
+            .findStopPointsByNationalIdsAndIndexByRoutePointOrdering(routePoints, maxStopLocationDeviation)
 
-        val snappedLinksFromStops: List<SnapStopToLinkDTO> =
-            stopRepository.findStopsAndSnapToInfrastructureLinks(fromRoutePointIndexToStopMatchParams.values,
-                                                                 maxStopLocationDeviation)
-
-        val fromStopNationalIdToInfrastructureLink: Map<Int, SnappedLinkState> =
-            snappedLinksFromStops.associateBy(SnapStopToLinkDTO::stopNationalId, SnapStopToLinkDTO::link)
-
-        val fromRoutePointIndexToMatchedStopNationalId: Map<Int, Int> = fromRoutePointIndexToStopMatchParams
-            .mapValues { mapEntry -> mapEntry.value.nationalId }
-            .filterValues(fromStopNationalIdToInfrastructureLink::containsKey)
-
-        LOGGER.debug {
-            "Matched following public transport stop points from source route points: ${
-                joinToLogString(fromRoutePointIndexToMatchedStopNationalId.toSortedMap().entries) {
-                    "Route point #${it.key + 1}: nationalId=${it.value}"
-                }
-            }"
-        }
+        val fromStopNationalIdToPointOnLink: Map<Int, SnappedLinkState> = fromRoutePointIndexToSnappedLinkOfMatchedStop
+            .values
+            .associateBy(SnapStopToLinkDTO::stopNationalId, SnapStopToLinkDTO::link)
 
         val (startLinkCandidates: List<TerminusLinkCandidate>, endLinkCandidates: List<TerminusLinkCandidate>) =
             MatchingServiceHelper.resolveTerminusLinkCandidates(terminusLinkSelectionInput,
-                                                                fromStopNationalIdToInfrastructureLink)
+                                                                fromStopNationalIdToPointOnLink)
 
-        val fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedLinkState> =
-            fromRoutePointIndexToMatchedStopNationalId.mapValues { (_, stopNationalId: Int) ->
-                fromStopNationalIdToInfrastructureLink[stopNationalId]!!
-            }
+        val fromRouteStopPointIndexToPointOnLink: Map<Int, SnappedLinkState> =
+            fromRoutePointIndexToSnappedLinkOfMatchedStop.mapValues { (_, snap) -> snap.link }
 
         return InfrastructureLinksOnRoute(startLinkCandidates,
                                           endLinkCandidates,
-                                          fromRouteStopPointIndexToInfrastructureLink)
+                                          fromRouteStopPointIndexToPointOnLink)
     }
 }
