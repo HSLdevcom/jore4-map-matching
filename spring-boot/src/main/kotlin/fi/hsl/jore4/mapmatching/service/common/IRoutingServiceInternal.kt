@@ -9,8 +9,9 @@ import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 interface IRoutingServiceInternal {
 
     /**
-     * Find the shortest route through infrastructure network via given nodes
-     * and constrained by the given vehicle type and optional buffer area.
+     * Finds the shortest route through infrastructure network via given nodes
+     * (graph vertices) and constrained by the given vehicle type and optional
+     * buffer area.
      *
      * @param nodeIdSequence sequence of identifiers for infrastructure network
      * nodes that the route must pass through. The sequence must not contain
@@ -41,8 +42,9 @@ interface IRoutingServiceInternal {
         : List<RouteLinkDTO>
 
     /**
-     * Find the shortest route through infrastructure network via given points
-     * and constrained by the given vehicle type and optional buffer area.
+     * Finds the shortest route through infrastructure network via given points
+     * along infrastructure links (graph edges) and constrained by the given
+     * vehicle type and optional buffer area.
      *
      * @param points list of route points that the route must pass through.
      * @param vehicleType vehicle type constraint for the route. Resulting route
@@ -65,9 +67,9 @@ interface IRoutingServiceInternal {
      * reference to an infrastructure link and the direction of traversal on it.
      * If a route could not be found then an empty list is returned.
      */
-    fun findRouteViaPoints(points: List<PgRoutingPoint>,
-                           vehicleType: VehicleType,
-                           simplifyConsecutiveClosedLoopTraversals: Boolean,
-                           bufferAreaRestriction: BufferAreaRestriction? = null)
+    fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
+                                  vehicleType: VehicleType,
+                                  simplifyConsecutiveClosedLoopTraversals: Boolean,
+                                  bufferAreaRestriction: BufferAreaRestriction? = null)
         : List<RouteLinkDTO>
 }

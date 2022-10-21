@@ -6,8 +6,9 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 interface IRoutingRepository {
 
     /**
-     * Find the shortest route through infrastructure network via given nodes
-     * and constrained by the given vehicle type and optional buffer area.
+     * Finds the shortest route through infrastructure network via given nodes
+     * (graph vertices) and constrained by the given vehicle type and optional
+     * buffer area.
      *
      * @param nodeIdSequence sequence of identifiers for infrastructure network
      * nodes that the route must pass through. The sequence must not contain
@@ -30,8 +31,9 @@ interface IRoutingRepository {
         : List<RouteLinkDTO>
 
     /**
-     * Find the shortest route through infrastructure network via given nodes
-     * and constrained by the given vehicle type and optional buffer area.
+     * Finds the shortest route through infrastructure network via given nodes
+     * (graph vertices) and constrained by the given vehicle type and optional
+     * buffer area.
      *
      * @param nodeIdSequence sequence of identifiers for infrastructure network
      * nodes that the route must pass through. The sequence must not contain
@@ -62,8 +64,9 @@ interface IRoutingRepository {
         : List<RouteLinkDTO>
 
     /**
-     * Find the shortest route through infrastructure network via given points
-     * and constrained by the given vehicle type and optional buffer area.
+     * Finds the shortest route through infrastructure network via given points
+     * along infrastructure links (graph edges) and constrained by the given
+     * vehicle type and optional buffer area.
      *
      * @param points list of route points that the route must pass through. Note
      * that at least one source point must not be an infrastructure node but a
@@ -80,8 +83,8 @@ interface IRoutingRepository {
      * reference to an infrastructure link and the direction of traversal on it.
      * If a route could not be found then an empty list is returned.
      */
-    fun findRouteViaPoints(points: List<PgRoutingPoint>,
-                           vehicleType: VehicleType,
-                           bufferAreaRestriction: BufferAreaRestriction? = null)
+    fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
+                                  vehicleType: VehicleType,
+                                  bufferAreaRestriction: BufferAreaRestriction? = null)
         : List<RouteLinkDTO>
 }
