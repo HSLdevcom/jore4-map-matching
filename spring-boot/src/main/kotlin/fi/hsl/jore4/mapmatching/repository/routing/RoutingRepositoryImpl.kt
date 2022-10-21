@@ -137,13 +137,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
         }
 
         // These three lists must have equal amount of items. Each list contains certain property
-        // for all custom points (to be visited on route). The properties are populated as array
+        // for all virtual nodes (to be visited on route). The properties are populated as array
         // parameters into SQL query.
-        val linkIdsForCustomPoints: MutableList<Long> = ArrayList()
+        val linkIdsForVirtualNodes: MutableList<Long> = ArrayList()
         val fractionalLocations: MutableList<Double> = ArrayList()
         val linkSides: MutableList<Char> = ArrayList() // left, right, both
 
-        // contains both infrastructure nodes and custom points
+        // contains both real infrastructure nodes and virtual nodes
         val visitedPointIds: MutableList<Long> = ArrayList()
 
         // co-efficients for rounding fractional locations along infrastructure link
@@ -151,77 +151,76 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
         val roundingTolerance: Double = BigDecimal.ONE.movePointLeft(roundedFractionDecimalPrecision).toDouble()
         val roundingMultiplier: Double = 10.0.pow(roundedFractionDecimalPrecision.toDouble())
 
-        // Is seems it is needed to avoid values [-2, -1] while assigning point IDs because that
-        // range seems to have special semantics in pgRouting output.
-        var nextCustomPointId = 3
+        // Is seems it is needed to avoid values [-2, -1] while assigning virtual node IDs because
+        // that range seems to have special semantics in pgRouting output.
+        var nextVirtualNodeId = 3
 
-        // state for previously added custom point, used for comparing while adding new custom points
-        var prevCustomPointLinkId: Long? = null
-        var prevCustomPointRoundedFraction: Double? = null
+        // state for previously added virtual node, used for comparison while adding a new virtual node
+        var prevVirtualNodeLinkId: Long? = null
+        var prevVirtualNodeRoundedFraction: Double? = null
 
-        fun addNodeAsRoutePoint(nodeId: InfrastructureNodeId) {
+        fun addRealNodeAsRoutePoint(nodeId: InfrastructureNodeId) {
             visitedPointIds.add(nodeId.value)
 
-            // Nullify these references since the previously added point is a node, not a location
-            // in-between the endpoint nodes of a link.
-            prevCustomPointLinkId = null
-            prevCustomPointRoundedFraction = null
+            // Nullify these references since the previously added point is a real node,
+            // not a virtual one
+            prevVirtualNodeLinkId = null
+            prevVirtualNodeRoundedFraction = null
         }
 
         points.forEach { point ->
             when (point) {
-                is NetworkNode -> addNodeAsRoutePoint(point.nodeId)
+                is RealNode -> addRealNodeAsRoutePoint(point.nodeId)
 
-                is FractionalLocationAlongLink -> {
+                is VirtualNode -> {
 
                     val fraction: Double = point.fractionalLocation
 
                     if (fraction.isWithinTolerance(0.0, roundingTolerance)
                         || fraction.isWithinTolerance(1.0, roundingTolerance)
                     ) {
-                        // Snap to the node at link's endpoint if rounded value of fractional
+                        // Snap to real node at link's endpoint if rounded value of fractional
                         // location is zero or one.
-                        addNodeAsRoutePoint(point.closerNodeId)
+                        addRealNodeAsRoutePoint(point.closerRealNodeId)
                     } else {
 
                         val linkId: Long = point.linkId.value
                         val roundedFraction: Double = (fraction * roundingMultiplier).roundToInt() / roundingMultiplier
 
-                        fun addCustomPoint() {
+                        fun addVirtualNodeAsRoutePoint() {
                             val side: Char = when (point.side) {
                                 LinkSide.LEFT -> 'l'
                                 LinkSide.RIGHT -> 'r'
                                 LinkSide.BOTH -> 'b'
                             }
 
-                            linkIdsForCustomPoints.add(linkId)
+                            linkIdsForVirtualNodes.add(linkId)
                             fractionalLocations.add(fraction)
                             linkSides.add(side)
 
-                            // In pgRouting, custom point (relative location along infrastructure
-                            // link) is referenced by negative ID value.
-                            val customPointId: Int = nextCustomPointId++
+                            // In pgRouting, virtual node is referenced by negative ID value.
+                            val virtualNodeId: Int = nextVirtualNodeId++
 
-                            visitedPointIds.add((-customPointId).toLong())
+                            visitedPointIds.add((-virtualNodeId).toLong())
 
-                            prevCustomPointLinkId = linkId
-                            prevCustomPointRoundedFraction = roundedFraction
+                            prevVirtualNodeLinkId = linkId
+                            prevVirtualNodeRoundedFraction = roundedFraction
                         }
 
-                        if (prevCustomPointLinkId == null || prevCustomPointRoundedFraction == null) {
-                            addCustomPoint()
-                        } else { // prevCustomPointLinkId != null && prevCustomPointRoundedFraction != null
+                        if (prevVirtualNodeLinkId == null || prevVirtualNodeRoundedFraction == null) {
+                            addVirtualNodeAsRoutePoint()
+                        } else { // prevVirtualNodeLinkId != null && prevVirtualNodeRoundedFraction != null
 
-                            // When point distribution is too dense multiple points may round to same
-                            // location. Strip out points that round to same location as their
-                            // predecessor. This is done in order to have SQL query not fail due to
-                            // consecutive duplicate fractional locations on one link.
+                            // When point (virtual node) distribution is too dense multiple points
+                            // may round to same location. Strip out points that round to same
+                            // location as their predecessor. This is done in order to have SQL
+                            // query not fail due to consecutive duplicate points on one link.
 
-                            val isPointAConsecutiveDuplicateAfterRounding: Boolean = linkId == prevCustomPointLinkId &&
-                                roundedFraction.isWithinTolerance(prevCustomPointRoundedFraction!!, roundingTolerance)
+                            val isPointAConsecutiveDuplicateAfterRounding: Boolean = linkId == prevVirtualNodeLinkId &&
+                                roundedFraction.isWithinTolerance(prevVirtualNodeRoundedFraction!!, roundingTolerance)
 
                             if (!isPointAConsecutiveDuplicateAfterRounding) {
-                                addCustomPoint()
+                                addVirtualNodeAsRoutePoint()
                             }
                         }
                     }
@@ -239,7 +238,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
 
             // Setting array parameters can only be done through a java.sql.Connection object.
 
-            pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("bigint", linkIdsForCustomPoints.toTypedArray()))
+            pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("bigint", linkIdsForVirtualNodes.toTypedArray()))
             pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("numeric", fractionalLocations.toTypedArray()))
             pstmt.setArray(paramIndex++, pstmt.connection.createArrayOf("char", linkSides.toTypedArray()))
 
@@ -506,16 +505,16 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
         /**
          * Returns an SQL query that finds the shortest path through infrastructure network via
          * route points given as parameters. A route point is either (A) infrastructure node or
-         * (B) "custom point", that is, a point along infrastructure link that does not coincide
-         * with link's endpoints. The resulting route is returned as a sequence of route links
-         * each of which refers to an infrastructure link. For each route link, the geometry of the
-         * whole infrastructure link is returned. For only partially traversed infrastructure links
-         * also a trimmed version of the infrastructure link geometry is returned that models the
-         * real traversed path on the route.
+         * (B) virtual node, that is, a point along infrastructure link that does not coincide with
+         * link's endpoints. The resulting route is returned as a sequence of route links each of
+         * which refers to an infrastructure link. For each route link, the geometry of the whole
+         * infrastructure link is returned. For only partially traversed infrastructure links also a
+         * trimmed version of the infrastructure link geometry is returned that models the real
+         * traversed path on the route.
          *
-         * Custom points are bound to the query via array parameters. There are three arrays for
-         * custom points to be bound while preparing the query. Each custom point is effectively a
-         * triple consisting of the following properties:
+         * Virtual nodes are bound to the query via array parameters. There are three arrays for
+         * virtual nodes to be bound while preparing the query. Each virtual node point is
+         * effectively a triple consisting of the following properties:
          * (1) ID of the infrastructure link along which the point is located,
          * (2) fractional location (0,1) on a link,
          * (3) side of the road/street that the point affects with regard to the digitised direction
@@ -536,12 +535,12 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          *
          * The query contains sub-queries that process the output of pgRouting in several stages.
          * The processing involves recognising the direction of traversal on each link which
-         * information pgRouting itself does not provide. Because some route points given as
-         * parameters (custom points) appear as extra infrastructure nodes in the pgRouting output,
-         * the infrastructure links along which those custom points are located appear more times in
-         * the output than what is desired in the final output. The processing removes consecutive
-         * duplicate appearances of links in one direction of traversal. In addition, closed-loop
-         * links require special treatment which is done in the processing.
+         * information pgRouting itself does not provide. Because some input points may be
+         * virtual nodes, the infrastructure links along which those virtual nodes are located, may
+         * appear more times in the pgRouting output than what is desired in the final output. The
+         * processing removes consecutive duplicate appearances of links in one direction of
+         * traversal. In addition, closed-loop links require special treatment which is done in
+         * the processing.
          *
          * Since the query is quite long and complex a commentary in form of a sample data
          * transformation is provided below for sub-queries transforming the output of pgRouting.
@@ -550,8 +549,8 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          *
          * Sample output after "pgr" sub-query. "edge" means the ID of an infrastructure link and
          * "node" denotes either:
-         * - infrastructure node, if positive
-         * - custom point (relative location along infrastructure link), if negative
+         * - real infrastructure node, if positive
+         * - virtual node (that is, a point along an infrastructure link), if negative
          *
          *  seq | path_id |  edge  |  node  |        cost
          * -----+---------+--------+--------+--------------------
@@ -569,21 +568,20 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
          *   12 |       4 | 238707 |     -6 |  21.20953754741562
          *   13 |       4 |     -2 |     -7 |                  0
          *
-         * Sample output after "pgr_transform1" sub-query. Start and end points are added. Positive
-         * values refer to actual infrastructure nodes and negative values refer to given custom
-         * points.
+         * Sample output after "pgr_transform1" sub-query. Start and end nodes are added. Positive
+         * values refer to real infrastructure nodes and negative values refer to virtual nodes.
          *
-         *  seq | path_id |  edge  |        cost        | start_point | end_point
-         * -----+---------+--------+--------------------+-------------+-----------
-         *    1 |       1 | 238709 | 27.689157697826765 |          -3 |        -4
-         *    3 |       2 | 238709 | 27.689157697826765 |          -4 |        -5
-         *    5 |       3 | 238709 | 27.689157697826765 |          -5 |        -4
-         *    6 |       3 | 238709 | 27.689157697826765 |          -4 |        -3
-         *    7 |       3 | 238709 | 27.689157697826772 |          -3 |    115666
-         *    8 |       3 | 238714 | 13.741292778420942 |      115666 |    115667
-         *    9 |       3 | 238712 | 21.790898535769582 |      115667 |    115663
-         *   10 |       3 | 238707 |  21.20953754741562 |      115663 |        -6
-         *   12 |       4 | 238707 |  21.20953754741562 |          -6 |        -7
+         *  seq | path_id |  edge  |        cost        | start_node | end_node
+         * -----+---------+--------+--------------------+------------+----------
+         *    1 |       1 | 238709 | 27.689157697826765 |         -3 |       -4
+         *    3 |       2 | 238709 | 27.689157697826765 |         -4 |       -5
+         *    5 |       3 | 238709 | 27.689157697826765 |         -5 |       -4
+         *    6 |       3 | 238709 | 27.689157697826765 |         -4 |       -3
+         *    7 |       3 | 238709 | 27.689157697826772 |         -3 |   115666
+         *    8 |       3 | 238714 | 13.741292778420942 |     115666 |   115667
+         *    9 |       3 | 238712 | 21.790898535769582 |     115667 |   115663
+         *   10 |       3 | 238707 |  21.20953754741562 |     115663 |       -6
+         *   12 |       4 | 238707 |  21.20953754741562 |         -6 |       -7
          *
          * Sample output after "pgr_transform2" sub-query. Start and end fractions are derived for
          * each link traversal.
@@ -640,7 +638,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
         private fun getQueryForFindingRouteViaPoints(roundedFractionDecimalPrecision: Int,
                                                      bufferAreaRestriction: BufferAreaRestriction?) =
             """
-            WITH point_params AS (
+            WITH virtual_node_params AS (
                 SELECT
                     ?::bigint[] AS edge_ids,
                     ?::numeric[] AS fractions,
@@ -649,7 +647,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             visited_points AS (
                 SELECT ?::bigint[] AS ids
             ),
-            custom_point AS (
+            virtual_node AS (
                 SELECT
                     edge_index + 2 AS pid,
                     edge_id,
@@ -659,23 +657,23 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 FROM (
                     SELECT *, row_number() OVER () AS edge_index
                     FROM (
-                        SELECT unnest(edge_ids) AS edge_id FROM point_params
+                        SELECT unnest(edge_ids) AS edge_id FROM virtual_node_params
                     ) u
                 ) edges
                 INNER JOIN (
                     SELECT *, row_number() OVER () AS fraction_index
                     FROM (
-                        SELECT unnest(fractions) AS fraction FROM point_params
+                        SELECT unnest(fractions) AS fraction FROM virtual_node_params
                     ) u
                 ) fractions ON fraction_index = edge_index
                 INNER JOIN (
                     SELECT *, row_number() OVER () AS side_index
                     FROM (
-                        SELECT unnest(sides) AS side FROM point_params
+                        SELECT unnest(sides) AS side FROM virtual_node_params
                     ) u
                 ) sides ON side_index = edge_index
             ),
-            points_sql AS (
+            virtual_nodes_sql AS (
                 SELECT string_agg(sql, ' UNION ') AS txt
                 FROM (
                     SELECT
@@ -685,13 +683,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                             ELSE
                                 'SELECT ' || pid || ', ' || edge_id || ', ' || rounded_fraction || ', ''' || side || '''::char'
                         END AS sql
-                    FROM custom_point
+                    FROM virtual_node
                 ) parts
             ),
             pgr AS (
                 SELECT seq, path_id, edge, node, cost
                 FROM visited_points pts
-                CROSS JOIN points_sql sql
+                CROSS JOIN virtual_nodes_sql sql
                 CROSS JOIN pgr_withPointsVia(
                     ${createLinkSelectionQueryForPgRouting(bufferAreaRestriction)},
                     sql.txt,
@@ -704,16 +702,16 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                 ) pgr
             ),
             pgr_transform1 AS (
-                SELECT seq, path_id, edge, cost, node AS start_point, end_point
+                SELECT seq, path_id, edge, cost, node AS start_node, end_node
                 FROM (
-                    SELECT *, lead(node) OVER (ORDER BY seq) AS end_point FROM pgr
+                    SELECT *, lead(node) OVER (ORDER BY seq) AS end_node FROM pgr
                 ) sub
                 WHERE edge >= 0
             ),
             pgr_transform2 AS (
                 SELECT seq, path_id, edge,
                     CASE
-                        WHEN pgr.start_point < 0 THEN p1.fraction
+                        WHEN pgr.start_node < 0 THEN p1.fraction
                         WHEN l.start_node_id = l.end_node_id THEN ( -- closed loop
                             CASE
                                 WHEN l.traffic_flow_direction_type = 3 THEN 1.0
@@ -728,11 +726,11 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                 )
                             END
                         )
-                        WHEN pgr.start_point = l.start_node_id THEN 0.0
+                        WHEN pgr.start_node = l.start_node_id THEN 0.0
                         ELSE 1.0
                     END AS start_fraction,
                     CASE
-                        WHEN pgr.end_point < 0 THEN p2.fraction
+                        WHEN pgr.end_node < 0 THEN p2.fraction
                         WHEN l.start_node_id = l.end_node_id THEN ( -- closed loop
                             CASE
                                 WHEN l.traffic_flow_direction_type = 3 THEN 0.0
@@ -747,13 +745,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                 )
                             END
                         )
-                        WHEN pgr.end_point = l.start_node_id THEN 0.0
+                        WHEN pgr.end_node = l.start_node_id THEN 0.0
                         ELSE 1.0
                     END AS end_fraction
                 FROM pgr_transform1 pgr
                 INNER JOIN routing.infrastructure_link l ON l.infrastructure_link_id = pgr.edge
-                LEFT JOIN custom_point p1 ON (pgr.start_point < 0 AND p1.pid = -pgr.start_point)
-                LEFT JOIN custom_point p2 ON (pgr.end_point < 0 AND p2.pid = -pgr.end_point)
+                LEFT JOIN virtual_node p1 ON (pgr.start_node < 0 AND p1.pid = -pgr.start_node)
+                LEFT JOIN virtual_node p2 ON (pgr.end_node < 0 AND p2.pid = -pgr.end_node)
             ),
             pgr_transform3 AS (
                 SELECT seq, path_id, edge, (end_fraction > start_fraction) AS is_traversal_forwards, start_fraction, end_fraction

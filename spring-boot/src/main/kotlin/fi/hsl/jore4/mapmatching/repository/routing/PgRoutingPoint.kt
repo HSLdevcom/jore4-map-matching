@@ -14,21 +14,27 @@ sealed interface PgRoutingPoint {
 
         fun fromSnappedPointOnLink(pointOnLink: SnappedLinkState): PgRoutingPoint {
             return if (pointOnLink.isSnappedToStartNode)
-                NetworkNode(pointOnLink.startNodeId)
+                RealNode(pointOnLink.startNodeId)
             else if (pointOnLink.isSnappedToEndNode)
-                NetworkNode(pointOnLink.endNodeId)
+                RealNode(pointOnLink.endNodeId)
             else
-                FractionalLocationAlongLink(pointOnLink.infrastructureLinkId,
-                                            pointOnLink.closestPointFractionalMeasure,
-                                            LinkSide.BOTH,
-                                            pointOnLink.closerNodeId)
+                VirtualNode(pointOnLink.infrastructureLinkId,
+                            pointOnLink.closestPointFractionalMeasure,
+                            LinkSide.BOTH,
+                            pointOnLink.closerNodeId)
         }
     }
 }
 
-data class NetworkNode(val nodeId: InfrastructureNodeId) : PgRoutingPoint
+/**
+ * A real infrastructure node as routing point.
+ */
+data class RealNode(val nodeId: InfrastructureNodeId) : PgRoutingPoint
 
-data class FractionalLocationAlongLink(val linkId: InfrastructureLinkId,
-                                       val fractionalLocation: Double,
-                                       val side: LinkSide,
-                                       val closerNodeId: InfrastructureNodeId) : PgRoutingPoint
+/**
+ * A point along infrastructure link as virtual node.
+ */
+data class VirtualNode(val linkId: InfrastructureLinkId,
+                       val fractionalLocation: Double,
+                       val side: LinkSide,
+                       val closerRealNodeId: InfrastructureNodeId) : PgRoutingPoint

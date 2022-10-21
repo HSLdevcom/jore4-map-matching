@@ -5,8 +5,8 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
-import fi.hsl.jore4.mapmatching.repository.routing.NetworkNode
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
+import fi.hsl.jore4.mapmatching.repository.routing.RealNode
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
@@ -45,11 +45,11 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
                                            bufferAreaRestriction: BufferAreaRestriction?)
         : List<RouteLinkDTO> {
 
-        return when (points.all { it is NetworkNode }) {
+        return when (points.all { it is RealNode }) {
 
             true -> {
                 val nodeIdList: List<InfrastructureNodeId> =
-                    points.mapNotNull { if (it is NetworkNode) it.nodeId else null }
+                    points.mapNotNull { if (it is RealNode) it.nodeId else null }
 
                 val nodeIdSequence = NodeIdSequence(nodeIdList).duplicatesRemoved()
 
