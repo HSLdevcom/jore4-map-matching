@@ -37,12 +37,13 @@ import org.springframework.transaction.annotation.Transactional
 private val LOGGER = KotlinLogging.logger {}
 
 @Service
-class MatchingServiceImpl @Autowired constructor(val closestTerminusLinksResolver: IClosestTerminusLinksResolver,
-                                                 val publicTransportStopMatcher: IPublicTransportStopMatcher,
-                                                 val roadJunctionMatcher: IRoadJunctionMatcher,
-                                                 val nodeService: INodeServiceInternal,
-                                                 val routingService: IRoutingServiceInternal)
-    : IMatchingService {
+class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
+    val closestTerminusLinksResolver: IClosestTerminusLinksResolver,
+    val publicTransportStopMatcher: IPublicTransportStopMatcher,
+    val roadJunctionMatcher: IRoadJunctionMatcher,
+    val nodeService: INodeServiceInternal,
+    val routingService: IRoutingServiceInternal
+) : IMatchingService {
 
     internal data class InfrastructureLinksOnRoute(val startLinkCandidates: List<TerminusLinkCandidate>,
                                                    val endLinkCandidates: List<TerminusLinkCandidate>,
