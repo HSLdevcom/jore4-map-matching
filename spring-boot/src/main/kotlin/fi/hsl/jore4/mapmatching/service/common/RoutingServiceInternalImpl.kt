@@ -39,10 +39,10 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
     }
 
     @Transactional(readOnly = true)
-    override fun findRouteViaPoints(points: List<PgRoutingPoint>,
-                                    vehicleType: VehicleType,
-                                    simplifyConsecutiveClosedLoopTraversals: Boolean,
-                                    bufferAreaRestriction: BufferAreaRestriction?)
+    override fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
+                                           vehicleType: VehicleType,
+                                           simplifyConsecutiveClosedLoopTraversals: Boolean,
+                                           bufferAreaRestriction: BufferAreaRestriction?)
         : List<RouteLinkDTO> {
 
         return when (points.all { it is NetworkNode }) {
@@ -66,7 +66,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
 
             false -> {
                 val routeLinks: List<RouteLinkDTO> =
-                    routingRepository.findRouteViaPoints(points, vehicleType, bufferAreaRestriction)
+                    routingRepository.findRouteViaPointsOnLinks(points, vehicleType, bufferAreaRestriction)
 
                 val resultsRouteLinks: List<RouteLinkDTO> = if (simplifyConsecutiveClosedLoopTraversals)
                     ClosedLoopPostProcessor.simplifyConsecutiveClosedLoopTraversals(routeLinks)
