@@ -10,7 +10,6 @@ import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
 import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.findUnmatchedPoints
-import fi.hsl.jore4.mapmatching.service.routing.RoutingServiceHelper.toPgRoutingPoint
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
@@ -47,7 +46,8 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
         }
 
-        val sourceRoutePoints: List<PgRoutingPoint> = closestLinks.map { toPgRoutingPoint(it.link) }
+        val sourceRoutePoints: List<PgRoutingPoint> =
+            closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.link) }
 
         val resultRoute: RouteDTO = routingServiceInternal.findRouteViaPoints(sourceRoutePoints, vehicleType)
 
