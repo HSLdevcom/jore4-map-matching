@@ -73,8 +73,8 @@ class SnappedLinkStateTest {
     }
 
     @Nested
-    @DisplayName("findSnappedNode")
-    inner class FindSnappedNode {
+    @DisplayName("getSnappedNodeOrNull")
+    inner class GetSnappedNodeOrNull {
 
         @Test
         @DisplayName("When projected closest point is within snap-to-endpoint distance to link start")
@@ -83,7 +83,7 @@ class SnappedLinkStateTest {
                                                            AT_START))
                 .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(snap.findSnappedNode()).isEqualTo(snap.startNodeId)
+                    assertThat(snap.getSnappedNodeOrNull()).isEqualTo(snap.startNodeId)
                 }
         }
 
@@ -94,7 +94,7 @@ class SnappedLinkStateTest {
                                                            AT_END))
                 .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(snap.findSnappedNode()).isEqualTo(snap.endNodeId)
+                    assertThat(snap.getSnappedNodeOrNull()).isEqualTo(snap.endNodeId)
                 }
         }
 
@@ -105,7 +105,7 @@ class SnappedLinkStateTest {
                                                            BETWEEN_ENDPOINTS_EXCLUSIVE))
                 .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(snap.findSnappedNode()).isNull()
+                    assertThat(snap.getSnappedNodeOrNull()).isNull()
                 }
         }
     }
@@ -204,8 +204,8 @@ class SnappedLinkStateTest {
     }
 
     @Nested
-    @DisplayName("hasNode")
-    inner class HasNode {
+    @DisplayName("isOnLinkTerminatedByNode")
+    inner class IsOnLinkTerminatedByNode {
 
         @Test
         @DisplayName("Should return true when given ID of start node")
@@ -213,7 +213,7 @@ class SnappedLinkStateTest {
             qt().forAll(SnappedLinkStateGenerator.snapLink())
                 .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(snap.hasNode(snap.startNodeId)).isEqualTo(true)
+                    assertThat(snap.isOnLinkTerminatedByNode(snap.startNodeId)).isEqualTo(true)
                 }
         }
 
@@ -223,7 +223,7 @@ class SnappedLinkStateTest {
             qt().forAll(SnappedLinkStateGenerator.snapLink())
                 .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(snap.hasNode(snap.endNodeId)).isEqualTo(true)
+                    assertThat(snap.isOnLinkTerminatedByNode(snap.endNodeId)).isEqualTo(true)
                 }
         }
 
@@ -233,15 +233,16 @@ class SnappedLinkStateTest {
             qt().forAll(SnappedLinkStateGenerator.snapTwoUnconnectedLinks())
                 .checkAssert { (firstSnap: SnappedLinkState, secondSnap: SnappedLinkState) ->
 
-                    assertThat(firstSnap.hasNode(secondSnap.startNodeId) || firstSnap.hasNode(secondSnap.endNodeId))
+                    assertThat(firstSnap.isOnLinkTerminatedByNode(secondSnap.startNodeId)
+                                   || firstSnap.isOnLinkTerminatedByNode(secondSnap.endNodeId))
                         .isEqualTo(false)
                 }
         }
     }
 
     @Nested
-    @DisplayName("hasDiscreteNodes")
-    inner class HasDiscreteNodes {
+    @DisplayName("isOnLinkWithDiscreteNodes")
+    inner class IsOnLinkWithDiscreteNodes {
 
         @Test
         @DisplayName("When endpoint nodes of infrastructure links are discrete")
@@ -249,7 +250,7 @@ class SnappedLinkStateTest {
             qt().forAll(SnappedLinkStateGenerator.snapLink(hasDiscreteEndpoints = true))
                 .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(snap.hasDiscreteNodes()).isEqualTo(true)
+                    assertThat(snap.isOnLinkWithDiscreteNodes()).isEqualTo(true)
                 }
         }
 
@@ -259,7 +260,7 @@ class SnappedLinkStateTest {
             qt().forAll(SnappedLinkStateGenerator.snapLink(hasDiscreteEndpoints = false))
                 .checkAssert { snap: SnappedLinkState ->
 
-                    assertThat(snap.hasDiscreteNodes()).isEqualTo(false)
+                    assertThat(snap.isOnLinkWithDiscreteNodes()).isEqualTo(false)
                 }
         }
     }

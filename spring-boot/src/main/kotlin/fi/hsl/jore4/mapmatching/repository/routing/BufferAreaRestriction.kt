@@ -42,8 +42,8 @@ data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
         companion object {
 
             fun fromTerminusLinks(startLink: SnappedLinkState, endLink: SnappedLinkState): ExplicitLinkReferences {
-                val snappedNodeOnStartLink: InfrastructureNodeId? = startLink.findSnappedNode()
-                val snappedNodeOnEndLink: InfrastructureNodeId? = endLink.findSnappedNode()
+                val snappedNodeOnStartLink: InfrastructureNodeId? = startLink.getSnappedNodeOrNull()
+                val snappedNodeOnEndLink: InfrastructureNodeId? = endLink.getSnappedNodeOrNull()
 
                 val idsOfCandidatesForTerminusLinks: Set<InfrastructureLinkId>
                 val idsOfCandidatesForTerminusNodes: Set<InfrastructureNodeId>

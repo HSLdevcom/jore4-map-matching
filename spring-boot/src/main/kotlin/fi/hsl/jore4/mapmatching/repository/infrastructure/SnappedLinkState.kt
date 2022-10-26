@@ -72,7 +72,7 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
 
     fun isStartNodeCloser(): Boolean = closestPointFractionalMeasure <= 0.5
 
-    fun findSnappedNode(): InfrastructureNodeId? {
+    fun getSnappedNodeOrNull(): InfrastructureNodeId? {
         return if (isSnappedToStartNode)
             startNodeId
         else if (isSnappedToEndNode)
@@ -81,9 +81,9 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
             null
     }
 
-    fun hasNode(nodeId: InfrastructureNodeId) = startNodeId == nodeId || endNodeId == nodeId
+    fun isOnLinkTerminatedByNode(nodeId: InfrastructureNodeId) = startNodeId == nodeId || endNodeId == nodeId
 
-    fun hasDiscreteNodes(): Boolean = startNodeId != endNodeId
+    fun isOnLinkWithDiscreteNodes(): Boolean = startNodeId != endNodeId
 
     fun isOnSameLinkAs(other: SnappedLinkState): Boolean = infrastructureLinkId == other.infrastructureLinkId
 

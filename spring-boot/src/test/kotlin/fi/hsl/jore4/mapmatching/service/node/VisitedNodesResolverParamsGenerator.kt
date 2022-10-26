@@ -240,7 +240,7 @@ object VisitedNodesResolverParamsGenerator {
         : Gen<List<InfrastructureNodeId>> {
 
         val genTerminusNodeId: Gen<InfrastructureNodeId> = Retry(nodeId()) {
-            !startLink.hasNode(it) && !endLink.hasNode(it)
+            !startLink.isOnLinkTerminatedByNode(it) && !endLink.isOnLinkTerminatedByNode(it)
         }
 
         return integers().between(1, MAX_NUMBER_OF_VIA_NODES)

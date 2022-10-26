@@ -40,7 +40,7 @@ object VisitedNodesResolver {
     private fun fromSingleLinkWithoutViaNodes(link: SnappedLinkState, secondSnapPointFractionalLocation: Double)
         : VisitedNodes {
 
-        return when (link.hasDiscreteNodes()) {
+        return when (link.isOnLinkWithDiscreteNodes()) {
             true -> link.run {
                 when (trafficFlowDirectionType) {
                     BIDIRECTIONAL -> {
