@@ -30,7 +30,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     @Transactional(readOnly = true)
     override fun findClosestLinks(points: List<Point<G2D>>,
                                   vehicleType: VehicleType,
-                                  distanceInMeters: Double): Map<Int, SnapPointToLinkDTO> {
+                                  distanceInMeters: Double): Map<Int, SnapPointToLinkResult> {
 
         if (points.isEmpty()) {
             return emptyMap()
@@ -42,15 +42,15 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
             val pointIndex = it.pointSeqNum - 1
             val point = points[pointIndex]
 
-            SnapPointToLinkDTO(point,
-                               distanceInMeters,
-                               SnappedLinkState(it.infrastructureLinkId,
-                                                it.closestDistance,
-                                                it.closestPointFractionalMeasure,
-                                                it.trafficFlowDirectionType,
-                                                it.linkLength,
-                                                it.startNodeId,
-                                                it.endNodeId))
+            SnapPointToLinkResult(point,
+                                  distanceInMeters,
+                                  SnappedLinkState(it.infrastructureLinkId,
+                                                   it.closestDistance,
+                                                   it.closestPointFractionalMeasure,
+                                                   it.trafficFlowDirectionType,
+                                                   it.linkLength,
+                                                   it.startNodeId,
+                                                   it.endNodeId))
         })
     }
 
@@ -59,7 +59,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                                    vehicleType: VehicleType,
                                    distanceInMeters: Double,
                                    limit: Int)
-        : Map<Int, SnapPointToLinksDTO> {
+        : Map<Int, SnapPointToLinksResult> {
 
         if (points.isEmpty()) {
             return emptyMap()
@@ -83,7 +83,7 @@ class LinkRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
                 val closestLinks: List<SnappedLinkState> = entry.value.sortedBy(SnappedLinkState::closestDistance)
 
-                SnapPointToLinksDTO(point, distanceInMeters, limit, closestLinks)
+                SnapPointToLinksResult(point, distanceInMeters, limit, closestLinks)
             }
     }
 

@@ -65,7 +65,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     override fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
                                           vehicleType: VehicleType,
                                           bufferAreaRestriction: BufferAreaRestriction?)
-        : List<RouteLinkDTO> {
+        : List<RouteLink> {
 
         return findRouteViaNetworkNodesInternal(nodeIdSequence, vehicleType, null, null, bufferAreaRestriction)
     }
@@ -76,7 +76,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                           fractionalStartLocationOnFirstLink: Double,
                                           fractionalEndLocationOnLastLink: Double,
                                           bufferAreaRestriction: BufferAreaRestriction?)
-        : List<RouteLinkDTO> {
+        : List<RouteLink> {
 
         return findRouteViaNetworkNodesInternal(nodeIdSequence,
                                                 vehicleType,
@@ -90,7 +90,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                                          fractionalStartLocationOnFirstLink: Double?,
                                          fractionalEndLocationOnLastLink: Double?,
                                          bufferAreaRestriction: BufferAreaRestriction?)
-        : List<RouteLinkDTO> {
+        : List<RouteLink> {
 
         if (nodeIdSequence.isEmpty()) {
             return emptyList()
@@ -130,7 +130,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     override fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
                                            vehicleType: VehicleType,
                                            bufferAreaRestriction: BufferAreaRestriction?)
-        : List<RouteLinkDTO> {
+        : List<RouteLink> {
 
         if (points.isEmpty()) {
             return emptyList()
@@ -285,7 +285,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
     }
 
     private fun executeQueryAndTransformToResult(queryString: String,
-                                                 parameterSetter: PreparedStatementSetter): List<RouteLinkDTO> {
+                                                 parameterSetter: PreparedStatementSetter): List<RouteLink> {
 
         // This flat list contains result items for both (1) fully traversed infrastructure links
         // (with whole link geometries) and (2) partially traversed links (with trimmed geometries).
@@ -341,7 +341,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
             .mapNotNull { if (it is TrimmedRouteLinkResultItem) it else null }
             .associateBy { it.routeSeqNum }
 
-        val routeLinks: List<RouteLinkDTO> = queryResults
+        val routeLinks: List<RouteLink> = queryResults
             .mapNotNull { path ->
                 when (path) {
                     // Filtered out since trimmed versions (partial link traversals) were already
@@ -369,20 +369,20 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                             ?.let { it.traversedDistance }
                             ?: path.linkLength
 
-                        RouteLinkDTO(seqNum,
-                                     InfrastructureLinkTraversal(path.linkId,
-                                                                 path.externalLinkRef,
-                                                                 path.linkGeometry,
-                                                                 traversedGeometry,
-                                                                 path.isTraversalForwards,
-                                                                 path.linkLength,
-                                                                 traversedDistance,
-                                                                 path.isClosedLoop,
-                                                                 path.linkName))
+                        RouteLink(seqNum,
+                                  InfrastructureLinkTraversal(path.linkId,
+                                                              path.externalLinkRef,
+                                                              path.linkGeometry,
+                                                              traversedGeometry,
+                                                              path.isTraversalForwards,
+                                                              path.linkLength,
+                                                              traversedDistance,
+                                                              path.isClosedLoop,
+                                                              path.linkName))
                     }
                 }
             }
-            .sortedBy(RouteLinkDTO::routeSeqNum)
+            .sortedBy(RouteLink::routeSeqNum)
 
         return routeLinks
     }

@@ -24,7 +24,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     override fun findNClosestNodes(points: List<Point<G2D>>,
                                    vehicleType: VehicleType,
                                    distanceInMeters: Double)
-        : Map<Int, SnapPointToNodesDTO> {
+        : Map<Int, SnapPointToNodesResult> {
 
         if (points.isEmpty()) {
             return emptyMap()
@@ -58,7 +58,7 @@ class NodeRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
                 val pointIndex: Int = pointSeqNum - 1
                 val sourcePoint: Point<G2D> = points[pointIndex]
 
-                SnapPointToNodesDTO(sourcePoint, distanceInMeters, nodeList)
+                SnapPointToNodesResult(sourcePoint, distanceInMeters, nodeList)
             }
     }
 

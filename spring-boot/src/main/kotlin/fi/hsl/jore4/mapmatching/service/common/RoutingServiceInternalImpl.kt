@@ -7,7 +7,7 @@ import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.IRoutingRepository
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RealNode
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 import fi.hsl.jore4.mapmatching.util.InternalService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
@@ -22,7 +22,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
                                    fractionalStartLocationOnFirstLink: Double,
                                    fractionalEndLocationOnLastLink: Double,
                                    bufferAreaRestriction: BufferAreaRestriction?)
-        : List<RouteLinkDTO> {
+        : List<RouteLink> {
 
         return routingRepository.findRouteViaNetworkNodes(nodeIdSequence,
                                                           vehicleType,
@@ -36,7 +36,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
                                            vehicleType: VehicleType,
                                            simplifyConsecutiveClosedLoopTraversals: Boolean,
                                            bufferAreaRestriction: BufferAreaRestriction?)
-        : List<RouteLinkDTO> {
+        : List<RouteLink> {
 
         return when (points.all { it is RealNode }) {
 
@@ -52,7 +52,7 @@ class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: I
             }
 
             false -> {
-                val routeLinks: List<RouteLinkDTO> =
+                val routeLinks: List<RouteLink> =
                     routingRepository.findRouteViaPointsOnLinks(points, vehicleType, bufferAreaRestriction)
 
                 return if (simplifyConsecutiveClosedLoopTraversals)

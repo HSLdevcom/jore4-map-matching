@@ -30,7 +30,7 @@ interface INodeRepository {
     fun findNClosestNodes(points: List<Point<G2D>>,
                           vehicleType: VehicleType,
                           distanceInMeters: Double)
-        : Map<Int, SnapPointToNodesDTO>
+        : Map<Int, SnapPointToNodesResult>
 
     /**
      * Resolves the best possible sequences of infrastructure node identifiers

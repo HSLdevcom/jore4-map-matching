@@ -3,7 +3,7 @@ package fi.hsl.jore4.mapmatching.service.matching
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinksDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinksResult
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.util.InternalService
 import org.geolatte.geom.G2D
@@ -25,7 +25,7 @@ class ClosestTerminusLinksResolverImpl @Autowired constructor(val linkRepository
 
         // The method findNClosestLinks returns one-based index.
         // The number of the closest links searched is limited by linkQueryLimit parameter.
-        val linkSearchResults: Map<Int, SnapPointToLinksDTO> =
+        val linkSearchResults: Map<Int, SnapPointToLinksResult> =
             linkRepository.findNClosestLinks(listOf(startPoint, endPoint),
                                              vehicleType,
                                              linkQueryDistance,

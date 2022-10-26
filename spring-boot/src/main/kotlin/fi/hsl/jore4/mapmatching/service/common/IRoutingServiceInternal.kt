@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 
 interface IRoutingServiceInternal {
 
@@ -39,7 +39,7 @@ interface IRoutingServiceInternal {
                           fractionalStartLocationOnFirstLink: Double,
                           fractionalEndLocationOnLastLink: Double,
                           bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLinkDTO>
+        : List<RouteLink>
 
     /**
      * Finds the shortest route through infrastructure network via given points
@@ -71,5 +71,5 @@ interface IRoutingServiceInternal {
                                   vehicleType: VehicleType,
                                   simplifyConsecutiveClosedLoopTraversals: Boolean,
                                   bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLinkDTO>
+        : List<RouteLink>
 }

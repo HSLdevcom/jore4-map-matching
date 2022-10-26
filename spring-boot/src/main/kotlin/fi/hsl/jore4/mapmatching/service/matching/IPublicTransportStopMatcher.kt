@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.matching
 
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkResult
 
 interface IPublicTransportStopMatcher {
 
@@ -28,5 +28,5 @@ interface IPublicTransportStopMatcher {
      */
     fun findStopPointsByNationalIdsAndIndexByRoutePointOrdering(routePoints: List<RoutePoint>,
                                                                 maxStopLocationDeviation: Double)
-        : Map<Int, SnapStopToLinkDTO>
+        : Map<Int, SnapStopToLinkResult>
 }

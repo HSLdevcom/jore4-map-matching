@@ -7,12 +7,12 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkResult
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RealNode
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
@@ -70,7 +70,7 @@ class MatchRouteViaPointsOnLinksServiceImpl @Autowired constructor(
                                             vehicleType,
                                             targetRoutePointSequenceCandidates,
                                             matchingParameters.bufferRadiusInMeters)
-            ?.let { routeLinks: List<RouteLinkDTO> ->
+            ?.let { routeLinks: List<RouteLink> ->
                 LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
                 RoutingResponseCreator.create(routeLinks)
             }
@@ -165,12 +165,12 @@ class MatchRouteViaPointsOnLinksServiceImpl @Autowired constructor(
                                                              maxStopLocationDeviation: Double)
         : TerminusPointCandidatesAndStopPoints {
 
-        val fromRoutePointIndexToSnappedLinkOfMatchedStop: Map<Int, SnapStopToLinkDTO> = publicTransportStopMatcher
+        val fromRoutePointIndexToSnappedLinkOfMatchedStop: Map<Int, SnapStopToLinkResult> = publicTransportStopMatcher
             .findStopPointsByNationalIdsAndIndexByRoutePointOrdering(sourceRoutePoints, maxStopLocationDeviation)
 
         val fromNationalIdToTargetStopPoint: Map<Int, PgRoutingPoint> = fromRoutePointIndexToSnappedLinkOfMatchedStop
             .values
-            .associateBy(SnapStopToLinkDTO::stopNationalId) { snap ->
+            .associateBy(SnapStopToLinkResult::stopNationalId) { snap ->
 
                 val pointOnLink: SnappedLinkState = snap.link
                     // The location is snapped to terminus node if within close distance.
@@ -201,7 +201,7 @@ class MatchRouteViaPointsOnLinksServiceImpl @Autowired constructor(
                                               vehicleType: VehicleType,
                                               targetRoutePointSequenceCandidates: List<List<PgRoutingPoint>>,
                                               bufferRadiusInMeters: Double)
-        : List<RouteLinkDTO>? {
+        : List<RouteLink>? {
 
         return targetRoutePointSequenceCandidates.firstNotNullOfOrNull { targetRoutePoints ->
 

@@ -10,10 +10,10 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkResult
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedLinkState
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
@@ -93,7 +93,7 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
                 val startLink: SnappedLinkState = nodeSeqResult.startLink
                 val endLink: SnappedLinkState = nodeSeqResult.endLink
 
-                val routeLinks: List<RouteLinkDTO> = routingService
+                val routeLinks: List<RouteLink> = routingService
                     .findRouteViaNodes(nodeIdSequence,
                                        vehicleType,
                                        startLink.closestPointFractionalMeasure,
@@ -102,7 +102,7 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
                                                                   matchingParameters.bufferRadiusInMeters,
                                                                   startLink,
                                                                   endLink))
-                    .also { routeLinks: List<RouteLinkDTO> ->
+                    .also { routeLinks: List<RouteLink> ->
                         if (routeLinks.isNotEmpty()) {
                             LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
                         }
@@ -196,13 +196,13 @@ class MatchRouteViaNetworkNodesServiceImpl @Autowired constructor(
                                                    maxStopLocationDeviation: Double)
         : InfrastructureLinksOnRoute {
 
-        val fromRoutePointIndexToSnappedLinkOfMatchedStop: Map<Int, SnapStopToLinkDTO> = publicTransportStopMatcher
+        val fromRoutePointIndexToSnappedLinkOfMatchedStop: Map<Int, SnapStopToLinkResult> = publicTransportStopMatcher
             .findStopPointsByNationalIdsAndIndexByRoutePointOrdering(sourceRoutePoints, maxStopLocationDeviation)
 
         val fromStopNationalIdToInfrastructureLinkId: Map<Int, InfrastructureLinkId> =
             fromRoutePointIndexToSnappedLinkOfMatchedStop
                 .values
-                .associateBy(SnapStopToLinkDTO::stopNationalId) { it.link.infrastructureLinkId }
+                .associateBy(SnapStopToLinkResult::stopNationalId) { it.link.infrastructureLinkId }
 
         val (startLinkCandidates: List<TerminusLinkCandidate>, endLinkCandidates: List<TerminusLinkCandidate>) =
             MatchingServiceHelper.resolveTerminusLinkCandidates(terminusLinkSelectionInput,

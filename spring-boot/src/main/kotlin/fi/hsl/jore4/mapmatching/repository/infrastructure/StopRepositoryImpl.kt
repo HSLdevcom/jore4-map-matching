@@ -22,7 +22,7 @@ class StopRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
     @Transactional(readOnly = true)
     override fun findStopsAndSnapToInfrastructureLinks(stopMatchParams: Collection<PublicTransportStopMatchParameters>,
                                                        maxDistanceBetweenExpectedAndActualStopLocation: Double)
-        : List<SnapStopToLinkDTO> {
+        : List<SnapStopToLinkResult> {
 
         if (stopMatchParams.isEmpty()) {
             return emptyList()
@@ -61,15 +61,15 @@ class StopRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParameter
 
             val closestPointFractionalMeasure = rs.getDouble("fractional_measure")
 
-            SnapStopToLinkDTO(stopNationalId,
-                              stopSideOnLink,
-                              SnappedLinkState(InfrastructureLinkId(infrastructureLinkId),
-                                               0.0, // closest distance from stop to link is ignored
-                                               closestPointFractionalMeasure,
-                                               TrafficFlowDirectionType.from(trafficFlowDirectionType),
-                                               linkLength,
-                                               InfrastructureNodeId(startNodeId),
-                                               InfrastructureNodeId(endNodeId)))
+            SnapStopToLinkResult(stopNationalId,
+                                 stopSideOnLink,
+                                 SnappedLinkState(InfrastructureLinkId(infrastructureLinkId),
+                                                  0.0, // closest distance from stop to link is ignored
+                                                  closestPointFractionalMeasure,
+                                                  TrafficFlowDirectionType.from(trafficFlowDirectionType),
+                                                  linkLength,
+                                                  InfrastructureNodeId(startNodeId),
+                                                  InfrastructureNodeId(endNodeId)))
         }
     }
 

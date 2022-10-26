@@ -17,9 +17,9 @@ interface IStopRepository {
      * [maxDistanceBetweenExpectedAndActualStopLocation], then the affected stops are discarded from
      * the set of route points that are matched with infrastructure links.
      *
-     * @return [List] of [SnapStopToLinkDTO]s found by the given national identifiers.
+     * @return [List] of [SnapStopToLinkResult]s found by the given national identifiers.
      */
     fun findStopsAndSnapToInfrastructureLinks(stopMatchParams: Collection<PublicTransportStopMatchParameters>,
                                               maxDistanceBetweenExpectedAndActualStopLocation: Double)
-        : List<SnapStopToLinkDTO>
+        : List<SnapStopToLinkResult>
 }

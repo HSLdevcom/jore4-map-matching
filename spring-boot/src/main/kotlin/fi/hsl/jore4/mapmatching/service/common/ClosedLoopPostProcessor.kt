@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.service.common
 
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 
 object ClosedLoopPostProcessor {
 
@@ -14,8 +14,8 @@ object ClosedLoopPostProcessor {
      * terms of whole infrastructure link geometries. Therefore, we may want to
      * prevent inadvertent multi-traversals in closed loops.
      */
-    fun simplifyConsecutiveClosedLoopTraversals(routeLinks: List<RouteLinkDTO>): List<RouteLinkDTO> {
-        val modifiedRouteLinks: MutableList<RouteLinkDTO> = ArrayList(routeLinks.size)
+    fun simplifyConsecutiveClosedLoopTraversals(routeLinks: List<RouteLink>): List<RouteLink> {
+        val modifiedRouteLinks: MutableList<RouteLink> = ArrayList(routeLinks.size)
 
         var lastAddedTraversal: InfrastructureLinkTraversal? = null
 
@@ -45,7 +45,7 @@ object ClosedLoopPostProcessor {
                             lastAdded.infrastructureLinkName
                         )
 
-                        modifiedRouteLinks.add(RouteLinkDTO(routeSeqNum, replacementLinkTraversal))
+                        modifiedRouteLinks.add(RouteLink(routeSeqNum, replacementLinkTraversal))
                         lastAddedTraversal = replacementLinkTraversal
 
                     } else {

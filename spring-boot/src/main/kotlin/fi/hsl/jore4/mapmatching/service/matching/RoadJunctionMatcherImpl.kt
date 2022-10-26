@@ -5,7 +5,7 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RouteJunctionPoint
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
-import fi.hsl.jore4.mapmatching.repository.routing.SnapPointToNodesDTO
+import fi.hsl.jore4.mapmatching.repository.routing.SnapPointToNodesResult
 import fi.hsl.jore4.mapmatching.util.InternalService
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
@@ -40,12 +40,12 @@ class RoadJunctionMatcherImpl @Autowired constructor(val nodeRepository: INodeRe
         val pointCoordinates: List<Point<G2D>> = junctionPointsWithRoutePointOrdering.map { it.value.location }
 
         // Fetch all nodes that are located within clearing distance from some source route point.
-        val nClosestNodes: Map<Int, SnapPointToNodesDTO> = nodeRepository.findNClosestNodes(pointCoordinates,
-                                                                                            vehicleType,
-                                                                                            clearingDistance)
+        val nClosestNodes: Map<Int, SnapPointToNodesResult> = nodeRepository.findNClosestNodes(pointCoordinates,
+                                                                                               vehicleType,
+                                                                                               clearingDistance)
 
         return nClosestNodes.entries
-            .mapNotNull { (junctionPointOneBasedIndex: Int, snap: SnapPointToNodesDTO) ->
+            .mapNotNull { (junctionPointOneBasedIndex: Int, snap: SnapPointToNodesResult) ->
 
                 val routePointIndex: Int = fromJunctionPointOneBasedIndexToRoutePointIndex[junctionPointOneBasedIndex]!!
 

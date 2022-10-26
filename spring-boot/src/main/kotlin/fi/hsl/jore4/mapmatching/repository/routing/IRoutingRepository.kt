@@ -28,7 +28,7 @@ interface IRoutingRepository {
     fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
                                  vehicleType: VehicleType,
                                  bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLinkDTO>
+        : List<RouteLink>
 
     /**
      * Finds the shortest route through infrastructure network via given nodes
@@ -61,7 +61,7 @@ interface IRoutingRepository {
                                  fractionalStartLocationOnFirstLink: Double,
                                  fractionalEndLocationOnLastLink: Double,
                                  bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLinkDTO>
+        : List<RouteLink>
 
     /**
      * Finds the shortest route through infrastructure network via given points
@@ -86,5 +86,5 @@ interface IRoutingRepository {
     fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
                                   vehicleType: VehicleType,
                                   bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLinkDTO>
+        : List<RouteLink>
 }

@@ -26,7 +26,7 @@ interface ILinkRepository {
     fun findClosestLinks(points: List<Point<G2D>>,
                          vehicleType: VehicleType,
                          distanceInMeters: Double)
-        : Map<Int, SnapPointToLinkDTO>
+        : Map<Int, SnapPointToLinkResult>
 
     /**
      * Find multiple closest links for every given point within the given
@@ -53,5 +53,5 @@ interface ILinkRepository {
                           vehicleType: VehicleType,
                           distanceInMeters: Double,
                           limit: Int)
-        : Map<Int, SnapPointToLinksDTO>
+        : Map<Int, SnapPointToLinksResult>
 }

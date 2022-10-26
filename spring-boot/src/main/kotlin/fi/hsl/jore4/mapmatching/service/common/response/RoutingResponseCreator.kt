@@ -1,19 +1,19 @@
 package fi.hsl.jore4.mapmatching.service.common.response
 
 import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.mergeContinuousLines
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
 object RoutingResponseCreator {
 
-    fun create(routeLinks: List<RouteLinkDTO>): RoutingResponse {
+    fun create(routeLinks: List<RouteLink>): RoutingResponse {
         if (routeLinks.isEmpty()) {
             return RoutingResponse.noSegment("Could not find a matching route")
         }
 
-        val linkTraversals: List<InfrastructureLinkTraversal> = routeLinks.map(RouteLinkDTO::linkTraversal)
+        val linkTraversals: List<InfrastructureLinkTraversal> = routeLinks.map(RouteLink::linkTraversal)
 
         val totalWeight = linkTraversals.fold(0.0) { accumulatedWeight, link ->
             accumulatedWeight + link.traversedDistance
@@ -33,7 +33,7 @@ object RoutingResponseCreator {
         }
 
         val individualLinks = routeLinks
-            .map(RouteLinkDTO::linkTraversal)
+            .map(RouteLink::linkTraversal)
             .map(LinkTraversalDTO::from)
 
         val routeResult = RouteResultDTO(mergedLine, totalWeight, sumOfLinkLengths, individualLinks)

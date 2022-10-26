@@ -4,7 +4,7 @@ import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.repository.infrastructure.IStopRepository
 import fi.hsl.jore4.mapmatching.repository.infrastructure.PublicTransportStopMatchParameters
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkResult
 import fi.hsl.jore4.mapmatching.util.InternalService
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import mu.KotlinLogging
@@ -22,17 +22,17 @@ class PublicTransportStopMatcherImpl @Autowired constructor(val stopRepository: 
     @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun findStopPointsByNationalIdsAndIndexByRoutePointOrdering(routePoints: List<RoutePoint>,
                                                                          maxStopLocationDeviation: Double)
-        : Map<Int, SnapStopToLinkDTO> {
+        : Map<Int, SnapStopToLinkResult> {
 
         val fromRoutePointIndexToStopMatchParams: Map<Int, PublicTransportStopMatchParameters> =
             getMappingFromRoutePointIndexesToStopMatchParameters(routePoints)
 
-        val snappedLinks: List<SnapStopToLinkDTO> =
+        val snappedLinks: List<SnapStopToLinkResult> =
             stopRepository.findStopsAndSnapToInfrastructureLinks(fromRoutePointIndexToStopMatchParams.values,
                                                                  maxStopLocationDeviation)
 
-        val fromStopNationalIdToSnappedLink: Map<Int, SnapStopToLinkDTO> =
-            snappedLinks.associateBy(SnapStopToLinkDTO::stopNationalId)
+        val fromStopNationalIdToSnappedLink: Map<Int, SnapStopToLinkResult> =
+            snappedLinks.associateBy(SnapStopToLinkResult::stopNationalId)
 
         val fromRoutePointIndexToMatchedStopNationalId: Map<Int, Int> = fromRoutePointIndexToStopMatchParams
             .mapValues { it.value.nationalId }

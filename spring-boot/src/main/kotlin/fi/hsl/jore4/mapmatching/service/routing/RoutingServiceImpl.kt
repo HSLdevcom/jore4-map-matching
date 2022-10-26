@@ -3,9 +3,9 @@ package fi.hsl.jore4.mapmatching.service.routing
 import fi.hsl.jore4.mapmatching.Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.ILinkRepository
-import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkDTO
+import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapPointToLinkResult
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
-import fi.hsl.jore4.mapmatching.repository.routing.RouteLinkDTO
+import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
@@ -39,7 +39,7 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
             return RoutingResponse.invalidValue("At least 2 distinct points must be given")
         }
 
-        val closestLinks: Collection<SnapPointToLinkDTO> =
+        val closestLinks: Collection<SnapPointToLinkResult> =
             findClosestInfrastructureLinks(filteredPoints, vehicleType, extraParameters.linkQueryDistance)
 
         if (closestLinks.size < filteredPoints.size) {
@@ -49,11 +49,11 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
         val sourceRoutePoints: List<PgRoutingPoint> =
             closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.link) }
 
-        val resultRouteLinks: List<RouteLinkDTO> = routingServiceInternal
+        val resultRouteLinks: List<RouteLink> = routingServiceInternal
             .findRouteViaPointsOnLinks(sourceRoutePoints,
                                        vehicleType,
                                        extraParameters.simplifyConsecutiveClosedLoopTraversals)
-            .also { routeLinks: List<RouteLinkDTO> ->
+            .also { routeLinks: List<RouteLink> ->
                 if (routeLinks.isNotEmpty()) {
                     LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
                 }
@@ -65,12 +65,12 @@ class RoutingServiceImpl @Autowired constructor(val linkRepository: ILinkReposit
     private fun findClosestInfrastructureLinks(points: List<Point<G2D>>,
                                                vehicleType: VehicleType,
                                                linkQueryDistance: Int)
-        : List<SnapPointToLinkDTO> {
+        : List<SnapPointToLinkResult> {
 
         return linkRepository
             .findClosestLinks(points, vehicleType, linkQueryDistance.toDouble())
             .toSortedMap()
-            .also { sortedResults: SortedMap<Int, SnapPointToLinkDTO> ->
+            .also { sortedResults: SortedMap<Int, SnapPointToLinkResult> ->
                 LOGGER.debug {
                     "Found closest links within $linkQueryDistance m radius: ${
                         joinToLogString(sortedResults.entries) {
