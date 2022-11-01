@@ -83,8 +83,6 @@ data class SnappedLinkState(val infrastructureLinkId: InfrastructureLinkId,
 
     fun hasNode(nodeId: InfrastructureNodeId) = startNodeId == nodeId || endNodeId == nodeId
 
-    fun hasSharedNode(that: SnappedLinkState) = hasNode(that.startNodeId) || hasNode(that.endNodeId)
-
     fun hasDiscreteNodes(): Boolean = startNodeId != endNodeId
 
     fun isOnSameLinkAs(other: SnappedLinkState): Boolean = infrastructureLinkId == other.infrastructureLinkId

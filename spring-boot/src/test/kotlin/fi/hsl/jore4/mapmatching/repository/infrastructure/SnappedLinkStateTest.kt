@@ -240,33 +240,6 @@ class SnappedLinkStateTest {
     }
 
     @Nested
-    @DisplayName("hasSharedNode")
-    inner class HasSharedNode {
-
-        @Test
-        @DisplayName("When two infrastructure links have a common node")
-        fun whenTwoLinksShareNode() {
-            qt().forAll(SnappedLinkStateGenerator.snapTwoConnectedLinks())
-                .checkAssert { (firstSnap: SnappedLinkState, secondSnap: SnappedLinkState) ->
-
-                    assertThat(firstSnap.hasSharedNode(secondSnap))
-                        .isEqualTo(true)
-                }
-        }
-
-        @Test
-        @DisplayName("When two infrastructure links do not have a common node")
-        fun whenTwoLinksDoNotShareNode() {
-            qt().forAll(SnappedLinkStateGenerator.snapTwoUnconnectedLinks())
-                .checkAssert { (firstSnap: SnappedLinkState, secondSnap: SnappedLinkState) ->
-
-                    assertThat(firstSnap.hasSharedNode(secondSnap))
-                        .isEqualTo(false)
-                }
-        }
-    }
-
-    @Nested
     @DisplayName("hasDiscreteNodes")
     inner class HasDiscreteNodes {
 
