@@ -1,4 +1,4 @@
-FROM maven:3-openjdk-11-slim AS builder
+FROM maven:3-eclipse-temurin-17 AS builder
 
 # set up workdir
 WORKDIR /build
@@ -13,15 +13,15 @@ COPY ./spring-boot/src /build/src
 COPY ./spring-boot/profiles/prod /build/profiles/prod
 RUN mvn -Pprod -DskipTests=true clean package spring-boot:repackage
 
-
-# slim image for distribution
-FROM eclipse-temurin:11-jre-alpine
+FROM eclipse-temurin:17-jre
 
 # expose server port
 EXPOSE 8080
 
 # install curl
-RUN apk --no-cache add curl
+RUN apt update \
+ && apt install -y curl \
+ && rm -rf /var/lib/apt/lists/*
 
 # download script for reading Docker secrets
 RUN curl -o /tmp/read-secrets.sh "https://raw.githubusercontent.com/HSLdevcom/jore4-tools/main/docker/read-secrets.sh"
@@ -33,7 +33,7 @@ COPY ./docker/build-jdbc-urls.sh /tmp/build-jdbc-urls.sh
 COPY --from=builder /build/target/*.jar /usr/src/jore4-map-matching/jore4-map-matching-backend.jar
 
 # read Docker secrets into environment variables and run application
-CMD /bin/sh -c "source /tmp/read-secrets.sh && source /tmp/build-jdbc-urls.sh && java -jar /usr/src/jore4-map-matching/jore4-map-matching-backend.jar"
+CMD /bin/bash -c "source /tmp/read-secrets.sh && source /tmp/build-jdbc-urls.sh && java -jar /usr/src/jore4-map-matching/jore4-map-matching-backend.jar"
 
 HEALTHCHECK --interval=1m --timeout=5s \
   CMD curl --fail http://localhost:8080/actuator/health
