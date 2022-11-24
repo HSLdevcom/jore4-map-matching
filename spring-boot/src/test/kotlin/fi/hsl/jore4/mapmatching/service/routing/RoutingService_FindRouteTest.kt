@@ -366,7 +366,9 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
         inner class WhenTraversingBackAndForthABirectionalClosedLoopLink {
 
             private val requestRoutePoints: List<Point<G2D>> = listOf(toPoint(g(24.56306, 60.16016)),
-                                                                      toPoint(g(24.56373, 60.16019)),
+                                                                      toPoint(g(24.56333, 60.16021)),
+                                                                      toPoint(g(24.56451, 60.16029)),
+                                                                      toPoint(g(24.56216, 60.16041)),
                                                                       toPoint(g(24.56220, 60.16039)))
 
             @Nested
@@ -383,13 +385,20 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                             .add(24.56305, 60.16016)
                             .add(24.56307, 60.16021)
                             .add(24.56354, 60.16019)
-                            .add(24.56373, 60.16019)
+                            .add(24.56391, 60.16018)
+                            .add(24.56420, 60.16020)
+                            .add(24.56436, 60.16024)
+                            .add(24.56449, 60.1603)
+                            .add(24.56436, 60.16024)
+                            .add(24.56420, 60.16020)
+                            .add(24.56391, 60.16018)
                             .add(24.56354, 60.16019)
                             .add(24.56307, 60.16021)
                             .add(24.56291, 60.16022)
                             .add(24.56269, 60.16024)
                             .add(24.56245, 60.16029)
                             .add(24.56223, 60.16039)
+                            .add(24.56217, 60.16041)
                             .add(24.56221, 60.16040)
 
                         val expectedGeometry: LineString<G2D> =
@@ -414,7 +423,8 @@ class RoutingService_FindRouteTest @Autowired constructor(val routingService: IR
                             "11392370" to true,
                             "12538103" to true,
                             "12538103" to false,
-                            "12538103" to false
+                            "12538103" to false,
+                            "12538103" to true
                         ))
                     }
                 }

@@ -780,13 +780,13 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
                     is_traversal_forwards,
                     start_fraction,
                     CASE
-                        WHEN next_edge = edge THEN (
+                        WHEN next_edge IS NOT NULL THEN (
                             CASE
-                                WHEN end_fraction = 1.0 AND next_start_fraction = 0.0 OR end_fraction = 0.0 AND next_start_fraction = 1.0 THEN end_fraction
-                                ELSE next_start_fraction
+                                WHEN next_edge = edge AND next_start_fraction NOT IN (0.0, 1.0) THEN next_start_fraction
+                                WHEN is_traversal_forwards THEN 1.0
+                                ELSE 0.0
                             END
                         )
-                        WHEN next_edge <> edge THEN ( CASE WHEN is_traversal_forwards THEN 1.0 ELSE 0.0 END )
                         ELSE ( -- next_edge IS NULL
                             SELECT end_fraction AS last_end_fraction FROM pgr_transform2 ORDER BY seq DESC LIMIT 1 
                         )
