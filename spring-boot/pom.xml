@@ -32,7 +32,7 @@
         <geolatte.version>1.9.0</geolatte.version>
         <kotlin-logging-jvm.version>3.0.2</kotlin-logging-jvm.version>
         <quicktheories.version>0.26</quicktheories.version>
-        <spring-boot.version>2.7.5</spring-boot.version>
+        <spring-boot.version>2.7.12</spring-boot.version>
 
         <!-- Other properties -->
         <start.class>fi.hsl.jore4.mapmatching.MapMatchingApplicationKt</start.class>
