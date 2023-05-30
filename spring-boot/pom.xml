@@ -3,6 +3,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.5</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
 
     <groupId>fi.hsl.jore4</groupId>
     <artifactId>map-matching-backend</artifactId>
@@ -21,10 +27,6 @@
         <!-- Maven build plugins and their dependencies -->
         <build-helper-plugin.version>3.2.0</build-helper-plugin.version>
         <build-properties-plugin.version>1.0.0</build-properties-plugin.version>
-        <flyway-plugin.version>8.5.13</flyway-plugin.version>
-        <jooq-meta.version>3.14.16</jooq-meta.version>
-        <kotlin-plugin.version>1.6.21</kotlin-plugin.version>
-        <postgresql.version>42.3.7</postgresql.version>
         <surefire-plugin.version>2.22.2</surefire-plugin.version>
 
         <!-- Library versions -->
@@ -32,7 +34,6 @@
         <geolatte.version>1.9.0</geolatte.version>
         <kotlin-logging-jvm.version>3.0.2</kotlin-logging-jvm.version>
         <quicktheories.version>0.26</quicktheories.version>
-        <spring-boot.version>2.7.5</spring-boot.version>
 
         <!-- Other properties -->
         <start.class>fi.hsl.jore4.mapmatching.MapMatchingApplicationKt</start.class>
@@ -96,7 +97,8 @@
                     <plugin>
                         <groupId>org.flywaydb</groupId>
                         <artifactId>flyway-maven-plugin</artifactId>
-                        <version>${flyway-plugin.version}</version>
+                        <!-- version inherited from the Spring Boot parent POM -->
+                        <version>${flyway.version}</version>
 
                         <configuration>
                             <driver>${db.driver}</driver>
@@ -155,7 +157,8 @@
                     <plugin>
                         <groupId>org.jooq</groupId>
                         <artifactId>jooq-codegen-maven</artifactId>
-                        <version>${jooq-meta.version}</version>
+                        <!-- version inherited from the Spring Boot parent POM -->
+                        <version>${jooq.version}</version>
 
                         <executions>
                             <execution>
@@ -173,17 +176,20 @@
                             <dependency>
                                 <groupId>org.postgresql</groupId>
                                 <artifactId>postgresql</artifactId>
+                                <!-- version inherited from the Spring Boot parent POM -->
                                 <version>${postgresql.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>org.jooq</groupId>
                                 <artifactId>jooq-codegen</artifactId>
-                                <version>${jooq-meta.version}</version>
+                                <!-- version inherited from the Spring Boot parent POM -->
+                                <version>${jooq.version}</version>
                             </dependency>
                             <dependency>
                                 <groupId>org.jooq</groupId>
                                 <artifactId>jooq-meta</artifactId>
-                                <version>${jooq-meta.version}</version>
+                                <!-- version inherited from the Spring Boot parent POM -->
+                                <version>${jooq.version}</version>
                             </dependency>
                         </dependencies>
 
@@ -348,7 +354,8 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin-plugin.version}</version>
+                <!-- version inherited from the Spring Boot parent POM -->
+                <version>${kotlin.version}</version>
                 <configuration>
                     <compilerPlugins>
                         <plugin>spring</plugin>
@@ -378,12 +385,14 @@
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>
                         <artifactId>kotlin-maven-noarg</artifactId>
-                        <version>${kotlin-plugin.version}</version>
+                        <!-- version inherited from the Spring Boot parent POM -->
+                        <version>${kotlin.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>
                         <artifactId>kotlin-maven-allopen</artifactId>
-                        <version>${kotlin-plugin.version}</version>
+                        <!-- version inherited from the Spring Boot parent POM -->
+                        <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -434,7 +443,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
                 <configuration>
                     <fork>true</fork>
                     <mainClass>${start.class}</mainClass>
@@ -449,18 +457,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -495,10 +491,14 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
+            <!-- version inherited from the Spring Boot parent POM -->
+            <version>${kotlin.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
+            <!-- version inherited from the Spring Boot parent POM -->
+            <version>${kotlin.version}</version>
         </dependency>
 
         <dependency>
@@ -509,6 +509,8 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <!-- version inherited from the Spring Boot parent POM -->
+            <version>${postgresql.version}</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -550,6 +552,8 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit5</artifactId>
+            <!-- version inherited from the Spring Boot parent POM -->
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
 
