@@ -14,7 +14,7 @@ on:
 jobs:
   push_to_registry:
     name: Build & Push docker image to Docker Hub
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
@@ -74,7 +74,7 @@ jobs:
   run_e2e_tests:
     name: Run cypress e2e tests
     needs: push_to_registry
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
