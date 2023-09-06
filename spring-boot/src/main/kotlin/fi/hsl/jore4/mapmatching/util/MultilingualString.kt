@@ -12,10 +12,8 @@ class MultilingualString(@JsonValue val values: Map<String, String?>) {
     companion object {
         @JsonCreator
         @JvmStatic
-        fun of(mapOrNull: Map<String?, String?>?): MultilingualString {
-            val mapWithNonNullKeys: Map<String, String?> = mapOrNull?.let { map ->
-                map.filterKeys { it != null } as Map<String, String?>
-            } ?: emptyMap()
+        fun of(mapOrNull: Map<String, String?>?): MultilingualString {
+            val mapWithNonNullKeys: Map<String, String?> = mapOrNull ?: emptyMap()
 
             return MultilingualString(mapWithNonNullKeys)
         }
