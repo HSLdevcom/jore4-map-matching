@@ -80,7 +80,7 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
                                         val fallbackToViaNodesAlgorithm: Boolean?) {
 
         private val isRoadJunctionMatchingEnabled: Boolean
-            get() = roadJunctionMatchingEnabled?.let { it } != false
+            get() = roadJunctionMatchingEnabled != false
 
         @AssertTrue(message = "false")
         fun isJunctionNodeDistancesAbsentWhenJunctionMatchingDisabled(): Boolean =
