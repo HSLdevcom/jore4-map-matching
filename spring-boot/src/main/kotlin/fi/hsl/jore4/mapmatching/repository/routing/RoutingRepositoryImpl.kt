@@ -266,7 +266,7 @@ class RoutingRepositoryImpl @Autowired constructor(val jdbcTemplate: NamedParame
 
         var paramIndex = firstParameterIndex
 
-        bufferAreaRestriction?.run {
+        bufferAreaRestriction.run {
             explicitLinkReferences?.run {
                 idsOfCandidatesForTerminusLinks.forEach {
                     pstmt.setLong(paramIndex++, it.value)

@@ -1,10 +1,6 @@
 package fi.hsl.jore4.mapmatching.util
 
 import org.springframework.stereotype.Component
-import java.lang.annotation.ElementType
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
-import java.lang.annotation.Target
 
 /**
  * A meta-annotation for Spring's [Component] annotation. Marks a Spring-managed
@@ -17,7 +13,7 @@ import java.lang.annotation.Target
  * methods that open database transactions are enabled to recover from an
  * exception thrown from an internal service method.
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
 @Component
-annotation class InternalService()
+annotation class InternalService
