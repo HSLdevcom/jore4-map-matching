@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.api
 
 import fi.hsl.jore4.mapmatching.model.LatLng
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 /**
  * Contains input data for finding a route via given points through the
@@ -18,6 +18,8 @@ import javax.validation.Valid
  * terms of whole infrastructure link geometries. Therefore, we may want to
  * prevent inadvertent multi-traversals in closed loops.
  */
-data class PublicTransportRouteFindRequestDTO(@field:Valid val routePoints: List<LatLng>,
-                                              val linkSearchRadius: Int?,
-                                              val simplifyClosedLoopTraversals: Boolean?)
+data class PublicTransportRouteFindRequestDTO(
+    @field:Valid val routePoints: List<LatLng>,
+    val linkSearchRadius: Int?,
+    val simplifyClosedLoopTraversals: Boolean?,
+)

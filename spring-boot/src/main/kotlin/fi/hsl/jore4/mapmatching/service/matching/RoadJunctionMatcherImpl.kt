@@ -8,7 +8,7 @@ import fi.hsl.jore4.mapmatching.repository.routing.INodeRepository
 import fi.hsl.jore4.mapmatching.repository.routing.SnapPointToNodesResult
 import fi.hsl.jore4.mapmatching.util.InternalService
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,65 +17,72 @@ import org.springframework.transaction.annotation.Transactional
 private val LOGGER = KotlinLogging.logger {}
 
 @InternalService
-class RoadJunctionMatcherImpl @Autowired constructor(val nodeRepository: INodeRepository) : IRoadJunctionMatcher {
+class RoadJunctionMatcherImpl
+    @Autowired
+    constructor(
+        val nodeRepository: INodeRepository,
+    ) : IRoadJunctionMatcher {
+        @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
+        override fun findInfrastructureNodesMatchingRoadJunctions(
+            routePoints: List<RoutePoint>,
+            vehicleType: VehicleType,
+            matchDistance: Double,
+            clearingDistance: Double,
+        ): Map<Int, NodeProximity?> {
+            require(matchDistance <= clearingDistance) { "matchDistance must not be greater than clearingDistance" }
 
-    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
-    override fun findInfrastructureNodesMatchingRoadJunctions(routePoints: List<RoutePoint>,
-                                                              vehicleType: VehicleType,
-                                                              matchDistance: Double,
-                                                              clearingDistance: Double)
-        : Map<Int, NodeProximity?> {
+            val junctionPointsWithRoutePointOrdering: List<IndexedValue<RoutePoint>> =
+                routePoints
+                    .withIndex()
+                    .filter { it.value is RouteJunctionPoint }
 
-        require(matchDistance <= clearingDistance) { "matchDistance must not be greater than clearingDistance" }
+            val fromJunctionPointOneBasedIndexToRoutePointIndex: Map<Int, Int> =
+                junctionPointsWithRoutePointOrdering
+                    .map(IndexedValue<*>::index)
+                    .withIndex()
+                    .associateBy(keySelector = { it.index + 1 }, valueTransform = IndexedValue<Int>::value)
 
-        val junctionPointsWithRoutePointOrdering: List<IndexedValue<RoutePoint>> = routePoints
-            .withIndex()
-            .filter { it.value is RouteJunctionPoint }
+            val pointCoordinates: List<Point<G2D>> = junctionPointsWithRoutePointOrdering.map { it.value.location }
 
-        val fromJunctionPointOneBasedIndexToRoutePointIndex: Map<Int, Int> = junctionPointsWithRoutePointOrdering
-            .map(IndexedValue<*>::index)
-            .withIndex()
-            .associateBy(keySelector = { it.index + 1 }, valueTransform = IndexedValue<Int>::value)
+            // Fetch all nodes that are located within clearing distance from some source route point.
+            val nClosestNodes: Map<Int, SnapPointToNodesResult> =
+                nodeRepository.findNClosestNodes(
+                    pointCoordinates,
+                    vehicleType,
+                    clearingDistance,
+                )
 
-        val pointCoordinates: List<Point<G2D>> = junctionPointsWithRoutePointOrdering.map { it.value.location }
+            return nClosestNodes.entries
+                .mapNotNull { (junctionPointOneBasedIndex: Int, snap: SnapPointToNodesResult) ->
 
-        // Fetch all nodes that are located within clearing distance from some source route point.
-        val nClosestNodes: Map<Int, SnapPointToNodesResult> = nodeRepository.findNClosestNodes(pointCoordinates,
-                                                                                               vehicleType,
-                                                                                               clearingDistance)
+                    val routePointIndex: Int = fromJunctionPointOneBasedIndexToRoutePointIndex[junctionPointOneBasedIndex]!!
 
-        return nClosestNodes.entries
-            .mapNotNull { (junctionPointOneBasedIndex: Int, snap: SnapPointToNodesResult) ->
+                    val nodes: List<NodeProximity> = snap.nodes
 
-                val routePointIndex: Int = fromJunctionPointOneBasedIndexToRoutePointIndex[junctionPointOneBasedIndex]!!
+                    // Infrastructure node is accepted as a match if:
+                    // 1. it is within match distance (small circle) from a source route point
+                    // 2. there does not exist any other node within clearing distance (larger circle)
+                    when (nodes.size) {
+                        1 -> {
+                            val node: NodeProximity = nodes[0]
 
-                val nodes: List<NodeProximity> = snap.nodes
-
-                // Infrastructure node is accepted as a match if:
-                // 1. it is within match distance (small circle) from a source route point
-                // 2. there does not exist any other node within clearing distance (larger circle)
-                when (nodes.size) {
-                    1 -> {
-                        val node: NodeProximity = nodes[0]
-
-                        if (node.distanceToNode <= matchDistance)
-                            routePointIndex to node
-                        else
-                            null // discard because node not within match distance
-                    }
-
-                    else -> null // discard because multiple nodes within clearing distance
-                }
-            }
-            .also { routePointIndexToJunctionNode: List<Pair<Int, NodeProximity>> ->
-                LOGGER.debug {
-                    "Matched following road junction points from source route points: ${
-                        joinToLogString(routePointIndexToJunctionNode) {
-                            "Route point #${it.first + 1}: ${it.second}"
+                            if (node.distanceToNode <= matchDistance) {
+                                routePointIndex to node
+                            } else {
+                                null // discard because node not within match distance
+                            }
                         }
-                    }"
-                }
-            }
-            .toMap()
+
+                        else -> null // discard because multiple nodes within clearing distance
+                    }
+                }.also { routePointIndexToJunctionNode: List<Pair<Int, NodeProximity>> ->
+                    LOGGER.debug {
+                        "Matched following road junction points from source route points: ${
+                            joinToLogString(routePointIndexToJunctionNode) {
+                                "Route point #${it.first + 1}: ${it.second}"
+                            }
+                        }"
+                    }
+                }.toMap()
+        }
     }
-}

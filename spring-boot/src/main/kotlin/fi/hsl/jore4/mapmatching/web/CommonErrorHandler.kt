@@ -1,6 +1,7 @@
 package fi.hsl.jore4.mapmatching.web
 
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
+import jakarta.validation.ConstraintViolationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -14,14 +15,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import java.util.function.Consumer
-import javax.validation.ConstraintViolationException
 
 /**
  * Provides error handler methods that return custom error messages back to client.
  */
 @ControllerAdvice
 class CommonErrorHandler {
-
     @ExceptionHandler(MissingServletRequestParameterException::class)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
@@ -40,14 +39,17 @@ class CommonErrorHandler {
         LOGGER.info("Handling invalid method argument: ${ex.message}")
 
         val errors: MutableMap<String, String?> = HashMap()
-        ex.bindingResult.allErrors.forEach(Consumer { error: ObjectError ->
-            val fieldName = (error as FieldError).field
-            errors[fieldName] = error.getDefaultMessage()
-        })
+        ex.bindingResult.allErrors.forEach(
+            Consumer { error: ObjectError ->
+                val fieldName = (error as FieldError).field
+                errors[fieldName] = error.getDefaultMessage()
+            },
+        )
 
-        val message = errors.entries.joinToString(separator = ", ", prefix = "{", postfix = "}") { errorItem ->
-            "\"${errorItem.key}\": \"${errorItem.value}\""
-        }
+        val message =
+            errors.entries.joinToString(separator = ", ", prefix = "{", postfix = "}") { errorItem ->
+                "\"${errorItem.key}\": \"${errorItem.value}\""
+            }
 
         return RoutingResponse.invalidValue(message)
     }

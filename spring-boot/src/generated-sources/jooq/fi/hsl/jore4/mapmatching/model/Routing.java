@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jooq.Catalog;
-import org.jooq.Sequence;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
 
@@ -36,7 +35,8 @@ public class Routing extends SchemaImpl {
     public static final Routing ROUTING = new Routing();
 
     /**
-     * The infrastructure links, e.g. road or rail elements: https://www.transmodel-cen.eu/model/index.htm?goto=2:1:1:1:453
+     * The infrastructure links, e.g. road or rail elements:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=2:1:1:1:453
      */
     public final InfrastructureLink INFRASTRUCTURE_LINK = InfrastructureLink.INFRASTRUCTURE_LINK;
 
@@ -61,17 +61,20 @@ public class Routing extends SchemaImpl {
     public final PublicTransportStop PUBLIC_TRANSPORT_STOP = PublicTransportStop.PUBLIC_TRANSPORT_STOP;
 
     /**
-     * The possible directions of traffic flow on infrastructure links. Using code values from Digiroad codeset.
+     * The possible directions of traffic flow on infrastructure links. Using
+     * code values from Digiroad codeset.
      */
     public final TrafficFlowDirection TRAFFIC_FLOW_DIRECTION = TrafficFlowDirection.TRAFFIC_FLOW_DIRECTION;
 
     /**
-     * The vehicle modes from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
+     * The vehicle modes from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
      */
     public final VehicleMode VEHICLE_MODE = VehicleMode.VEHICLE_MODE;
 
     /**
-     * The vehicle types from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
+     * The vehicle types from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
      */
     public final VehicleType VEHICLE_TYPE = VehicleType.VEHICLE_TYPE;
 
@@ -89,14 +92,8 @@ public class Routing extends SchemaImpl {
     }
 
     @Override
-    public final List<Sequence<?>> getSequences() {
-        return Arrays.<Sequence<?>>asList(
-            Sequences.INFRASTRUCTURE_LINK_VERTICES_PGR_ID_SEQ);
-    }
-
-    @Override
     public final List<Table<?>> getTables() {
-        return Arrays.<Table<?>>asList(
+        return Arrays.asList(
             InfrastructureLink.INFRASTRUCTURE_LINK,
             InfrastructureLinkSafelyTraversedByVehicleType.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE,
             InfrastructureLinkVerticesPgr.INFRASTRUCTURE_LINK_VERTICES_PGR,
@@ -104,6 +101,7 @@ public class Routing extends SchemaImpl {
             PublicTransportStop.PUBLIC_TRANSPORT_STOP,
             TrafficFlowDirection.TRAFFIC_FLOW_DIRECTION,
             VehicleMode.VEHICLE_MODE,
-            VehicleType.VEHICLE_TYPE);
+            VehicleType.VEHICLE_TYPE
+        );
     }
 }
