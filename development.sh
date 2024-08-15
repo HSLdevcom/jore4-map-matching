@@ -6,7 +6,7 @@ set -euo pipefail
 WD=$(dirname "$0")
 cd "${WD}"
 
-DOCKER_COMPOSE_CMD="docker-compose -f ./docker/docker-compose.yml"
+DOCKER_COMPOSE_CMD="docker compose -f ./docker/docker-compose.yml"
 
 function start_prod_database {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingdb
