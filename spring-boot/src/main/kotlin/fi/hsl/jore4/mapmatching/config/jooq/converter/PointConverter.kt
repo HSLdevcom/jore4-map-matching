@@ -15,6 +15,7 @@ class PointConverter : Converter<Any, Point<C2D>> {
 
     override fun fromType() = Any::class.java
 
+    @Suppress("UNCHECKED_CAST")
     override fun toType() = Point::class.java as Class<Point<C2D>>
 
     companion object {

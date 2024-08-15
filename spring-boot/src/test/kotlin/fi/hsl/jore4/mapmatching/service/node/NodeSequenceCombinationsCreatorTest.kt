@@ -9,6 +9,7 @@ import fi.hsl.jore4.mapmatching.test.generators.InfrastructureNodeIdGenerator.in
 import fi.hsl.jore4.mapmatching.test.generators.Retry
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.InstanceOfAssertFactories
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -33,7 +34,7 @@ class NodeSequenceCombinationsCreatorTest {
                     val nodesToVisit = VisitSingleNode(nodeId)
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSize(1)
                 }
         }
@@ -47,7 +48,7 @@ class NodeSequenceCombinationsCreatorTest {
                     val nodesToVisit = VisitSingleNode(nodeId)
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .isEqualTo(
                             listOf(
                                 NodeIdSequence(
@@ -73,7 +74,7 @@ class NodeSequenceCombinationsCreatorTest {
                     val nodesToVisit = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSize(1)
                 }
         }
@@ -87,7 +88,7 @@ class NodeSequenceCombinationsCreatorTest {
                     val nodesToVisit = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .isEqualTo(
                             listOf(
                                 NodeIdSequence(
@@ -114,7 +115,7 @@ class NodeSequenceCombinationsCreatorTest {
                     val nodesToVisit = VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSize(2)
                 }
         }
@@ -128,7 +129,7 @@ class NodeSequenceCombinationsCreatorTest {
                     val nodesToVisit = VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .isEqualTo(
                             listOf(
                                 NodeIdSequence(
@@ -173,7 +174,7 @@ class NodeSequenceCombinationsCreatorTest {
                         )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSizeGreaterThanOrEqualTo(1)
                         .hasSizeLessThanOrEqualTo(4)
                 }
@@ -309,7 +310,7 @@ class NodeSequenceCombinationsCreatorTest {
                         )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSizeLessThanOrEqualTo(2)
                 }
             }
@@ -355,7 +356,7 @@ class NodeSequenceCombinationsCreatorTest {
                         )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSizeLessThanOrEqualTo(2)
                 }
             }
@@ -401,7 +402,7 @@ class NodeSequenceCombinationsCreatorTest {
                         )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSizeLessThanOrEqualTo(2)
                 }
             }
@@ -467,7 +468,7 @@ class NodeSequenceCombinationsCreatorTest {
                         )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSizeLessThanOrEqualTo(2)
                 }
             }
@@ -533,7 +534,7 @@ class NodeSequenceCombinationsCreatorTest {
                         )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSizeGreaterThanOrEqualTo(2)
                 }
             }
@@ -603,7 +604,7 @@ class NodeSequenceCombinationsCreatorTest {
                         )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSizeGreaterThanOrEqualTo(2)
                 }
             }
@@ -673,7 +674,7 @@ class NodeSequenceCombinationsCreatorTest {
                         )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
-                        .asList()
+                        .asInstanceOf(InstanceOfAssertFactories.LIST)
                         .hasSize(4)
                 }
             }
