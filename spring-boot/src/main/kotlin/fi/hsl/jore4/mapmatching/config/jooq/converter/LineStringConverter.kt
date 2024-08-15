@@ -15,6 +15,7 @@ class LineStringConverter : Converter<Any, LineString<C2D>> {
 
     override fun fromType() = Any::class.java
 
+    @Suppress("UNCHECKED_CAST")
     override fun toType() = LineString::class.java as Class<LineString<C2D>>
 
     companion object {
