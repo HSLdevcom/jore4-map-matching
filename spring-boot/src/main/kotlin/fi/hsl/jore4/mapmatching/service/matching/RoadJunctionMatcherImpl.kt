@@ -20,14 +20,14 @@ private val LOGGER = KotlinLogging.logger {}
 class RoadJunctionMatcherImpl
     @Autowired
     constructor(
-        val nodeRepository: INodeRepository,
+        val nodeRepository: INodeRepository
     ) : IRoadJunctionMatcher {
         @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
         override fun findInfrastructureNodesMatchingRoadJunctions(
             routePoints: List<RoutePoint>,
             vehicleType: VehicleType,
             matchDistance: Double,
-            clearingDistance: Double,
+            clearingDistance: Double
         ): Map<Int, NodeProximity?> {
             require(matchDistance <= clearingDistance) { "matchDistance must not be greater than clearingDistance" }
 
@@ -49,13 +49,14 @@ class RoadJunctionMatcherImpl
                 nodeRepository.findNClosestNodes(
                     pointCoordinates,
                     vehicleType,
-                    clearingDistance,
+                    clearingDistance
                 )
 
             return nClosestNodes.entries
                 .mapNotNull { (junctionPointOneBasedIndex: Int, snap: SnapPointToNodesResult) ->
 
-                    val routePointIndex: Int = fromJunctionPointOneBasedIndexToRoutePointIndex[junctionPointOneBasedIndex]!!
+                    val routePointIndex: Int =
+                        fromJunctionPointOneBasedIndexToRoutePointIndex[junctionPointOneBasedIndex]!!
 
                     val nodes: List<NodeProximity> = snap.nodes
 

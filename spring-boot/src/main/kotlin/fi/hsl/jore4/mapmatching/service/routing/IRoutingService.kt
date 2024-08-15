@@ -6,7 +6,6 @@ import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 
 interface IRoutingService {
-
     /**
      * Find route through infrastructure network that matches with the given
      * points and vehicle type.
@@ -26,8 +25,9 @@ interface IRoutingService {
      * closest infrastructure link cannot be found for any of the given points
      * then a failure response is returned.
      */
-    fun findRoute(viaPoints: List<Point<G2D>>,
-                  vehicleType: VehicleType,
-                  extraParameters: RoutingExtraParameters)
-        : RoutingResponse
+    fun findRoute(
+        viaPoints: List<Point<G2D>>,
+        vehicleType: VehicleType,
+        extraParameters: RoutingExtraParameters
+    ): RoutingResponse
 }

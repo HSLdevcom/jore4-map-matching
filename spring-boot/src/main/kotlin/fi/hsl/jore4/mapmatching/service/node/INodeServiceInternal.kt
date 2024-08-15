@@ -4,7 +4,6 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.repository.routing.BufferAreaRestriction
 
 interface INodeServiceInternal {
-
     /**
      * Resolves optimal sequence of infrastructure network nodes from the given
      * [nodeSequenceCandidates]. In addition to node identifiers, the result
@@ -21,8 +20,9 @@ interface INodeServiceInternal {
      * restriction for the target set of infrastructure links can be defined
      * while resolving optimal node sequence.
      */
-    fun resolveNodeIdSequence(nodeSequenceCandidates: List<NodeSequenceCandidatesBetweenSnappedLinks>,
-                              vehicleType: VehicleType,
-                              bufferAreaRestriction: BufferAreaRestriction? = null)
-        : NodeSequenceResolutionResult
+    fun resolveNodeIdSequence(
+        nodeSequenceCandidates: List<NodeSequenceCandidatesBetweenSnappedLinks>,
+        vehicleType: VehicleType,
+        bufferAreaRestriction: BufferAreaRestriction? = null
+    ): NodeSequenceResolutionResult
 }

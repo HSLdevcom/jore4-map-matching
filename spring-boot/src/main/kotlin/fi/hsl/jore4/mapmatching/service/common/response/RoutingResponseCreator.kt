@@ -7,7 +7,6 @@ import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
 object RoutingResponseCreator {
-
     fun create(routeLinks: List<RouteLink>): RoutingResponse {
         if (routeLinks.isEmpty()) {
             return RoutingResponse.noSegment("Could not find a matching route")
@@ -15,26 +14,31 @@ object RoutingResponseCreator {
 
         val linkTraversals: List<InfrastructureLinkTraversal> = routeLinks.map(RouteLink::linkTraversal)
 
-        val totalWeight = linkTraversals.fold(0.0) { accumulatedWeight, link ->
-            accumulatedWeight + link.traversedDistance
-        }
+        val totalWeight =
+            linkTraversals.fold(0.0) { accumulatedWeight, link ->
+                accumulatedWeight + link.traversedDistance
+            }
 
-        val sumOfLinkLengths = linkTraversals.fold(0.0) { accumulatedLength, link ->
-            accumulatedLength + link.linkLength
-        }
+        val sumOfLinkLengths =
+            linkTraversals.fold(0.0) { accumulatedLength, link ->
+                accumulatedLength + link.linkLength
+            }
 
         val linesToMerge: List<LineString<G2D>> = linkTraversals.map(InfrastructureLinkTraversal::traversedGeometry)
 
-        val mergedLine: LineString<G2D> = try {
-            mergeContinuousLines(linesToMerge)
-        } catch (ex: Exception) {
-            return RoutingResponse.noSegment(
-                ex.message ?: "Merging compound LineString from multiple infrastructure link geometries failed")
-        }
+        val mergedLine: LineString<G2D> =
+            try {
+                mergeContinuousLines(linesToMerge)
+            } catch (ex: Exception) {
+                return RoutingResponse.noSegment(
+                    ex.message ?: "Merging compound LineString from multiple infrastructure link geometries failed"
+                )
+            }
 
-        val individualLinks = routeLinks
-            .map(RouteLink::linkTraversal)
-            .map(LinkTraversalDTO::from)
+        val individualLinks =
+            routeLinks
+                .map(RouteLink::linkTraversal)
+                .map(LinkTraversalDTO::from)
 
         val routeResult = RouteResultDTO(mergedLine, totalWeight, sumOfLinkLengths, individualLinks)
 

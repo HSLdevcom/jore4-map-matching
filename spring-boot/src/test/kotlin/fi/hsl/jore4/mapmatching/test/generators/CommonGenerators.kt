@@ -6,7 +6,6 @@ import org.quicktheories.generators.Generate
 import org.quicktheories.generators.Generate.constant
 
 object CommonGenerators {
-
     val ZERO_DOUBLE: Gen<Double> = constant(0.0)
 
     fun <T> pair(source: Gen<T>): Gen<Pair<T, T>> = source.zip(source, ::Pair)
@@ -20,14 +19,18 @@ object CommonGenerators {
         }
     }
 
-    fun shuffledPair(source1: Gen<Double>, source2: Gen<Double>): Gen<Pair<Double, Double>> {
+    fun shuffledPair(
+        source1: Gen<Double>,
+        source2: Gen<Double>
+    ): Gen<Pair<Double, Double>> {
         // Randomise order of distances generated from different sources.
         return Generate.booleans()
             .zip(source1, source2) { flipOrder, distance1, distance2 ->
-                if (flipOrder)
+                if (flipOrder) {
                     distance2 to distance1
-                else
+                } else {
                     distance1 to distance2
+                }
             }
     }
 

@@ -13,53 +13,56 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 
 @InternalService
-class RoutingServiceInternalImpl @Autowired constructor(val routingRepository: IRoutingRepository)
-    : IRoutingServiceInternal {
+class RoutingServiceInternalImpl
+    @Autowired
+    constructor(val routingRepository: IRoutingRepository) :
+    IRoutingServiceInternal {
+        @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
+        override fun findRouteViaNodes(
+            nodeIdSequence: NodeIdSequence,
+            vehicleType: VehicleType,
+            fractionalStartLocationOnFirstLink: Double,
+            fractionalEndLocationOnLastLink: Double,
+            bufferAreaRestriction: BufferAreaRestriction?
+        ): List<RouteLink> {
+            return routingRepository.findRouteViaNetworkNodes(
+                nodeIdSequence,
+                vehicleType,
+                fractionalStartLocationOnFirstLink,
+                fractionalEndLocationOnLastLink,
+                bufferAreaRestriction
+            )
+        }
 
-    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
-    override fun findRouteViaNodes(nodeIdSequence: NodeIdSequence,
-                                   vehicleType: VehicleType,
-                                   fractionalStartLocationOnFirstLink: Double,
-                                   fractionalEndLocationOnLastLink: Double,
-                                   bufferAreaRestriction: BufferAreaRestriction?)
-        : List<RouteLink> {
+        @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
+        override fun findRouteViaPointsOnLinks(
+            points: List<PgRoutingPoint>,
+            vehicleType: VehicleType,
+            simplifyConsecutiveClosedLoopTraversals: Boolean,
+            bufferAreaRestriction: BufferAreaRestriction?
+        ): List<RouteLink> {
+            return when (points.all { it is RealNode }) {
+                true -> {
+                    val nodeIdList: List<InfrastructureNodeId> =
+                        points.mapNotNull { if (it is RealNode) it.nodeId else null }
 
-        return routingRepository.findRouteViaNetworkNodes(nodeIdSequence,
-                                                          vehicleType,
-                                                          fractionalStartLocationOnFirstLink,
-                                                          fractionalEndLocationOnLastLink,
-                                                          bufferAreaRestriction)
-    }
+                    val nodeIdSequence = NodeIdSequence(nodeIdList).duplicatesRemoved()
 
-    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
-    override fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
-                                           vehicleType: VehicleType,
-                                           simplifyConsecutiveClosedLoopTraversals: Boolean,
-                                           bufferAreaRestriction: BufferAreaRestriction?)
-        : List<RouteLink> {
+                    // Closed-loop post-processing is not relevant when find route via network nodes.
 
-        return when (points.all { it is RealNode }) {
+                    routingRepository.findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
+                }
 
-            true -> {
-                val nodeIdList: List<InfrastructureNodeId> =
-                    points.mapNotNull { if (it is RealNode) it.nodeId else null }
+                false -> {
+                    val routeLinks: List<RouteLink> =
+                        routingRepository.findRouteViaPointsOnLinks(points, vehicleType, bufferAreaRestriction)
 
-                val nodeIdSequence = NodeIdSequence(nodeIdList).duplicatesRemoved()
-
-                // Closed-loop post-processing is not relevant when find route via network nodes.
-
-                routingRepository.findRouteViaNetworkNodes(nodeIdSequence, vehicleType, bufferAreaRestriction)
-            }
-
-            false -> {
-                val routeLinks: List<RouteLink> =
-                    routingRepository.findRouteViaPointsOnLinks(points, vehicleType, bufferAreaRestriction)
-
-                return if (simplifyConsecutiveClosedLoopTraversals)
-                    ClosedLoopPostProcessor.simplifyConsecutiveClosedLoopTraversals(routeLinks)
-                else
-                    routeLinks
+                    return if (simplifyConsecutiveClosedLoopTraversals) {
+                        ClosedLoopPostProcessor.simplifyConsecutiveClosedLoopTraversals(routeLinks)
+                    } else {
+                        routeLinks
+                    }
+                }
             }
         }
     }
-}

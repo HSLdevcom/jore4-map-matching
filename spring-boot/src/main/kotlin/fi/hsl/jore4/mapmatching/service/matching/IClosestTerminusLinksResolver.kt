@@ -6,7 +6,6 @@ import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 
 interface IClosestTerminusLinksResolver {
-
     /**
      * Finds the closest infrastructure links to the given start and end point.
      *
@@ -23,10 +22,11 @@ interface IClosestTerminusLinksResolver {
      * @throws [IllegalStateException] if no links are found for one or both of
      * the two endpoints of the route
      */
-    fun findClosestInfrastructureLinksForRouteEndpoints(startPoint: Point<G2D>,
-                                                        endPoint: Point<G2D>,
-                                                        vehicleType: VehicleType,
-                                                        linkQueryDistance: Double,
-                                                        linkQueryLimit: Int)
-        : Pair<List<SnappedPointOnLink>, List<SnappedPointOnLink>>
+    fun findClosestInfrastructureLinksForRouteEndpoints(
+        startPoint: Point<G2D>,
+        endPoint: Point<G2D>,
+        vehicleType: VehicleType,
+        linkQueryDistance: Double,
+        linkQueryLimit: Int
+    ): Pair<List<SnappedPointOnLink>, List<SnappedPointOnLink>>
 }

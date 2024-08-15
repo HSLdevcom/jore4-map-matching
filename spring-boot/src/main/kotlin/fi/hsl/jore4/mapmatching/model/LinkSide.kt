@@ -6,6 +6,7 @@ package fi.hsl.jore4.mapmatching.model
  * infrastructure link is affected by a public transport stop associated with it.
  */
 enum class LinkSide {
-
-    LEFT, RIGHT, BOTH
+    LEFT,
+    RIGHT,
+    BOTH
 }

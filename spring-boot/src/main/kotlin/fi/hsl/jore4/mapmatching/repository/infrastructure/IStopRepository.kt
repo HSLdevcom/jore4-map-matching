@@ -1,7 +1,6 @@
 package fi.hsl.jore4.mapmatching.repository.infrastructure
 
 interface IStopRepository {
-
     /**
      * Find public transport stops constrained by collection of matching parameters and snap the
      * matched stops to infrastructure links.
@@ -19,7 +18,8 @@ interface IStopRepository {
      *
      * @return [List] of [SnapStopToLinkResult]s found by the given national identifiers.
      */
-    fun findStopsAndSnapToInfrastructureLinks(stopMatchParams: Collection<PublicTransportStopMatchParameters>,
-                                              maxDistanceBetweenExpectedAndActualStopLocation: Double)
-        : List<SnapStopToLinkResult>
+    fun findStopsAndSnapToInfrastructureLinks(
+        stopMatchParams: Collection<PublicTransportStopMatchParameters>,
+        maxDistanceBetweenExpectedAndActualStopLocation: Double
+    ): List<SnapStopToLinkResult>
 }

@@ -13,7 +13,6 @@ import java.util.function.Predicate
  * is licensed by https://github.com/quicktheories/QuickTheories under Apace License V2.0.
  */
 class Retry<T : Any>(private val child: Gen<T>, private val assumption: Predicate<T>) : Gen<T> {
-
     override fun generate(randomnessSource: RandomnessSource): T {
         // danger of infinite loop if used incorrectly
         while (true) {

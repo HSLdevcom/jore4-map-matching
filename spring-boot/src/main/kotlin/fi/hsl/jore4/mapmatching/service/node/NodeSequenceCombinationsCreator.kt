@@ -5,21 +5,23 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplicates
 
 object NodeSequenceCombinationsCreator {
-
     /**
      * Produce list of [NodeIdSequence] objects that contains possible sequences of infrastructure
      * network node identifiers resolved from parameter.
      */
-    fun create(nodesToVisit: VisitedNodes): List<NodeIdSequence> = when (nodesToVisit) {
-        is VisitedNodesOnLink -> nodesToVisit.toListOfNodeIdSequences()
+    fun create(nodesToVisit: VisitedNodes): List<NodeIdSequence> =
+        when (nodesToVisit) {
+            is VisitedNodesOnLink -> nodesToVisit.toListOfNodeIdSequences()
 
-        is VisitNodesOnMultipleLinks -> toListOfNodeIdSequences(nodesToVisit)
-    }
+            is VisitNodesOnMultipleLinks -> toListOfNodeIdSequences(nodesToVisit)
+        }
 
     private fun toListOfNodeIdSequences(nodesToVisit: VisitNodesOnMultipleLinks): List<NodeIdSequence> {
-        val (nodesToVisitOnStartLink: VisitedNodesOnLink,
+        val (
+            nodesToVisitOnStartLink: VisitedNodesOnLink,
             viaNodeIds: List<InfrastructureNodeId>,
-            nodesToVisitOnEndLink: VisitedNodesOnLink) = nodesToVisit
+            nodesToVisitOnEndLink: VisitedNodesOnLink
+        ) = nodesToVisit
 
         return nodesToVisitOnStartLink.toListOfNodeIdSequences().flatMap { startNodeIdSeq ->
 

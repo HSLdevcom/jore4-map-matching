@@ -33,11 +33,12 @@ import kotlin.math.min
  * whether the directions of traversal on terminus links can be determined by
  * interim nodes.
  */
-data class NodeSequenceCandidatesBetweenSnappedLinks(val pointOnStartLink: SnappedPointOnLink,
-                                                     val pointOnEndLink: SnappedPointOnLink,
-                                                     val nodeIdSequences: List<NodeIdSequence>)
-    : Comparable<NodeSequenceCandidatesBetweenSnappedLinks> {
-
+data class NodeSequenceCandidatesBetweenSnappedLinks(
+    val pointOnStartLink: SnappedPointOnLink,
+    val pointOnEndLink: SnappedPointOnLink,
+    val nodeIdSequences: List<NodeIdSequence>
+) :
+    Comparable<NodeSequenceCandidatesBetweenSnappedLinks> {
     init {
         require(nodeIdSequences.isNotEmpty()) { "At least one node ID sequence must be provided" }
         require(nodeIdSequences.size <= 4) {
@@ -60,19 +61,22 @@ data class NodeSequenceCandidatesBetweenSnappedLinks(val pointOnStartLink: Snapp
      */
     fun isRoutePossible(): Boolean = nodeIdSequences.size > 1 || nodeIdSequences.first().size > 1
 
-    private fun getDistanceToCloserTerminusLink(): Double = min(pointOnStartLink.closestDistance, pointOnEndLink.closestDistance)
+    private fun getDistanceToCloserTerminusLink(): Double =
+        min(pointOnStartLink.closestDistance, pointOnEndLink.closestDistance)
 
-    private fun getDistanceToFurtherTerminusLink(): Double = max(pointOnStartLink.closestDistance, pointOnEndLink.closestDistance)
+    private fun getDistanceToFurtherTerminusLink(): Double =
+        max(pointOnStartLink.closestDistance, pointOnEndLink.closestDistance)
 
     // sorting node sequence candidates by closest distances to terminus links
     override fun compareTo(other: NodeSequenceCandidatesBetweenSnappedLinks): Int {
         val closestDistanceToTerminusLink1: Double = getDistanceToCloserTerminusLink()
         val closestDistanceToTerminusLink2: Double = other.getDistanceToCloserTerminusLink()
 
-        if (closestDistanceToTerminusLink1 < closestDistanceToTerminusLink2)
+        if (closestDistanceToTerminusLink1 < closestDistanceToTerminusLink2) {
             return -1
-        else if (closestDistanceToTerminusLink1 > closestDistanceToTerminusLink2)
+        } else if (closestDistanceToTerminusLink1 > closestDistanceToTerminusLink2) {
             return 1
+        }
 
         return getDistanceToFurtherTerminusLink().compareTo(other.getDistanceToFurtherTerminusLink())
     }

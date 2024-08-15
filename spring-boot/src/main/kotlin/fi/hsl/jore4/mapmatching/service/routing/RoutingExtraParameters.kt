@@ -14,5 +14,7 @@ package fi.hsl.jore4.mapmatching.service.routing
  * terms of whole infrastructure link geometries. Therefore, we may want to
  * prevent inadvertent multi-traversals in closed loops.
  */
-data class RoutingExtraParameters(val linkQueryDistance: Int,
-                                  val simplifyConsecutiveClosedLoopTraversals: Boolean)
+data class RoutingExtraParameters(
+    val linkQueryDistance: Int,
+    val simplifyConsecutiveClosedLoopTraversals: Boolean
+)

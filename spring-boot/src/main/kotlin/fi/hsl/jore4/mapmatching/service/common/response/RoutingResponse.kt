@@ -18,8 +18,12 @@ sealed interface RoutingResponse {
         fun invalidTransportationMode(transportationMode: String) =
             invalidUrl("Failed to resolve transportation mode from: '$transportationMode'")
 
-        fun invalidTransportationProfile(transportationMode: String, vehicleType: String) =
-            invalidUrl("Failed to resolve a valid combination of transportation mode and vehicle type from: '$transportationMode/$vehicleType'")
+        fun invalidTransportationProfile(
+            transportationMode: String,
+            vehicleType: String
+        ) = invalidUrl(
+            "Failed to resolve a valid combination of transportation mode and vehicle type from: '$transportationMode/$vehicleType'"
+        )
 
         fun invalidValue(message: String) = RoutingFailureDTO(ResponseCode.InvalidValue, message)
 

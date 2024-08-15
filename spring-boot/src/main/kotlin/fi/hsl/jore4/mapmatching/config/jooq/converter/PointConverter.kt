@@ -9,7 +9,6 @@ import org.jooq.Converter
  * Converts between Point geometries and PostGIS EWKT/EWKB formats.
  */
 class PointConverter : Converter<Any, Point<C2D>> {
-
     override fun from(databaseObject: Any?) = CONVERTER.from(databaseObject) as Point?
 
     override fun to(userObject: Point<C2D>?): Any? = GeometryConverter.to(userObject)

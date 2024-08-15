@@ -19,12 +19,12 @@ private val LOGGER = KotlinLogging.logger {}
 class PublicTransportStopMatcherImpl
     @Autowired
     constructor(
-        val stopRepository: IStopRepository,
+        val stopRepository: IStopRepository
     ) : IPublicTransportStopMatcher {
         @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
         override fun findStopPointsByNationalIdsAndIndexByRoutePointOrdering(
             routePoints: List<RoutePoint>,
-            maxStopLocationDeviation: Double,
+            maxStopLocationDeviation: Double
         ): Map<Int, SnapStopToLinkResult> {
             val fromRoutePointIndexToStopMatchParams: Map<Int, PublicTransportStopMatchParameters> =
                 getMappingFromRoutePointIndexesToStopMatchParameters(routePoints)
@@ -32,7 +32,7 @@ class PublicTransportStopMatcherImpl
             val snappedLinks: List<SnapStopToLinkResult> =
                 stopRepository.findStopsAndSnapToInfrastructureLinks(
                     fromRoutePointIndexToStopMatchParams.values,
-                    maxStopLocationDeviation,
+                    maxStopLocationDeviation
                 )
 
             val fromStopNationalIdToSnappedLink: Map<Int, SnapStopToLinkResult> =
@@ -58,7 +58,7 @@ class PublicTransportStopMatcherImpl
 
         companion object {
             fun getMappingFromRoutePointIndexesToStopMatchParameters(
-                routePoints: List<RoutePoint>,
+                routePoints: List<RoutePoint>
             ): Map<Int, PublicTransportStopMatchParameters> =
                 routePoints
                     .mapIndexedNotNull { index: Int, routePoint: RoutePoint ->

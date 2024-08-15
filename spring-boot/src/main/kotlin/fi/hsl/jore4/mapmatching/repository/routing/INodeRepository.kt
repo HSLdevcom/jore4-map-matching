@@ -7,7 +7,6 @@ import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 
 interface INodeRepository {
-
     /**
      * Find the closest network nodes for every given point within the given
      * distance.
@@ -27,10 +26,11 @@ interface INodeRepository {
      * the result map. The result map contains at most the same amount of
      * entries as there are points in the parameter list.
      */
-    fun findNClosestNodes(points: List<Point<G2D>>,
-                          vehicleType: VehicleType,
-                          distanceInMeters: Double)
-        : Map<Int, SnapPointToNodesResult>
+    fun findNClosestNodes(
+        points: List<Point<G2D>>,
+        vehicleType: VehicleType,
+        distanceInMeters: Double
+    ): Map<Int, SnapPointToNodesResult>
 
     /**
      * Resolves the best possible sequences of infrastructure node identifiers
@@ -53,8 +53,9 @@ interface INodeRepository {
      * @return [NodeIdSequence] indexed by pair of infrastructure link
      * identifiers associated with the sequence.
      */
-    fun resolveBestNodeSequences(nodeSequenceCandidates: List<NodeSequenceCandidate>,
-                                 vehicleType: VehicleType,
-                                 bufferAreaRestriction: BufferAreaRestriction? = null)
-        : Map<Pair<InfrastructureLinkId, InfrastructureLinkId>, NodeIdSequence>
+    fun resolveBestNodeSequences(
+        nodeSequenceCandidates: List<NodeSequenceCandidate>,
+        vehicleType: VehicleType,
+        bufferAreaRestriction: BufferAreaRestriction? = null
+    ): Map<Pair<InfrastructureLinkId, InfrastructureLinkId>, NodeIdSequence>
 }

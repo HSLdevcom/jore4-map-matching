@@ -21,5 +21,5 @@ import jakarta.validation.Valid
 data class PublicTransportRouteFindRequestDTO(
     @field:Valid val routePoints: List<LatLng>,
     val linkSearchRadius: Int?,
-    val simplifyClosedLoopTraversals: Boolean?,
+    val simplifyClosedLoopTraversals: Boolean?
 )

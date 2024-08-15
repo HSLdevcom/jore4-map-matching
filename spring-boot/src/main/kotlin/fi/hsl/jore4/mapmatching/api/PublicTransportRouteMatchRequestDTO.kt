@@ -21,7 +21,7 @@ data class PublicTransportRouteMatchRequestDTO(
     @field:Pattern(regexp = "[\\w\\d-_ ]{1,50}") val routeId: String?,
     val routeGeometry: LineString<G2D>,
     @field:Valid val routePoints: List<RoutePoint>,
-    @field:Valid val matchingParameters: MapMatchingParametersDTO?,
+    @field:Valid val matchingParameters: MapMatchingParametersDTO?
 ) {
     /**
      * Contains parameters that can be adjusted for the purpose of getting
@@ -79,7 +79,7 @@ data class PublicTransportRouteMatchRequestDTO(
         val roadJunctionMatchingEnabled: Boolean?,
         val junctionNodeMatchDistance: Double?,
         val junctionNodeClearingDistance: Double?,
-        val fallbackToViaNodesAlgorithm: Boolean?,
+        val fallbackToViaNodesAlgorithm: Boolean?
     ) {
         private val isRoadJunctionMatchingEnabled: Boolean
             get() = roadJunctionMatchingEnabled != false

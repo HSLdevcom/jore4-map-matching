@@ -7,7 +7,6 @@ import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 
 interface IRoutingServiceInternal {
-
     /**
      * Finds the shortest route through infrastructure network via given nodes
      * (graph vertices) and constrained by the given vehicle type and optional
@@ -34,12 +33,13 @@ interface IRoutingServiceInternal {
      * reference to an infrastructure link and the direction of traversal on it.
      * If a route could not be found then an empty list is returned.
      */
-    fun findRouteViaNodes(nodeIdSequence: NodeIdSequence,
-                          vehicleType: VehicleType,
-                          fractionalStartLocationOnFirstLink: Double,
-                          fractionalEndLocationOnLastLink: Double,
-                          bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLink>
+    fun findRouteViaNodes(
+        nodeIdSequence: NodeIdSequence,
+        vehicleType: VehicleType,
+        fractionalStartLocationOnFirstLink: Double,
+        fractionalEndLocationOnLastLink: Double,
+        bufferAreaRestriction: BufferAreaRestriction? = null
+    ): List<RouteLink>
 
     /**
      * Finds the shortest route through infrastructure network via given points
@@ -67,9 +67,10 @@ interface IRoutingServiceInternal {
      * reference to an infrastructure link and the direction of traversal on it.
      * If a route could not be found then an empty list is returned.
      */
-    fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
-                                  vehicleType: VehicleType,
-                                  simplifyConsecutiveClosedLoopTraversals: Boolean,
-                                  bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLink>
+    fun findRouteViaPointsOnLinks(
+        points: List<PgRoutingPoint>,
+        vehicleType: VehicleType,
+        simplifyConsecutiveClosedLoopTraversals: Boolean,
+        bufferAreaRestriction: BufferAreaRestriction? = null
+    ): List<RouteLink>
 }

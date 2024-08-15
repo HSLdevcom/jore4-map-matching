@@ -13,6 +13,8 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
  * @property nodeIdSequence sequence of infrastructure network node identifiers related to
  * referenced start and end link.
  */
-data class NodeSequenceCandidate(val startLinkId: InfrastructureLinkId,
-                                 val endLinkId: InfrastructureLinkId,
-                                 val nodeIdSequence: NodeIdSequence)
+data class NodeSequenceCandidate(
+    val startLinkId: InfrastructureLinkId,
+    val endLinkId: InfrastructureLinkId,
+    val nodeIdSequence: NodeIdSequence
+)
