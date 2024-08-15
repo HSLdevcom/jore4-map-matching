@@ -6,29 +6,32 @@ package fi.hsl.jore4.mapmatching.model.tables.records;
 
 import fi.hsl.jore4.mapmatching.model.tables.VehicleMode;
 
-import org.jooq.Field;
 import org.jooq.Record1;
-import org.jooq.Row1;
 import org.jooq.impl.UpdatableRecordImpl;
 
 
 /**
- * The vehicle modes from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
+ * The vehicle modes from Transmodel:
+ * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class VehicleModeRecord extends UpdatableRecordImpl<VehicleModeRecord> implements Record1<String> {
+public class VehicleModeRecord extends UpdatableRecordImpl<VehicleModeRecord> {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>routing.vehicle_mode.vehicle_mode</code>. The vehicle mode from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
+     * Setter for <code>routing.vehicle_mode.vehicle_mode</code>. The vehicle
+     * mode from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
      */
     public void setVehicleMode(String value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>routing.vehicle_mode.vehicle_mode</code>. The vehicle mode from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
+     * Getter for <code>routing.vehicle_mode.vehicle_mode</code>. The vehicle
+     * mode from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
      */
     public String getVehicleMode() {
         return (String) get(0);
@@ -41,47 +44,6 @@ public class VehicleModeRecord extends UpdatableRecordImpl<VehicleModeRecord> im
     @Override
     public Record1<String> key() {
         return (Record1) super.key();
-    }
-
-    // -------------------------------------------------------------------------
-    // Record1 type implementation
-    // -------------------------------------------------------------------------
-
-    @Override
-    public Row1<String> fieldsRow() {
-        return (Row1) super.fieldsRow();
-    }
-
-    @Override
-    public Row1<String> valuesRow() {
-        return (Row1) super.valuesRow();
-    }
-
-    @Override
-    public Field<String> field1() {
-        return VehicleMode.VEHICLE_MODE.VEHICLE_MODE_;
-    }
-
-    @Override
-    public String component1() {
-        return getVehicleMode();
-    }
-
-    @Override
-    public String value1() {
-        return getVehicleMode();
-    }
-
-    @Override
-    public VehicleModeRecord value1(String value) {
-        setVehicleMode(value);
-        return this;
-    }
-
-    @Override
-    public VehicleModeRecord values(String value1) {
-        value1(value1);
-        return this;
     }
 
     // -------------------------------------------------------------------------
@@ -102,5 +64,6 @@ public class VehicleModeRecord extends UpdatableRecordImpl<VehicleModeRecord> im
         super(VehicleMode.VEHICLE_MODE);
 
         setVehicleMode(vehicleMode);
+        resetChangedOnNotNull();
     }
 }

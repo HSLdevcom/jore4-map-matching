@@ -6,45 +6,54 @@ package fi.hsl.jore4.mapmatching.model.tables.records;
 
 import fi.hsl.jore4.mapmatching.model.tables.TrafficFlowDirection;
 
-import org.jooq.Field;
 import org.jooq.Record1;
-import org.jooq.Record3;
-import org.jooq.Row3;
 import org.jooq.impl.UpdatableRecordImpl;
 
 
 /**
- * The possible directions of traffic flow on infrastructure links. Using 
- * code values from Digiroad codeset.
+ * The possible directions of traffic flow on infrastructure links. Using code
+ * values from Digiroad codeset.
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class TrafficFlowDirectionRecord extends UpdatableRecordImpl<TrafficFlowDirectionRecord> implements Record3<Integer, String, String> {
+public class TrafficFlowDirectionRecord extends UpdatableRecordImpl<TrafficFlowDirectionRecord> {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>routing.traffic_flow_direction.traffic_flow_direction_type</code>. Numeric enum value for direction of traffic flow. The code value originates from Digiroad codeset.
+     * Setter for
+     * <code>routing.traffic_flow_direction.traffic_flow_direction_type</code>.
+     * Numeric enum value for direction of traffic flow. The code value
+     * originates from Digiroad codeset.
      */
     public void setTrafficFlowDirectionType(Integer value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>routing.traffic_flow_direction.traffic_flow_direction_type</code>. Numeric enum value for direction of traffic flow. The code value originates from Digiroad codeset.
+     * Getter for
+     * <code>routing.traffic_flow_direction.traffic_flow_direction_type</code>.
+     * Numeric enum value for direction of traffic flow. The code value
+     * originates from Digiroad codeset.
      */
     public Integer getTrafficFlowDirectionType() {
         return (Integer) get(0);
     }
 
     /**
-     * Setter for <code>routing.traffic_flow_direction.traffic_flow_direction_name</code>. The short name for direction of traffic flow. The text value originates from the JORE4 database schema.
+     * Setter for
+     * <code>routing.traffic_flow_direction.traffic_flow_direction_name</code>.
+     * The short name for direction of traffic flow. The text value originates
+     * from the JORE4 database schema.
      */
     public void setTrafficFlowDirectionName(String value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>routing.traffic_flow_direction.traffic_flow_direction_name</code>. The short name for direction of traffic flow. The text value originates from the JORE4 database schema.
+     * Getter for
+     * <code>routing.traffic_flow_direction.traffic_flow_direction_name</code>.
+     * The short name for direction of traffic flow. The text value originates
+     * from the JORE4 database schema.
      */
     public String getTrafficFlowDirectionName() {
         return (String) get(1);
@@ -74,91 +83,6 @@ public class TrafficFlowDirectionRecord extends UpdatableRecordImpl<TrafficFlowD
     }
 
     // -------------------------------------------------------------------------
-    // Record3 type implementation
-    // -------------------------------------------------------------------------
-
-    @Override
-    public Row3<Integer, String, String> fieldsRow() {
-        return (Row3) super.fieldsRow();
-    }
-
-    @Override
-    public Row3<Integer, String, String> valuesRow() {
-        return (Row3) super.valuesRow();
-    }
-
-    @Override
-    public Field<Integer> field1() {
-        return TrafficFlowDirection.TRAFFIC_FLOW_DIRECTION.TRAFFIC_FLOW_DIRECTION_TYPE;
-    }
-
-    @Override
-    public Field<String> field2() {
-        return TrafficFlowDirection.TRAFFIC_FLOW_DIRECTION.TRAFFIC_FLOW_DIRECTION_NAME;
-    }
-
-    @Override
-    public Field<String> field3() {
-        return TrafficFlowDirection.TRAFFIC_FLOW_DIRECTION.DESCRIPTION;
-    }
-
-    @Override
-    public Integer component1() {
-        return getTrafficFlowDirectionType();
-    }
-
-    @Override
-    public String component2() {
-        return getTrafficFlowDirectionName();
-    }
-
-    @Override
-    public String component3() {
-        return getDescription();
-    }
-
-    @Override
-    public Integer value1() {
-        return getTrafficFlowDirectionType();
-    }
-
-    @Override
-    public String value2() {
-        return getTrafficFlowDirectionName();
-    }
-
-    @Override
-    public String value3() {
-        return getDescription();
-    }
-
-    @Override
-    public TrafficFlowDirectionRecord value1(Integer value) {
-        setTrafficFlowDirectionType(value);
-        return this;
-    }
-
-    @Override
-    public TrafficFlowDirectionRecord value2(String value) {
-        setTrafficFlowDirectionName(value);
-        return this;
-    }
-
-    @Override
-    public TrafficFlowDirectionRecord value3(String value) {
-        setDescription(value);
-        return this;
-    }
-
-    @Override
-    public TrafficFlowDirectionRecord values(Integer value1, String value2, String value3) {
-        value1(value1);
-        value2(value2);
-        value3(value3);
-        return this;
-    }
-
-    // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
 
@@ -178,5 +102,6 @@ public class TrafficFlowDirectionRecord extends UpdatableRecordImpl<TrafficFlowD
         setTrafficFlowDirectionType(trafficFlowDirectionType);
         setTrafficFlowDirectionName(trafficFlowDirectionName);
         setDescription(description);
+        resetChangedOnNotNull();
     }
 }

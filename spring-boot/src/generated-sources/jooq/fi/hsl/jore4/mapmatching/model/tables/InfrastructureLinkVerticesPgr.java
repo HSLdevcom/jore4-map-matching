@@ -9,18 +9,20 @@ import fi.hsl.jore4.mapmatching.model.Keys;
 import fi.hsl.jore4.mapmatching.model.Routing;
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkVerticesPgrRecord;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import org.geolatte.geom.C2D;
 import org.geolatte.geom.Point;
+import org.jooq.Condition;
 import org.jooq.Field;
-import org.jooq.ForeignKey;
 import org.jooq.Identity;
 import org.jooq.Name;
-import org.jooq.Record;
-import org.jooq.Row6;
+import org.jooq.PlainSQL;
+import org.jooq.QueryPart;
+import org.jooq.SQL;
 import org.jooq.Schema;
+import org.jooq.Select;
+import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -39,7 +41,8 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>routing.infrastructure_link_vertices_pgr</code>
+     * The reference instance of
+     * <code>routing.infrastructure_link_vertices_pgr</code>
      */
     public static final InfrastructureLinkVerticesPgr INFRASTRUCTURE_LINK_VERTICES_PGR = new InfrastructureLinkVerticesPgr();
 
@@ -77,46 +80,46 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     public final TableField<InfrastructureLinkVerticesPgrRecord, Integer> EOUT = createField(DSL.name("eout"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>routing.infrastructure_link_vertices_pgr.the_geom</code>.
+     * The column
+     * <code>routing.infrastructure_link_vertices_pgr.the_geom</code>.
      */
-    public final TableField<InfrastructureLinkVerticesPgrRecord, Point<C2D>> THE_GEOM = createField(DSL.name("the_geom"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"extensions\".\"geometry\""), this, "", new PointBinding());
+    public final TableField<InfrastructureLinkVerticesPgrRecord, Point<C2D>> THE_GEOM = createField(DSL.name("the_geom"), SQLDataType.OTHER, this, "", new PointBinding());
 
     private InfrastructureLinkVerticesPgr(Name alias, Table<InfrastructureLinkVerticesPgrRecord> aliased) {
-        this(alias, aliased, null);
+        this(alias, aliased, (Field<?>[]) null, null);
     }
 
-    private InfrastructureLinkVerticesPgr(Name alias, Table<InfrastructureLinkVerticesPgrRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment("Topology nodes created for infrastructure links by pgRougting"), TableOptions.table());
+    private InfrastructureLinkVerticesPgr(Name alias, Table<InfrastructureLinkVerticesPgrRecord> aliased, Field<?>[] parameters, Condition where) {
+        super(alias, null, aliased, parameters, DSL.comment("Topology nodes created for infrastructure links by pgRougting"), TableOptions.table(), where);
     }
 
     /**
-     * Create an aliased <code>routing.infrastructure_link_vertices_pgr</code> table reference
+     * Create an aliased <code>routing.infrastructure_link_vertices_pgr</code>
+     * table reference
      */
     public InfrastructureLinkVerticesPgr(String alias) {
         this(DSL.name(alias), INFRASTRUCTURE_LINK_VERTICES_PGR);
     }
 
     /**
-     * Create an aliased <code>routing.infrastructure_link_vertices_pgr</code> table reference
+     * Create an aliased <code>routing.infrastructure_link_vertices_pgr</code>
+     * table reference
      */
     public InfrastructureLinkVerticesPgr(Name alias) {
         this(alias, INFRASTRUCTURE_LINK_VERTICES_PGR);
     }
 
     /**
-     * Create a <code>routing.infrastructure_link_vertices_pgr</code> table reference
+     * Create a <code>routing.infrastructure_link_vertices_pgr</code> table
+     * reference
      */
     public InfrastructureLinkVerticesPgr() {
         this(DSL.name("infrastructure_link_vertices_pgr"), null);
     }
 
-    public <O extends Record> InfrastructureLinkVerticesPgr(Table<O> child, ForeignKey<O, InfrastructureLinkVerticesPgrRecord> key) {
-        super(child, key, INFRASTRUCTURE_LINK_VERTICES_PGR);
-    }
-
     @Override
     public Schema getSchema() {
-        return Routing.ROUTING;
+        return aliased() ? null : Routing.ROUTING;
     }
 
     @Override
@@ -130,11 +133,6 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     }
 
     @Override
-    public List<UniqueKey<InfrastructureLinkVerticesPgrRecord>> getKeys() {
-        return Arrays.<UniqueKey<InfrastructureLinkVerticesPgrRecord>>asList(Keys.INFRASTRUCTURE_LINK_VERTICES_PGR_PKEY);
-    }
-
-    @Override
     public InfrastructureLinkVerticesPgr as(String alias) {
         return new InfrastructureLinkVerticesPgr(DSL.name(alias), this);
     }
@@ -142,6 +140,11 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     @Override
     public InfrastructureLinkVerticesPgr as(Name alias) {
         return new InfrastructureLinkVerticesPgr(alias, this);
+    }
+
+    @Override
+    public InfrastructureLinkVerticesPgr as(Table<?> alias) {
+        return new InfrastructureLinkVerticesPgr(alias.getQualifiedName(), this);
     }
 
     /**
@@ -160,12 +163,95 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
         return new InfrastructureLinkVerticesPgr(name, null);
     }
 
-    // -------------------------------------------------------------------------
-    // Row6 type methods
-    // -------------------------------------------------------------------------
-
+    /**
+     * Rename this table
+     */
     @Override
-    public Row6<Long, Integer, Integer, Integer, Integer, Point<C2D>> fieldsRow() {
-        return (Row6) super.fieldsRow();
+    public InfrastructureLinkVerticesPgr rename(Table<?> name) {
+        return new InfrastructureLinkVerticesPgr(name.getQualifiedName(), null);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkVerticesPgr where(Condition condition) {
+        return new InfrastructureLinkVerticesPgr(getQualifiedName(), aliased() ? this : null, null, condition);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkVerticesPgr where(Collection<? extends Condition> conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkVerticesPgr where(Condition... conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkVerticesPgr where(Field<Boolean> condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureLinkVerticesPgr where(SQL condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureLinkVerticesPgr where(@Stringly.SQL String condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureLinkVerticesPgr where(@Stringly.SQL String condition, Object... binds) {
+        return where(DSL.condition(condition, binds));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureLinkVerticesPgr where(@Stringly.SQL String condition, QueryPart... parts) {
+        return where(DSL.condition(condition, parts));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkVerticesPgr whereExists(Select<?> select) {
+        return where(DSL.exists(select));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkVerticesPgr whereNotExists(Select<?> select) {
+        return where(DSL.notExists(select));
     }
 }

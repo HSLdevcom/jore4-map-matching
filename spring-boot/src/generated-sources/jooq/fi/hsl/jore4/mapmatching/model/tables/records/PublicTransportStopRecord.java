@@ -8,11 +8,8 @@ import fi.hsl.jore4.mapmatching.model.tables.PublicTransportStop;
 
 import org.geolatte.geom.C2D;
 import org.geolatte.geom.Point;
-import org.jooq.Field;
 import org.jooq.JSONB;
 import org.jooq.Record1;
-import org.jooq.Record9;
-import org.jooq.Row9;
 import org.jooq.impl.UpdatableRecordImpl;
 
 
@@ -20,131 +17,173 @@ import org.jooq.impl.UpdatableRecordImpl;
  * The public transport stops imported from Digiroad export
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class PublicTransportStopRecord extends UpdatableRecordImpl<PublicTransportStopRecord> implements Record9<Long, Integer, Long, Integer, Boolean, Double, Integer, JSONB, Point<C2D>> {
+public class PublicTransportStopRecord extends UpdatableRecordImpl<PublicTransportStopRecord> {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>routing.public_transport_stop.public_transport_stop_id</code>. The local ID of the public transport stop
+     * Setter for
+     * <code>routing.public_transport_stop.public_transport_stop_id</code>. The
+     * local ID of the public transport stop
      */
     public void setPublicTransportStopId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.public_transport_stop_id</code>. The local ID of the public transport stop
+     * Getter for
+     * <code>routing.public_transport_stop.public_transport_stop_id</code>. The
+     * local ID of the public transport stop
      */
     public Long getPublicTransportStopId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>routing.public_transport_stop.public_transport_stop_national_id</code>. The national (persistent) ID for the public transport stop
+     * Setter for
+     * <code>routing.public_transport_stop.public_transport_stop_national_id</code>.
+     * The national (persistent) ID for the public transport stop
      */
     public void setPublicTransportStopNationalId(Integer value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.public_transport_stop_national_id</code>. The national (persistent) ID for the public transport stop
+     * Getter for
+     * <code>routing.public_transport_stop.public_transport_stop_national_id</code>.
+     * The national (persistent) ID for the public transport stop
      */
     public Integer getPublicTransportStopNationalId() {
         return (Integer) get(1);
     }
 
     /**
-     * Setter for <code>routing.public_transport_stop.located_on_infrastructure_link_id</code>. The ID of the infrastructure link on which the stop is located
+     * Setter for
+     * <code>routing.public_transport_stop.located_on_infrastructure_link_id</code>.
+     * The ID of the infrastructure link on which the stop is located
      */
     public void setLocatedOnInfrastructureLinkId(Long value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.located_on_infrastructure_link_id</code>. The ID of the infrastructure link on which the stop is located
+     * Getter for
+     * <code>routing.public_transport_stop.located_on_infrastructure_link_id</code>.
+     * The ID of the infrastructure link on which the stop is located
      */
     public Long getLocatedOnInfrastructureLinkId() {
         return (Long) get(2);
     }
 
     /**
-     * Setter for <code>routing.public_transport_stop.infrastructure_source_id</code>. The ID of the external source system providing the stop data
+     * Setter for
+     * <code>routing.public_transport_stop.infrastructure_source_id</code>. The
+     * ID of the external source system providing the stop data
      */
     public void setInfrastructureSourceId(Integer value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.infrastructure_source_id</code>. The ID of the external source system providing the stop data
+     * Getter for
+     * <code>routing.public_transport_stop.infrastructure_source_id</code>. The
+     * ID of the external source system providing the stop data
      */
     public Integer getInfrastructureSourceId() {
         return (Integer) get(3);
     }
 
     /**
-     * Setter for <code>routing.public_transport_stop.is_on_direction_of_link_forward_traversal</code>. Is the direction of traffic on this stop the same as the direction of the linestring describing the infrastructure link? If TRUE, the stop lies in the direction of the linestring. If FALSE, the stop lies in the reverse direction of the linestring. If NULL, the direction is undefined.
+     * Setter for
+     * <code>routing.public_transport_stop.is_on_direction_of_link_forward_traversal</code>.
+     * Is the direction of traffic on this stop the same as the direction of the
+     * linestring describing the infrastructure link? If TRUE, the stop lies in
+     * the direction of the linestring. If FALSE, the stop lies in the reverse
+     * direction of the linestring. If NULL, the direction is undefined.
      */
     public void setIsOnDirectionOfLinkForwardTraversal(Boolean value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.is_on_direction_of_link_forward_traversal</code>. Is the direction of traffic on this stop the same as the direction of the linestring describing the infrastructure link? If TRUE, the stop lies in the direction of the linestring. If FALSE, the stop lies in the reverse direction of the linestring. If NULL, the direction is undefined.
+     * Getter for
+     * <code>routing.public_transport_stop.is_on_direction_of_link_forward_traversal</code>.
+     * Is the direction of traffic on this stop the same as the direction of the
+     * linestring describing the infrastructure link? If TRUE, the stop lies in
+     * the direction of the linestring. If FALSE, the stop lies in the reverse
+     * direction of the linestring. If NULL, the direction is undefined.
      */
     public Boolean getIsOnDirectionOfLinkForwardTraversal() {
         return (Boolean) get(4);
     }
 
     /**
-     * Setter for <code>routing.public_transport_stop.distance_from_link_start_in_meters</code>. The measure or M value of the stop from the start of the linestring (linear geometry) describing the infrastructure link. The SI unit is the meter.
+     * Setter for
+     * <code>routing.public_transport_stop.distance_from_link_start_in_meters</code>.
+     * The measure or M value of the stop from the start of the linestring
+     * (linear geometry) describing the infrastructure link. The SI unit is the
+     * meter.
      */
     public void setDistanceFromLinkStartInMeters(Double value) {
         set(5, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.distance_from_link_start_in_meters</code>. The measure or M value of the stop from the start of the linestring (linear geometry) describing the infrastructure link. The SI unit is the meter.
+     * Getter for
+     * <code>routing.public_transport_stop.distance_from_link_start_in_meters</code>.
+     * The measure or M value of the stop from the start of the linestring
+     * (linear geometry) describing the infrastructure link. The SI unit is the
+     * meter.
      */
     public Double getDistanceFromLinkStartInMeters() {
         return (Double) get(5);
     }
 
     /**
-     * Setter for <code>routing.public_transport_stop.municipality_code</code>. The official code of municipality in which the stop is located
+     * Setter for <code>routing.public_transport_stop.municipality_code</code>.
+     * The official code of municipality in which the stop is located
      */
     public void setMunicipalityCode(Integer value) {
         set(6, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.municipality_code</code>. The official code of municipality in which the stop is located
+     * Getter for <code>routing.public_transport_stop.municipality_code</code>.
+     * The official code of municipality in which the stop is located
      */
     public Integer getMunicipalityCode() {
         return (Integer) get(6);
     }
 
     /**
-     * Setter for <code>routing.public_transport_stop.name</code>. JSON object containing name in different localisations
+     * Setter for <code>routing.public_transport_stop.name</code>. JSON object
+     * containing name in different localisations
      */
     public void setName(JSONB value) {
         set(7, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.name</code>. JSON object containing name in different localisations
+     * Getter for <code>routing.public_transport_stop.name</code>. JSON object
+     * containing name in different localisations
      */
     public JSONB getName() {
         return (JSONB) get(7);
     }
 
     /**
-     * Setter for <code>routing.public_transport_stop.geom</code>. The 2D point geometry describing the location of the public transport stop. The EPSG:3067 coordinate system applied is the same as is used in Digiroad.
+     * Setter for <code>routing.public_transport_stop.geom</code>. The 2D point
+     * geometry describing the location of the public transport stop. The
+     * EPSG:3067 coordinate system applied is the same as is used in Digiroad.
      */
     public void setGeom(Point<C2D> value) {
         set(8, value);
     }
 
     /**
-     * Getter for <code>routing.public_transport_stop.geom</code>. The 2D point geometry describing the location of the public transport stop. The EPSG:3067 coordinate system applied is the same as is used in Digiroad.
+     * Getter for <code>routing.public_transport_stop.geom</code>. The 2D point
+     * geometry describing the location of the public transport stop. The
+     * EPSG:3067 coordinate system applied is the same as is used in Digiroad.
      */
     public Point<C2D> getGeom() {
         return (Point<C2D>) get(8);
@@ -157,223 +196,6 @@ public class PublicTransportStopRecord extends UpdatableRecordImpl<PublicTranspo
     @Override
     public Record1<Long> key() {
         return (Record1) super.key();
-    }
-
-    // -------------------------------------------------------------------------
-    // Record9 type implementation
-    // -------------------------------------------------------------------------
-
-    @Override
-    public Row9<Long, Integer, Long, Integer, Boolean, Double, Integer, JSONB, Point<C2D>> fieldsRow() {
-        return (Row9) super.fieldsRow();
-    }
-
-    @Override
-    public Row9<Long, Integer, Long, Integer, Boolean, Double, Integer, JSONB, Point<C2D>> valuesRow() {
-        return (Row9) super.valuesRow();
-    }
-
-    @Override
-    public Field<Long> field1() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.PUBLIC_TRANSPORT_STOP_ID;
-    }
-
-    @Override
-    public Field<Integer> field2() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.PUBLIC_TRANSPORT_STOP_NATIONAL_ID;
-    }
-
-    @Override
-    public Field<Long> field3() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.LOCATED_ON_INFRASTRUCTURE_LINK_ID;
-    }
-
-    @Override
-    public Field<Integer> field4() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.INFRASTRUCTURE_SOURCE_ID;
-    }
-
-    @Override
-    public Field<Boolean> field5() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.IS_ON_DIRECTION_OF_LINK_FORWARD_TRAVERSAL;
-    }
-
-    @Override
-    public Field<Double> field6() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.DISTANCE_FROM_LINK_START_IN_METERS;
-    }
-
-    @Override
-    public Field<Integer> field7() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.MUNICIPALITY_CODE;
-    }
-
-    @Override
-    public Field<JSONB> field8() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.NAME;
-    }
-
-    @Override
-    public Field<Point<C2D>> field9() {
-        return PublicTransportStop.PUBLIC_TRANSPORT_STOP.GEOM;
-    }
-
-    @Override
-    public Long component1() {
-        return getPublicTransportStopId();
-    }
-
-    @Override
-    public Integer component2() {
-        return getPublicTransportStopNationalId();
-    }
-
-    @Override
-    public Long component3() {
-        return getLocatedOnInfrastructureLinkId();
-    }
-
-    @Override
-    public Integer component4() {
-        return getInfrastructureSourceId();
-    }
-
-    @Override
-    public Boolean component5() {
-        return getIsOnDirectionOfLinkForwardTraversal();
-    }
-
-    @Override
-    public Double component6() {
-        return getDistanceFromLinkStartInMeters();
-    }
-
-    @Override
-    public Integer component7() {
-        return getMunicipalityCode();
-    }
-
-    @Override
-    public JSONB component8() {
-        return getName();
-    }
-
-    @Override
-    public Point<C2D> component9() {
-        return getGeom();
-    }
-
-    @Override
-    public Long value1() {
-        return getPublicTransportStopId();
-    }
-
-    @Override
-    public Integer value2() {
-        return getPublicTransportStopNationalId();
-    }
-
-    @Override
-    public Long value3() {
-        return getLocatedOnInfrastructureLinkId();
-    }
-
-    @Override
-    public Integer value4() {
-        return getInfrastructureSourceId();
-    }
-
-    @Override
-    public Boolean value5() {
-        return getIsOnDirectionOfLinkForwardTraversal();
-    }
-
-    @Override
-    public Double value6() {
-        return getDistanceFromLinkStartInMeters();
-    }
-
-    @Override
-    public Integer value7() {
-        return getMunicipalityCode();
-    }
-
-    @Override
-    public JSONB value8() {
-        return getName();
-    }
-
-    @Override
-    public Point<C2D> value9() {
-        return getGeom();
-    }
-
-    @Override
-    public PublicTransportStopRecord value1(Long value) {
-        setPublicTransportStopId(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord value2(Integer value) {
-        setPublicTransportStopNationalId(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord value3(Long value) {
-        setLocatedOnInfrastructureLinkId(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord value4(Integer value) {
-        setInfrastructureSourceId(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord value5(Boolean value) {
-        setIsOnDirectionOfLinkForwardTraversal(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord value6(Double value) {
-        setDistanceFromLinkStartInMeters(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord value7(Integer value) {
-        setMunicipalityCode(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord value8(JSONB value) {
-        setName(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord value9(Point<C2D> value) {
-        setGeom(value);
-        return this;
-    }
-
-    @Override
-    public PublicTransportStopRecord values(Long value1, Integer value2, Long value3, Integer value4, Boolean value5, Double value6, Integer value7, JSONB value8, Point<C2D> value9) {
-        value1(value1);
-        value2(value2);
-        value3(value3);
-        value4(value4);
-        value5(value5);
-        value6(value6);
-        value7(value7);
-        value8(value8);
-        value9(value9);
-        return this;
     }
 
     // -------------------------------------------------------------------------
@@ -402,5 +224,6 @@ public class PublicTransportStopRecord extends UpdatableRecordImpl<PublicTranspo
         setMunicipalityCode(municipalityCode);
         setName(name);
         setGeom(geom);
+        resetChangedOnNotNull();
     }
 }

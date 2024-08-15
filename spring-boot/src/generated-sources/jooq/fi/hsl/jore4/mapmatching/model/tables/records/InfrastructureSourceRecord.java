@@ -6,10 +6,7 @@ package fi.hsl.jore4.mapmatching.model.tables.records;
 
 import fi.hsl.jore4.mapmatching.model.tables.InfrastructureSource;
 
-import org.jooq.Field;
 import org.jooq.Record1;
-import org.jooq.Record3;
-import org.jooq.Row3;
 import org.jooq.impl.UpdatableRecordImpl;
 
 
@@ -17,33 +14,45 @@ import org.jooq.impl.UpdatableRecordImpl;
  * The enumerated sources for infrastructure network entities
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class InfrastructureSourceRecord extends UpdatableRecordImpl<InfrastructureSourceRecord> implements Record3<Integer, String, String> {
+public class InfrastructureSourceRecord extends UpdatableRecordImpl<InfrastructureSourceRecord> {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>routing.infrastructure_source.infrastructure_source_id</code>. The numeric enum value for the infrastructure element source. This enum code is only local to this routing schema. ATM, it is not intended to be distributed to or shared across other JORE4 services.
+     * Setter for
+     * <code>routing.infrastructure_source.infrastructure_source_id</code>. The
+     * numeric enum value for the infrastructure element source. This enum code
+     * is only local to this routing schema. ATM, it is not intended to be
+     * distributed to or shared across other JORE4 services.
      */
     public void setInfrastructureSourceId(Integer value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>routing.infrastructure_source.infrastructure_source_id</code>. The numeric enum value for the infrastructure element source. This enum code is only local to this routing schema. ATM, it is not intended to be distributed to or shared across other JORE4 services.
+     * Getter for
+     * <code>routing.infrastructure_source.infrastructure_source_id</code>. The
+     * numeric enum value for the infrastructure element source. This enum code
+     * is only local to this routing schema. ATM, it is not intended to be
+     * distributed to or shared across other JORE4 services.
      */
     public Integer getInfrastructureSourceId() {
         return (Integer) get(0);
     }
 
     /**
-     * Setter for <code>routing.infrastructure_source.infrastructure_source_name</code>. The short name for the infrastructure element source
+     * Setter for
+     * <code>routing.infrastructure_source.infrastructure_source_name</code>.
+     * The short name for the infrastructure element source
      */
     public void setInfrastructureSourceName(String value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>routing.infrastructure_source.infrastructure_source_name</code>. The short name for the infrastructure element source
+     * Getter for
+     * <code>routing.infrastructure_source.infrastructure_source_name</code>.
+     * The short name for the infrastructure element source
      */
     public String getInfrastructureSourceName() {
         return (String) get(1);
@@ -73,91 +82,6 @@ public class InfrastructureSourceRecord extends UpdatableRecordImpl<Infrastructu
     }
 
     // -------------------------------------------------------------------------
-    // Record3 type implementation
-    // -------------------------------------------------------------------------
-
-    @Override
-    public Row3<Integer, String, String> fieldsRow() {
-        return (Row3) super.fieldsRow();
-    }
-
-    @Override
-    public Row3<Integer, String, String> valuesRow() {
-        return (Row3) super.valuesRow();
-    }
-
-    @Override
-    public Field<Integer> field1() {
-        return InfrastructureSource.INFRASTRUCTURE_SOURCE.INFRASTRUCTURE_SOURCE_ID;
-    }
-
-    @Override
-    public Field<String> field2() {
-        return InfrastructureSource.INFRASTRUCTURE_SOURCE.INFRASTRUCTURE_SOURCE_NAME;
-    }
-
-    @Override
-    public Field<String> field3() {
-        return InfrastructureSource.INFRASTRUCTURE_SOURCE.DESCRIPTION;
-    }
-
-    @Override
-    public Integer component1() {
-        return getInfrastructureSourceId();
-    }
-
-    @Override
-    public String component2() {
-        return getInfrastructureSourceName();
-    }
-
-    @Override
-    public String component3() {
-        return getDescription();
-    }
-
-    @Override
-    public Integer value1() {
-        return getInfrastructureSourceId();
-    }
-
-    @Override
-    public String value2() {
-        return getInfrastructureSourceName();
-    }
-
-    @Override
-    public String value3() {
-        return getDescription();
-    }
-
-    @Override
-    public InfrastructureSourceRecord value1(Integer value) {
-        setInfrastructureSourceId(value);
-        return this;
-    }
-
-    @Override
-    public InfrastructureSourceRecord value2(String value) {
-        setInfrastructureSourceName(value);
-        return this;
-    }
-
-    @Override
-    public InfrastructureSourceRecord value3(String value) {
-        setDescription(value);
-        return this;
-    }
-
-    @Override
-    public InfrastructureSourceRecord values(Integer value1, String value2, String value3) {
-        value1(value1);
-        value2(value2);
-        value3(value3);
-        return this;
-    }
-
-    // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
 
@@ -177,5 +101,6 @@ public class InfrastructureSourceRecord extends UpdatableRecordImpl<Infrastructu
         setInfrastructureSourceId(infrastructureSourceId);
         setInfrastructureSourceName(infrastructureSourceName);
         setDescription(description);
+        resetChangedOnNotNull();
     }
 }
