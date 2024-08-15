@@ -1,14 +1,13 @@
 name: Run java tests
 
 on:
-  push:
-  pull_request:
-    branches: [main]
+  # this workflow is only called by others, won't be executed on itself
+  workflow_call:
 
 jobs:
   run-tests:
     name: Run java tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -18,7 +17,7 @@ jobs:
         run: ./development.sh start:devdeps
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: "17"
           java-package: jdk
@@ -26,7 +25,7 @@ jobs:
           distribution: temurin
 
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
