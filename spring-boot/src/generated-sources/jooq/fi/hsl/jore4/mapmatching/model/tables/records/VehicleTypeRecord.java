@@ -6,44 +6,50 @@ package fi.hsl.jore4.mapmatching.model.tables.records;
 
 import fi.hsl.jore4.mapmatching.model.tables.VehicleType;
 
-import org.jooq.Field;
 import org.jooq.Record1;
-import org.jooq.Record2;
-import org.jooq.Row2;
 import org.jooq.impl.UpdatableRecordImpl;
 
 
 /**
- * The vehicle types from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
+ * The vehicle types from Transmodel:
+ * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
-public class VehicleTypeRecord extends UpdatableRecordImpl<VehicleTypeRecord> implements Record2<String, String> {
+public class VehicleTypeRecord extends UpdatableRecordImpl<VehicleTypeRecord> {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>routing.vehicle_type.vehicle_type</code>. The vehicle type from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
+     * Setter for <code>routing.vehicle_type.vehicle_type</code>. The vehicle
+     * type from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
      */
     public void setVehicleType(String value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>routing.vehicle_type.vehicle_type</code>. The vehicle type from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
+     * Getter for <code>routing.vehicle_type.vehicle_type</code>. The vehicle
+     * type from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
      */
     public String getVehicleType() {
         return (String) get(0);
     }
 
     /**
-     * Setter for <code>routing.vehicle_type.belonging_to_vehicle_mode</code>. The vehicle mode the vehicle type belongs to: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
+     * Setter for <code>routing.vehicle_type.belonging_to_vehicle_mode</code>.
+     * The vehicle mode the vehicle type belongs to:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
      */
     public void setBelongingToVehicleMode(String value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>routing.vehicle_type.belonging_to_vehicle_mode</code>. The vehicle mode the vehicle type belongs to: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
+     * Getter for <code>routing.vehicle_type.belonging_to_vehicle_mode</code>.
+     * The vehicle mode the vehicle type belongs to:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
      */
     public String getBelongingToVehicleMode() {
         return (String) get(1);
@@ -56,69 +62,6 @@ public class VehicleTypeRecord extends UpdatableRecordImpl<VehicleTypeRecord> im
     @Override
     public Record1<String> key() {
         return (Record1) super.key();
-    }
-
-    // -------------------------------------------------------------------------
-    // Record2 type implementation
-    // -------------------------------------------------------------------------
-
-    @Override
-    public Row2<String, String> fieldsRow() {
-        return (Row2) super.fieldsRow();
-    }
-
-    @Override
-    public Row2<String, String> valuesRow() {
-        return (Row2) super.valuesRow();
-    }
-
-    @Override
-    public Field<String> field1() {
-        return VehicleType.VEHICLE_TYPE.VEHICLE_TYPE_;
-    }
-
-    @Override
-    public Field<String> field2() {
-        return VehicleType.VEHICLE_TYPE.BELONGING_TO_VEHICLE_MODE;
-    }
-
-    @Override
-    public String component1() {
-        return getVehicleType();
-    }
-
-    @Override
-    public String component2() {
-        return getBelongingToVehicleMode();
-    }
-
-    @Override
-    public String value1() {
-        return getVehicleType();
-    }
-
-    @Override
-    public String value2() {
-        return getBelongingToVehicleMode();
-    }
-
-    @Override
-    public VehicleTypeRecord value1(String value) {
-        setVehicleType(value);
-        return this;
-    }
-
-    @Override
-    public VehicleTypeRecord value2(String value) {
-        setBelongingToVehicleMode(value);
-        return this;
-    }
-
-    @Override
-    public VehicleTypeRecord values(String value1, String value2) {
-        value1(value1);
-        value2(value2);
-        return this;
     }
 
     // -------------------------------------------------------------------------
@@ -140,5 +83,6 @@ public class VehicleTypeRecord extends UpdatableRecordImpl<VehicleTypeRecord> im
 
         setVehicleType(vehicleType);
         setBelongingToVehicleMode(belongingToVehicleMode);
+        resetChangedOnNotNull();
     }
 }

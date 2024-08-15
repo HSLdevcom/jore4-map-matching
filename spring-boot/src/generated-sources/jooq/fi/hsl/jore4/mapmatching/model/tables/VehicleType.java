@@ -6,17 +6,28 @@ package fi.hsl.jore4.mapmatching.model.tables;
 
 import fi.hsl.jore4.mapmatching.model.Keys;
 import fi.hsl.jore4.mapmatching.model.Routing;
+import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink.InfrastructureLinkPath;
+import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLinkSafelyTraversedByVehicleType.InfrastructureLinkSafelyTraversedByVehicleTypePath;
+import fi.hsl.jore4.mapmatching.model.tables.VehicleMode.VehicleModePath;
 import fi.hsl.jore4.mapmatching.model.tables.records.VehicleTypeRecord;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.InverseForeignKey;
 import org.jooq.Name;
+import org.jooq.Path;
+import org.jooq.PlainSQL;
+import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.Row2;
+import org.jooq.SQL;
 import org.jooq.Schema;
+import org.jooq.Select;
+import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -27,7 +38,8 @@ import org.jooq.impl.TableImpl;
 
 
 /**
- * The vehicle types from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
+ * The vehicle types from Transmodel:
+ * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class VehicleType extends TableImpl<VehicleTypeRecord> {
@@ -48,21 +60,25 @@ public class VehicleType extends TableImpl<VehicleTypeRecord> {
     }
 
     /**
-     * The column <code>routing.vehicle_type.vehicle_type</code>. The vehicle type from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
+     * The column <code>routing.vehicle_type.vehicle_type</code>. The vehicle
+     * type from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
      */
     public final TableField<VehicleTypeRecord, String> VEHICLE_TYPE_ = createField(DSL.name("vehicle_type"), SQLDataType.CLOB.nullable(false), this, "The vehicle type from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360");
 
     /**
-     * The column <code>routing.vehicle_type.belonging_to_vehicle_mode</code>. The vehicle mode the vehicle type belongs to: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
+     * The column <code>routing.vehicle_type.belonging_to_vehicle_mode</code>.
+     * The vehicle mode the vehicle type belongs to:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
      */
     public final TableField<VehicleTypeRecord, String> BELONGING_TO_VEHICLE_MODE = createField(DSL.name("belonging_to_vehicle_mode"), SQLDataType.CLOB.nullable(false), this, "The vehicle mode the vehicle type belongs to: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283");
 
     private VehicleType(Name alias, Table<VehicleTypeRecord> aliased) {
-        this(alias, aliased, null);
+        this(alias, aliased, (Field<?>[]) null, null);
     }
 
-    private VehicleType(Name alias, Table<VehicleTypeRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment("The vehicle types from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360"), TableOptions.table());
+    private VehicleType(Name alias, Table<VehicleTypeRecord> aliased, Field<?>[] parameters, Condition where) {
+        super(alias, null, aliased, parameters, DSL.comment("The vehicle types from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360"), TableOptions.table(), where);
     }
 
     /**
@@ -86,13 +102,42 @@ public class VehicleType extends TableImpl<VehicleTypeRecord> {
         this(DSL.name("vehicle_type"), null);
     }
 
-    public <O extends Record> VehicleType(Table<O> child, ForeignKey<O, VehicleTypeRecord> key) {
-        super(child, key, VEHICLE_TYPE);
+    public <O extends Record> VehicleType(Table<O> path, ForeignKey<O, VehicleTypeRecord> childPath, InverseForeignKey<O, VehicleTypeRecord> parentPath) {
+        super(path, childPath, parentPath, VEHICLE_TYPE);
+    }
+
+    /**
+     * A subtype implementing {@link Path} for simplified path-based joins.
+     */
+    public static class VehicleTypePath extends VehicleType implements Path<VehicleTypeRecord> {
+
+        private static final long serialVersionUID = 1L;
+        public <O extends Record> VehicleTypePath(Table<O> path, ForeignKey<O, VehicleTypeRecord> childPath, InverseForeignKey<O, VehicleTypeRecord> parentPath) {
+            super(path, childPath, parentPath);
+        }
+        private VehicleTypePath(Name alias, Table<VehicleTypeRecord> aliased) {
+            super(alias, aliased);
+        }
+
+        @Override
+        public VehicleTypePath as(String alias) {
+            return new VehicleTypePath(DSL.name(alias), this);
+        }
+
+        @Override
+        public VehicleTypePath as(Name alias) {
+            return new VehicleTypePath(alias, this);
+        }
+
+        @Override
+        public VehicleTypePath as(Table<?> alias) {
+            return new VehicleTypePath(alias.getQualifiedName(), this);
+        }
     }
 
     @Override
     public Schema getSchema() {
-        return Routing.ROUTING;
+        return aliased() ? null : Routing.ROUTING;
     }
 
     @Override
@@ -101,22 +146,43 @@ public class VehicleType extends TableImpl<VehicleTypeRecord> {
     }
 
     @Override
-    public List<UniqueKey<VehicleTypeRecord>> getKeys() {
-        return Arrays.<UniqueKey<VehicleTypeRecord>>asList(Keys.VEHICLE_TYPE_PKEY);
-    }
-
-    @Override
     public List<ForeignKey<VehicleTypeRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<VehicleTypeRecord, ?>>asList(Keys.VEHICLE_TYPE__VEHICLE_TYPE_BELONGING_TO_VEHICLE_MODE_FKEY);
+        return Arrays.asList(Keys.VEHICLE_TYPE__VEHICLE_TYPE_BELONGING_TO_VEHICLE_MODE_FKEY);
     }
 
-    private transient VehicleMode _vehicleMode;
+    private transient VehicleModePath _vehicleMode;
 
-    public VehicleMode vehicleMode() {
+    /**
+     * Get the implicit join path to the <code>routing.vehicle_mode</code>
+     * table.
+     */
+    public VehicleModePath vehicleMode() {
         if (_vehicleMode == null)
-            _vehicleMode = new VehicleMode(this, Keys.VEHICLE_TYPE__VEHICLE_TYPE_BELONGING_TO_VEHICLE_MODE_FKEY);
+            _vehicleMode = new VehicleModePath(this, Keys.VEHICLE_TYPE__VEHICLE_TYPE_BELONGING_TO_VEHICLE_MODE_FKEY, null);
 
         return _vehicleMode;
+    }
+
+    private transient InfrastructureLinkSafelyTraversedByVehicleTypePath _infrastructureLinkSafelyTraversedByVehicleType;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code>
+     * table
+     */
+    public InfrastructureLinkSafelyTraversedByVehicleTypePath infrastructureLinkSafelyTraversedByVehicleType() {
+        if (_infrastructureLinkSafelyTraversedByVehicleType == null)
+            _infrastructureLinkSafelyTraversedByVehicleType = new InfrastructureLinkSafelyTraversedByVehicleTypePath(this, null, Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHIC_VEHICLE_TYPE_FKEY.getInverseKey());
+
+        return _infrastructureLinkSafelyTraversedByVehicleType;
+    }
+
+    /**
+     * Get the implicit many-to-many join path to the
+     * <code>routing.infrastructure_link</code> table
+     */
+    public InfrastructureLinkPath infrastructureLink() {
+        return infrastructureLinkSafelyTraversedByVehicleType().infrastructureLink();
     }
 
     @Override
@@ -127,6 +193,11 @@ public class VehicleType extends TableImpl<VehicleTypeRecord> {
     @Override
     public VehicleType as(Name alias) {
         return new VehicleType(alias, this);
+    }
+
+    @Override
+    public VehicleType as(Table<?> alias) {
+        return new VehicleType(alias.getQualifiedName(), this);
     }
 
     /**
@@ -145,12 +216,95 @@ public class VehicleType extends TableImpl<VehicleTypeRecord> {
         return new VehicleType(name, null);
     }
 
-    // -------------------------------------------------------------------------
-    // Row2 type methods
-    // -------------------------------------------------------------------------
-
+    /**
+     * Rename this table
+     */
     @Override
-    public Row2<String, String> fieldsRow() {
-        return (Row2) super.fieldsRow();
+    public VehicleType rename(Table<?> name) {
+        return new VehicleType(name.getQualifiedName(), null);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public VehicleType where(Condition condition) {
+        return new VehicleType(getQualifiedName(), aliased() ? this : null, null, condition);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public VehicleType where(Collection<? extends Condition> conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public VehicleType where(Condition... conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public VehicleType where(Field<Boolean> condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public VehicleType where(SQL condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public VehicleType where(@Stringly.SQL String condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public VehicleType where(@Stringly.SQL String condition, Object... binds) {
+        return where(DSL.condition(condition, binds));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public VehicleType where(@Stringly.SQL String condition, QueryPart... parts) {
+        return where(DSL.condition(condition, parts));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public VehicleType whereExists(Select<?> select) {
+        return where(DSL.exists(select));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public VehicleType whereNotExists(Select<?> select) {
+        return where(DSL.notExists(select));
     }
 }

@@ -6,17 +6,24 @@ package fi.hsl.jore4.mapmatching.model.tables;
 
 import fi.hsl.jore4.mapmatching.model.Keys;
 import fi.hsl.jore4.mapmatching.model.Routing;
+import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink.InfrastructureLinkPath;
 import fi.hsl.jore4.mapmatching.model.tables.records.TrafficFlowDirectionRecord;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
+import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.InverseForeignKey;
 import org.jooq.Name;
+import org.jooq.Path;
+import org.jooq.PlainSQL;
+import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.Row3;
+import org.jooq.SQL;
 import org.jooq.Schema;
+import org.jooq.Select;
+import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -27,8 +34,8 @@ import org.jooq.impl.TableImpl;
 
 
 /**
- * The possible directions of traffic flow on infrastructure links. Using 
- * code values from Digiroad codeset.
+ * The possible directions of traffic flow on infrastructure links. Using code
+ * values from Digiroad codeset.
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> {
@@ -49,12 +56,18 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
     }
 
     /**
-     * The column <code>routing.traffic_flow_direction.traffic_flow_direction_type</code>. Numeric enum value for direction of traffic flow. The code value originates from Digiroad codeset.
+     * The column
+     * <code>routing.traffic_flow_direction.traffic_flow_direction_type</code>.
+     * Numeric enum value for direction of traffic flow. The code value
+     * originates from Digiroad codeset.
      */
     public final TableField<TrafficFlowDirectionRecord, Integer> TRAFFIC_FLOW_DIRECTION_TYPE = createField(DSL.name("traffic_flow_direction_type"), SQLDataType.INTEGER.nullable(false), this, "Numeric enum value for direction of traffic flow. The code value originates from Digiroad codeset.");
 
     /**
-     * The column <code>routing.traffic_flow_direction.traffic_flow_direction_name</code>. The short name for direction of traffic flow. The text value originates from the JORE4 database schema.
+     * The column
+     * <code>routing.traffic_flow_direction.traffic_flow_direction_name</code>.
+     * The short name for direction of traffic flow. The text value originates
+     * from the JORE4 database schema.
      */
     public final TableField<TrafficFlowDirectionRecord, String> TRAFFIC_FLOW_DIRECTION_NAME = createField(DSL.name("traffic_flow_direction_name"), SQLDataType.CLOB.nullable(false), this, "The short name for direction of traffic flow. The text value originates from the JORE4 database schema.");
 
@@ -64,22 +77,24 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
     public final TableField<TrafficFlowDirectionRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB.nullable(false), this, "");
 
     private TrafficFlowDirection(Name alias, Table<TrafficFlowDirectionRecord> aliased) {
-        this(alias, aliased, null);
+        this(alias, aliased, (Field<?>[]) null, null);
     }
 
-    private TrafficFlowDirection(Name alias, Table<TrafficFlowDirectionRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment("The possible directions of traffic flow on infrastructure links. Using code values from Digiroad codeset."), TableOptions.table());
+    private TrafficFlowDirection(Name alias, Table<TrafficFlowDirectionRecord> aliased, Field<?>[] parameters, Condition where) {
+        super(alias, null, aliased, parameters, DSL.comment("The possible directions of traffic flow on infrastructure links. Using code values from Digiroad codeset."), TableOptions.table(), where);
     }
 
     /**
-     * Create an aliased <code>routing.traffic_flow_direction</code> table reference
+     * Create an aliased <code>routing.traffic_flow_direction</code> table
+     * reference
      */
     public TrafficFlowDirection(String alias) {
         this(DSL.name(alias), TRAFFIC_FLOW_DIRECTION);
     }
 
     /**
-     * Create an aliased <code>routing.traffic_flow_direction</code> table reference
+     * Create an aliased <code>routing.traffic_flow_direction</code> table
+     * reference
      */
     public TrafficFlowDirection(Name alias) {
         this(alias, TRAFFIC_FLOW_DIRECTION);
@@ -92,13 +107,42 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
         this(DSL.name("traffic_flow_direction"), null);
     }
 
-    public <O extends Record> TrafficFlowDirection(Table<O> child, ForeignKey<O, TrafficFlowDirectionRecord> key) {
-        super(child, key, TRAFFIC_FLOW_DIRECTION);
+    public <O extends Record> TrafficFlowDirection(Table<O> path, ForeignKey<O, TrafficFlowDirectionRecord> childPath, InverseForeignKey<O, TrafficFlowDirectionRecord> parentPath) {
+        super(path, childPath, parentPath, TRAFFIC_FLOW_DIRECTION);
+    }
+
+    /**
+     * A subtype implementing {@link Path} for simplified path-based joins.
+     */
+    public static class TrafficFlowDirectionPath extends TrafficFlowDirection implements Path<TrafficFlowDirectionRecord> {
+
+        private static final long serialVersionUID = 1L;
+        public <O extends Record> TrafficFlowDirectionPath(Table<O> path, ForeignKey<O, TrafficFlowDirectionRecord> childPath, InverseForeignKey<O, TrafficFlowDirectionRecord> parentPath) {
+            super(path, childPath, parentPath);
+        }
+        private TrafficFlowDirectionPath(Name alias, Table<TrafficFlowDirectionRecord> aliased) {
+            super(alias, aliased);
+        }
+
+        @Override
+        public TrafficFlowDirectionPath as(String alias) {
+            return new TrafficFlowDirectionPath(DSL.name(alias), this);
+        }
+
+        @Override
+        public TrafficFlowDirectionPath as(Name alias) {
+            return new TrafficFlowDirectionPath(alias, this);
+        }
+
+        @Override
+        public TrafficFlowDirectionPath as(Table<?> alias) {
+            return new TrafficFlowDirectionPath(alias.getQualifiedName(), this);
+        }
     }
 
     @Override
     public Schema getSchema() {
-        return Routing.ROUTING;
+        return aliased() ? null : Routing.ROUTING;
     }
 
     @Override
@@ -106,9 +150,17 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
         return Keys.TRAFFIC_FLOW_DIRECTION_PKEY;
     }
 
-    @Override
-    public List<UniqueKey<TrafficFlowDirectionRecord>> getKeys() {
-        return Arrays.<UniqueKey<TrafficFlowDirectionRecord>>asList(Keys.TRAFFIC_FLOW_DIRECTION_PKEY);
+    private transient InfrastructureLinkPath _infrastructureLink;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>routing.infrastructure_link</code> table
+     */
+    public InfrastructureLinkPath infrastructureLink() {
+        if (_infrastructureLink == null)
+            _infrastructureLink = new InfrastructureLinkPath(this, null, Keys.INFRASTRUCTURE_LINK__INFRASTRUCTURE_LINK_TRAFFIC_FLOW_DIRECTION_FKEY.getInverseKey());
+
+        return _infrastructureLink;
     }
 
     @Override
@@ -119,6 +171,11 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
     @Override
     public TrafficFlowDirection as(Name alias) {
         return new TrafficFlowDirection(alias, this);
+    }
+
+    @Override
+    public TrafficFlowDirection as(Table<?> alias) {
+        return new TrafficFlowDirection(alias.getQualifiedName(), this);
     }
 
     /**
@@ -137,12 +194,95 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
         return new TrafficFlowDirection(name, null);
     }
 
-    // -------------------------------------------------------------------------
-    // Row3 type methods
-    // -------------------------------------------------------------------------
-
+    /**
+     * Rename this table
+     */
     @Override
-    public Row3<Integer, String, String> fieldsRow() {
-        return (Row3) super.fieldsRow();
+    public TrafficFlowDirection rename(Table<?> name) {
+        return new TrafficFlowDirection(name.getQualifiedName(), null);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public TrafficFlowDirection where(Condition condition) {
+        return new TrafficFlowDirection(getQualifiedName(), aliased() ? this : null, null, condition);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public TrafficFlowDirection where(Collection<? extends Condition> conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public TrafficFlowDirection where(Condition... conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public TrafficFlowDirection where(Field<Boolean> condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public TrafficFlowDirection where(SQL condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public TrafficFlowDirection where(@Stringly.SQL String condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public TrafficFlowDirection where(@Stringly.SQL String condition, Object... binds) {
+        return where(DSL.condition(condition, binds));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public TrafficFlowDirection where(@Stringly.SQL String condition, QueryPart... parts) {
+        return where(DSL.condition(condition, parts));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public TrafficFlowDirection whereExists(Select<?> select) {
+        return where(DSL.exists(select));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public TrafficFlowDirection whereNotExists(Select<?> select) {
+        return where(DSL.notExists(select));
     }
 }

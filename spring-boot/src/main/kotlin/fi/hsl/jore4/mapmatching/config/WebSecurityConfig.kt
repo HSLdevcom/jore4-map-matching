@@ -14,34 +14,29 @@ import org.springframework.security.web.SecurityFilterChain
 @Configuration
 @EnableWebSecurity
 class WebSecurityConfig {
-
     @Bean
     @Throws(Exception::class)
-    fun configure(httpSecurity: HttpSecurity): SecurityFilterChain {
-        return httpSecurity
+    fun configure(httpSecurity: HttpSecurity): SecurityFilterChain =
+        httpSecurity
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.NEVER) }
-
             // CSRF is not needed.
-            .csrf().disable()
-
+            .csrf { it.disable() }
             /** A CORS mapping is defined in [WebConfig] within "development" Spring profile. */
             .cors(withDefaults())
-
             .authorizeHttpRequests {
                 it
-                    .antMatchers(HttpMethod.GET,
-                                 RouteController.URL_PREFIX + "/**",
-                                 "/actuator/health",
-                                 "/*" // matches static landing page for examining results from route API
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        RouteController.URL_PREFIX + "/**",
+                        "/actuator/health",
+                        "/*", // matches static landing page for examining results from route API
                     ).permitAll()
-
-                    .antMatchers(HttpMethod.POST,
-                                 MapMatchingController.URL_PREFIX + "/**",
-                                 RouteController.URL_PREFIX + "/**"
+                    .requestMatchers(
+                        HttpMethod.POST,
+                        MapMatchingController.URL_PREFIX + "/**",
+                        RouteController.URL_PREFIX + "/**",
                     ).permitAll()
-
-                    .anyRequest().denyAll()
-            }
-            .build()
-    }
+                    .anyRequest()
+                    .denyAll()
+            }.build()
 }

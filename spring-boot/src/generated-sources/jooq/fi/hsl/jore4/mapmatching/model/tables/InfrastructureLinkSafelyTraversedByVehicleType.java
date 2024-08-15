@@ -6,17 +6,27 @@ package fi.hsl.jore4.mapmatching.model.tables;
 
 import fi.hsl.jore4.mapmatching.model.Keys;
 import fi.hsl.jore4.mapmatching.model.Routing;
+import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink.InfrastructureLinkPath;
+import fi.hsl.jore4.mapmatching.model.tables.VehicleType.VehicleTypePath;
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureLinkSafelyTraversedByVehicleTypeRecord;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.InverseForeignKey;
 import org.jooq.Name;
+import org.jooq.Path;
+import org.jooq.PlainSQL;
+import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.Row2;
+import org.jooq.SQL;
 import org.jooq.Schema;
+import org.jooq.Select;
+import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -35,7 +45,8 @@ public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<In
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code>
+     * The reference instance of
+     * <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code>
      */
     public static final InfrastructureLinkSafelyTraversedByVehicleType INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE = new InfrastructureLinkSafelyTraversedByVehicleType();
 
@@ -48,51 +59,90 @@ public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<In
     }
 
     /**
-     * The column <code>routing.infrastructure_link_safely_traversed_by_vehicle_type.infrastructure_link_id</code>. The infrastructure link that can be safely traversed by the vehicle type
+     * The column
+     * <code>routing.infrastructure_link_safely_traversed_by_vehicle_type.infrastructure_link_id</code>.
+     * The infrastructure link that can be safely traversed by the vehicle type
      */
     public final TableField<InfrastructureLinkSafelyTraversedByVehicleTypeRecord, Long> INFRASTRUCTURE_LINK_ID = createField(DSL.name("infrastructure_link_id"), SQLDataType.BIGINT.nullable(false), this, "The infrastructure link that can be safely traversed by the vehicle type");
 
     /**
-     * The column <code>routing.infrastructure_link_safely_traversed_by_vehicle_type.vehicle_type</code>. The vehicle type that can safely traverse the infrastructure link
+     * The column
+     * <code>routing.infrastructure_link_safely_traversed_by_vehicle_type.vehicle_type</code>.
+     * The vehicle type that can safely traverse the infrastructure link
      */
     public final TableField<InfrastructureLinkSafelyTraversedByVehicleTypeRecord, String> VEHICLE_TYPE = createField(DSL.name("vehicle_type"), SQLDataType.CLOB.nullable(false), this, "The vehicle type that can safely traverse the infrastructure link");
 
     private InfrastructureLinkSafelyTraversedByVehicleType(Name alias, Table<InfrastructureLinkSafelyTraversedByVehicleTypeRecord> aliased) {
-        this(alias, aliased, null);
+        this(alias, aliased, (Field<?>[]) null, null);
     }
 
-    private InfrastructureLinkSafelyTraversedByVehicleType(Name alias, Table<InfrastructureLinkSafelyTraversedByVehicleTypeRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment("Which infrastructure links are safely traversed by which vehicle types?"), TableOptions.table());
+    private InfrastructureLinkSafelyTraversedByVehicleType(Name alias, Table<InfrastructureLinkSafelyTraversedByVehicleTypeRecord> aliased, Field<?>[] parameters, Condition where) {
+        super(alias, null, aliased, parameters, DSL.comment("Which infrastructure links are safely traversed by which vehicle types?"), TableOptions.table(), where);
     }
 
     /**
-     * Create an aliased <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code> table reference
+     * Create an aliased
+     * <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code>
+     * table reference
      */
     public InfrastructureLinkSafelyTraversedByVehicleType(String alias) {
         this(DSL.name(alias), INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE);
     }
 
     /**
-     * Create an aliased <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code> table reference
+     * Create an aliased
+     * <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code>
+     * table reference
      */
     public InfrastructureLinkSafelyTraversedByVehicleType(Name alias) {
         this(alias, INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE);
     }
 
     /**
-     * Create a <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code> table reference
+     * Create a
+     * <code>routing.infrastructure_link_safely_traversed_by_vehicle_type</code>
+     * table reference
      */
     public InfrastructureLinkSafelyTraversedByVehicleType() {
         this(DSL.name("infrastructure_link_safely_traversed_by_vehicle_type"), null);
     }
 
-    public <O extends Record> InfrastructureLinkSafelyTraversedByVehicleType(Table<O> child, ForeignKey<O, InfrastructureLinkSafelyTraversedByVehicleTypeRecord> key) {
-        super(child, key, INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE);
+    public <O extends Record> InfrastructureLinkSafelyTraversedByVehicleType(Table<O> path, ForeignKey<O, InfrastructureLinkSafelyTraversedByVehicleTypeRecord> childPath, InverseForeignKey<O, InfrastructureLinkSafelyTraversedByVehicleTypeRecord> parentPath) {
+        super(path, childPath, parentPath, INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE);
+    }
+
+    /**
+     * A subtype implementing {@link Path} for simplified path-based joins.
+     */
+    public static class InfrastructureLinkSafelyTraversedByVehicleTypePath extends InfrastructureLinkSafelyTraversedByVehicleType implements Path<InfrastructureLinkSafelyTraversedByVehicleTypeRecord> {
+
+        private static final long serialVersionUID = 1L;
+        public <O extends Record> InfrastructureLinkSafelyTraversedByVehicleTypePath(Table<O> path, ForeignKey<O, InfrastructureLinkSafelyTraversedByVehicleTypeRecord> childPath, InverseForeignKey<O, InfrastructureLinkSafelyTraversedByVehicleTypeRecord> parentPath) {
+            super(path, childPath, parentPath);
+        }
+        private InfrastructureLinkSafelyTraversedByVehicleTypePath(Name alias, Table<InfrastructureLinkSafelyTraversedByVehicleTypeRecord> aliased) {
+            super(alias, aliased);
+        }
+
+        @Override
+        public InfrastructureLinkSafelyTraversedByVehicleTypePath as(String alias) {
+            return new InfrastructureLinkSafelyTraversedByVehicleTypePath(DSL.name(alias), this);
+        }
+
+        @Override
+        public InfrastructureLinkSafelyTraversedByVehicleTypePath as(Name alias) {
+            return new InfrastructureLinkSafelyTraversedByVehicleTypePath(alias, this);
+        }
+
+        @Override
+        public InfrastructureLinkSafelyTraversedByVehicleTypePath as(Table<?> alias) {
+            return new InfrastructureLinkSafelyTraversedByVehicleTypePath(alias.getQualifiedName(), this);
+        }
     }
 
     @Override
     public Schema getSchema() {
-        return Routing.ROUTING;
+        return aliased() ? null : Routing.ROUTING;
     }
 
     @Override
@@ -101,28 +151,32 @@ public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<In
     }
 
     @Override
-    public List<UniqueKey<InfrastructureLinkSafelyTraversedByVehicleTypeRecord>> getKeys() {
-        return Arrays.<UniqueKey<InfrastructureLinkSafelyTraversedByVehicleTypeRecord>>asList(Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE_PKEY);
-    }
-
-    @Override
     public List<ForeignKey<InfrastructureLinkSafelyTraversedByVehicleTypeRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<InfrastructureLinkSafelyTraversedByVehicleTypeRecord, ?>>asList(Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSE_INFRASTRUCTURE_LINK_ID_FKEY, Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHIC_VEHICLE_TYPE_FKEY);
+        return Arrays.asList(Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSE_INFRASTRUCTURE_LINK_ID_FKEY, Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHIC_VEHICLE_TYPE_FKEY);
     }
 
-    private transient InfrastructureLink _infrastructureLink;
-    private transient VehicleType _vehicleType;
+    private transient InfrastructureLinkPath _infrastructureLink;
 
-    public InfrastructureLink infrastructureLink() {
+    /**
+     * Get the implicit join path to the
+     * <code>routing.infrastructure_link</code> table.
+     */
+    public InfrastructureLinkPath infrastructureLink() {
         if (_infrastructureLink == null)
-            _infrastructureLink = new InfrastructureLink(this, Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSE_INFRASTRUCTURE_LINK_ID_FKEY);
+            _infrastructureLink = new InfrastructureLinkPath(this, Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSE_INFRASTRUCTURE_LINK_ID_FKEY, null);
 
         return _infrastructureLink;
     }
 
-    public VehicleType vehicleType() {
+    private transient VehicleTypePath _vehicleType;
+
+    /**
+     * Get the implicit join path to the <code>routing.vehicle_type</code>
+     * table.
+     */
+    public VehicleTypePath vehicleType() {
         if (_vehicleType == null)
-            _vehicleType = new VehicleType(this, Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHIC_VEHICLE_TYPE_FKEY);
+            _vehicleType = new VehicleTypePath(this, Keys.INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHICLE_TYPE__INFRASTRUCTURE_LINK_SAFELY_TRAVERSED_BY_VEHIC_VEHICLE_TYPE_FKEY, null);
 
         return _vehicleType;
     }
@@ -135,6 +189,11 @@ public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<In
     @Override
     public InfrastructureLinkSafelyTraversedByVehicleType as(Name alias) {
         return new InfrastructureLinkSafelyTraversedByVehicleType(alias, this);
+    }
+
+    @Override
+    public InfrastructureLinkSafelyTraversedByVehicleType as(Table<?> alias) {
+        return new InfrastructureLinkSafelyTraversedByVehicleType(alias.getQualifiedName(), this);
     }
 
     /**
@@ -153,12 +212,95 @@ public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<In
         return new InfrastructureLinkSafelyTraversedByVehicleType(name, null);
     }
 
-    // -------------------------------------------------------------------------
-    // Row2 type methods
-    // -------------------------------------------------------------------------
-
+    /**
+     * Rename this table
+     */
     @Override
-    public Row2<Long, String> fieldsRow() {
-        return (Row2) super.fieldsRow();
+    public InfrastructureLinkSafelyTraversedByVehicleType rename(Table<?> name) {
+        return new InfrastructureLinkSafelyTraversedByVehicleType(name.getQualifiedName(), null);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkSafelyTraversedByVehicleType where(Condition condition) {
+        return new InfrastructureLinkSafelyTraversedByVehicleType(getQualifiedName(), aliased() ? this : null, null, condition);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkSafelyTraversedByVehicleType where(Collection<? extends Condition> conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkSafelyTraversedByVehicleType where(Condition... conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkSafelyTraversedByVehicleType where(Field<Boolean> condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureLinkSafelyTraversedByVehicleType where(SQL condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureLinkSafelyTraversedByVehicleType where(@Stringly.SQL String condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureLinkSafelyTraversedByVehicleType where(@Stringly.SQL String condition, Object... binds) {
+        return where(DSL.condition(condition, binds));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureLinkSafelyTraversedByVehicleType where(@Stringly.SQL String condition, QueryPart... parts) {
+        return where(DSL.condition(condition, parts));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkSafelyTraversedByVehicleType whereExists(Select<?> select) {
+        return where(DSL.exists(select));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureLinkSafelyTraversedByVehicleType whereNotExists(Select<?> select) {
+        return where(DSL.notExists(select));
     }
 }

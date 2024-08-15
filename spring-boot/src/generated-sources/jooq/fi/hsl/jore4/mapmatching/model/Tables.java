@@ -21,7 +21,8 @@ import fi.hsl.jore4.mapmatching.model.tables.VehicleType;
 public class Tables {
 
     /**
-     * The infrastructure links, e.g. road or rail elements: https://www.transmodel-cen.eu/model/index.htm?goto=2:1:1:1:453
+     * The infrastructure links, e.g. road or rail elements:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=2:1:1:1:453
      */
     public static final InfrastructureLink INFRASTRUCTURE_LINK = InfrastructureLink.INFRASTRUCTURE_LINK;
 
@@ -46,17 +47,20 @@ public class Tables {
     public static final PublicTransportStop PUBLIC_TRANSPORT_STOP = PublicTransportStop.PUBLIC_TRANSPORT_STOP;
 
     /**
-     * The possible directions of traffic flow on infrastructure links. Using code values from Digiroad codeset.
+     * The possible directions of traffic flow on infrastructure links. Using
+     * code values from Digiroad codeset.
      */
     public static final TrafficFlowDirection TRAFFIC_FLOW_DIRECTION = TrafficFlowDirection.TRAFFIC_FLOW_DIRECTION;
 
     /**
-     * The vehicle modes from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
+     * The vehicle modes from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
      */
     public static final VehicleMode VEHICLE_MODE = VehicleMode.VEHICLE_MODE;
 
     /**
-     * The vehicle types from Transmodel: https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
+     * The vehicle types from Transmodel:
+     * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
      */
     public static final VehicleType VEHICLE_TYPE = VehicleType.VEHICLE_TYPE;
 }

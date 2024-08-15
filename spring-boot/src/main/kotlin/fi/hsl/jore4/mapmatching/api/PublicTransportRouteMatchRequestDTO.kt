@@ -1,11 +1,11 @@
 package fi.hsl.jore4.mapmatching.api
 
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
+import jakarta.validation.Valid
+import jakarta.validation.constraints.AssertTrue
+import jakarta.validation.constraints.Pattern
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
-import javax.validation.Valid
-import javax.validation.constraints.AssertTrue
-import javax.validation.constraints.Pattern
 
 /**
  * Contains input data for map-matching a public transport route against the
@@ -17,11 +17,12 @@ import javax.validation.constraints.Pattern
  * @property matchingParameters optional parameters with which map-matching
  * functionality can be adjusted
  */
-data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-_ ]{1,50}") val routeId: String?,
-                                               val routeGeometry: LineString<G2D>,
-                                               @field:Valid val routePoints: List<RoutePoint>,
-                                               @field:Valid val matchingParameters: MapMatchingParametersDTO?) {
-
+data class PublicTransportRouteMatchRequestDTO(
+    @field:Pattern(regexp = "[\\w\\d-_ ]{1,50}") val routeId: String?,
+    val routeGeometry: LineString<G2D>,
+    @field:Valid val routePoints: List<RoutePoint>,
+    @field:Valid val matchingParameters: MapMatchingParametersDTO?,
+) {
     /**
      * Contains parameters that can be adjusted for the purpose of getting
      * optimal results in matching public transport routes against the
@@ -70,15 +71,16 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
      * a retry using via-graph-vertices is performed if this property is set to
      * true.
      */
-    data class MapMatchingParametersDTO(val bufferRadiusInMeters: Double?,
-                                        val terminusLinkQueryDistance: Double?,
-                                        val terminusLinkQueryLimit: Int?,
-                                        val maxStopLocationDeviation: Double?,
-                                        val roadJunctionMatchingEnabled: Boolean?,
-                                        val junctionNodeMatchDistance: Double?,
-                                        val junctionNodeClearingDistance: Double?,
-                                        val fallbackToViaNodesAlgorithm: Boolean?) {
-
+    data class MapMatchingParametersDTO(
+        val bufferRadiusInMeters: Double?,
+        val terminusLinkQueryDistance: Double?,
+        val terminusLinkQueryLimit: Int?,
+        val maxStopLocationDeviation: Double?,
+        val roadJunctionMatchingEnabled: Boolean?,
+        val junctionNodeMatchDistance: Double?,
+        val junctionNodeClearingDistance: Double?,
+        val fallbackToViaNodesAlgorithm: Boolean?,
+    ) {
         private val isRoadJunctionMatchingEnabled: Boolean
             get() = roadJunctionMatchingEnabled != false
 
@@ -88,9 +90,11 @@ data class PublicTransportRouteMatchRequestDTO(@field:Pattern(regexp = "[\\w\\d-
 
         @AssertTrue(message = "false")
         fun isJunctionNodeMatchDistanceNotGreaterThanClearingDistance(): Boolean =
-            if (junctionNodeMatchDistance != null && junctionNodeClearingDistance != null)
+            if (junctionNodeMatchDistance != null && junctionNodeClearingDistance != null) {
                 junctionNodeMatchDistance <= junctionNodeClearingDistance
-            else true
+            } else {
+                true
+            }
     }
 
     @AssertTrue(message = "false")

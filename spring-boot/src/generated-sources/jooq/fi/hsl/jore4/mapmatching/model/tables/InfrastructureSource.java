@@ -6,17 +6,25 @@ package fi.hsl.jore4.mapmatching.model.tables;
 
 import fi.hsl.jore4.mapmatching.model.Keys;
 import fi.hsl.jore4.mapmatching.model.Routing;
+import fi.hsl.jore4.mapmatching.model.tables.InfrastructureLink.InfrastructureLinkPath;
+import fi.hsl.jore4.mapmatching.model.tables.PublicTransportStop.PublicTransportStopPath;
 import fi.hsl.jore4.mapmatching.model.tables.records.InfrastructureSourceRecord;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
+import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.InverseForeignKey;
 import org.jooq.Name;
+import org.jooq.Path;
+import org.jooq.PlainSQL;
+import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.Row3;
+import org.jooq.SQL;
 import org.jooq.Schema;
+import org.jooq.Select;
+import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -48,12 +56,18 @@ public class InfrastructureSource extends TableImpl<InfrastructureSourceRecord> 
     }
 
     /**
-     * The column <code>routing.infrastructure_source.infrastructure_source_id</code>. The numeric enum value for the infrastructure element source. This enum code is only local to this routing schema. ATM, it is not intended to be distributed to or shared across other JORE4 services.
+     * The column
+     * <code>routing.infrastructure_source.infrastructure_source_id</code>. The
+     * numeric enum value for the infrastructure element source. This enum code
+     * is only local to this routing schema. ATM, it is not intended to be
+     * distributed to or shared across other JORE4 services.
      */
     public final TableField<InfrastructureSourceRecord, Integer> INFRASTRUCTURE_SOURCE_ID = createField(DSL.name("infrastructure_source_id"), SQLDataType.INTEGER.nullable(false), this, "The numeric enum value for the infrastructure element source. This enum code is only local to this routing schema. ATM, it is not intended to be distributed to or shared across other JORE4 services.");
 
     /**
-     * The column <code>routing.infrastructure_source.infrastructure_source_name</code>. The short name for the infrastructure element source
+     * The column
+     * <code>routing.infrastructure_source.infrastructure_source_name</code>.
+     * The short name for the infrastructure element source
      */
     public final TableField<InfrastructureSourceRecord, String> INFRASTRUCTURE_SOURCE_NAME = createField(DSL.name("infrastructure_source_name"), SQLDataType.CLOB.nullable(false), this, "The short name for the infrastructure element source");
 
@@ -63,22 +77,24 @@ public class InfrastructureSource extends TableImpl<InfrastructureSourceRecord> 
     public final TableField<InfrastructureSourceRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB.nullable(false), this, "");
 
     private InfrastructureSource(Name alias, Table<InfrastructureSourceRecord> aliased) {
-        this(alias, aliased, null);
+        this(alias, aliased, (Field<?>[]) null, null);
     }
 
-    private InfrastructureSource(Name alias, Table<InfrastructureSourceRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment("The enumerated sources for infrastructure network entities"), TableOptions.table());
+    private InfrastructureSource(Name alias, Table<InfrastructureSourceRecord> aliased, Field<?>[] parameters, Condition where) {
+        super(alias, null, aliased, parameters, DSL.comment("The enumerated sources for infrastructure network entities"), TableOptions.table(), where);
     }
 
     /**
-     * Create an aliased <code>routing.infrastructure_source</code> table reference
+     * Create an aliased <code>routing.infrastructure_source</code> table
+     * reference
      */
     public InfrastructureSource(String alias) {
         this(DSL.name(alias), INFRASTRUCTURE_SOURCE);
     }
 
     /**
-     * Create an aliased <code>routing.infrastructure_source</code> table reference
+     * Create an aliased <code>routing.infrastructure_source</code> table
+     * reference
      */
     public InfrastructureSource(Name alias) {
         this(alias, INFRASTRUCTURE_SOURCE);
@@ -91,13 +107,42 @@ public class InfrastructureSource extends TableImpl<InfrastructureSourceRecord> 
         this(DSL.name("infrastructure_source"), null);
     }
 
-    public <O extends Record> InfrastructureSource(Table<O> child, ForeignKey<O, InfrastructureSourceRecord> key) {
-        super(child, key, INFRASTRUCTURE_SOURCE);
+    public <O extends Record> InfrastructureSource(Table<O> path, ForeignKey<O, InfrastructureSourceRecord> childPath, InverseForeignKey<O, InfrastructureSourceRecord> parentPath) {
+        super(path, childPath, parentPath, INFRASTRUCTURE_SOURCE);
+    }
+
+    /**
+     * A subtype implementing {@link Path} for simplified path-based joins.
+     */
+    public static class InfrastructureSourcePath extends InfrastructureSource implements Path<InfrastructureSourceRecord> {
+
+        private static final long serialVersionUID = 1L;
+        public <O extends Record> InfrastructureSourcePath(Table<O> path, ForeignKey<O, InfrastructureSourceRecord> childPath, InverseForeignKey<O, InfrastructureSourceRecord> parentPath) {
+            super(path, childPath, parentPath);
+        }
+        private InfrastructureSourcePath(Name alias, Table<InfrastructureSourceRecord> aliased) {
+            super(alias, aliased);
+        }
+
+        @Override
+        public InfrastructureSourcePath as(String alias) {
+            return new InfrastructureSourcePath(DSL.name(alias), this);
+        }
+
+        @Override
+        public InfrastructureSourcePath as(Name alias) {
+            return new InfrastructureSourcePath(alias, this);
+        }
+
+        @Override
+        public InfrastructureSourcePath as(Table<?> alias) {
+            return new InfrastructureSourcePath(alias.getQualifiedName(), this);
+        }
     }
 
     @Override
     public Schema getSchema() {
-        return Routing.ROUTING;
+        return aliased() ? null : Routing.ROUTING;
     }
 
     @Override
@@ -105,9 +150,30 @@ public class InfrastructureSource extends TableImpl<InfrastructureSourceRecord> 
         return Keys.INFRASTRUCTURE_SOURCE_PKEY;
     }
 
-    @Override
-    public List<UniqueKey<InfrastructureSourceRecord>> getKeys() {
-        return Arrays.<UniqueKey<InfrastructureSourceRecord>>asList(Keys.INFRASTRUCTURE_SOURCE_PKEY);
+    private transient InfrastructureLinkPath _infrastructureLink;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>routing.infrastructure_link</code> table
+     */
+    public InfrastructureLinkPath infrastructureLink() {
+        if (_infrastructureLink == null)
+            _infrastructureLink = new InfrastructureLinkPath(this, null, Keys.INFRASTRUCTURE_LINK__INFRASTRUCTURE_LINK_INFRASTRUCTURE_SOURCE_FKEY.getInverseKey());
+
+        return _infrastructureLink;
+    }
+
+    private transient PublicTransportStopPath _publicTransportStop;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>routing.public_transport_stop</code> table
+     */
+    public PublicTransportStopPath publicTransportStop() {
+        if (_publicTransportStop == null)
+            _publicTransportStop = new PublicTransportStopPath(this, null, Keys.PUBLIC_TRANSPORT_STOP__PUBLIC_TRANSPORT_STOP_INFRASTRUCTURE_SOURCE_FKEY.getInverseKey());
+
+        return _publicTransportStop;
     }
 
     @Override
@@ -118,6 +184,11 @@ public class InfrastructureSource extends TableImpl<InfrastructureSourceRecord> 
     @Override
     public InfrastructureSource as(Name alias) {
         return new InfrastructureSource(alias, this);
+    }
+
+    @Override
+    public InfrastructureSource as(Table<?> alias) {
+        return new InfrastructureSource(alias.getQualifiedName(), this);
     }
 
     /**
@@ -136,12 +207,95 @@ public class InfrastructureSource extends TableImpl<InfrastructureSourceRecord> 
         return new InfrastructureSource(name, null);
     }
 
-    // -------------------------------------------------------------------------
-    // Row3 type methods
-    // -------------------------------------------------------------------------
-
+    /**
+     * Rename this table
+     */
     @Override
-    public Row3<Integer, String, String> fieldsRow() {
-        return (Row3) super.fieldsRow();
+    public InfrastructureSource rename(Table<?> name) {
+        return new InfrastructureSource(name.getQualifiedName(), null);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureSource where(Condition condition) {
+        return new InfrastructureSource(getQualifiedName(), aliased() ? this : null, null, condition);
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureSource where(Collection<? extends Condition> conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureSource where(Condition... conditions) {
+        return where(DSL.and(conditions));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureSource where(Field<Boolean> condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureSource where(SQL condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureSource where(@Stringly.SQL String condition) {
+        return where(DSL.condition(condition));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureSource where(@Stringly.SQL String condition, Object... binds) {
+        return where(DSL.condition(condition, binds));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    @PlainSQL
+    public InfrastructureSource where(@Stringly.SQL String condition, QueryPart... parts) {
+        return where(DSL.condition(condition, parts));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureSource whereExists(Select<?> select) {
+        return where(DSL.exists(select));
+    }
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @Override
+    public InfrastructureSource whereNotExists(Select<?> select) {
+        return where(DSL.notExists(select));
     }
 }
