@@ -2,20 +2,21 @@ name: Generate jooq
 
 on:
   push:
+    branches:
+      - main
   pull_request:
-    branches: [main]
 
 jobs:
   generate-jooq:
     name: Verifies whether generated jooq classes have been updated
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: "17"
           java-package: jdk
@@ -23,7 +24,7 @@ jobs:
           distribution: temurin
 
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
