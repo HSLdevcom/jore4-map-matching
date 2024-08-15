@@ -17,7 +17,6 @@ import java.math.RoundingMode.HALF_UP
 import kotlin.math.max
 
 object GeolatteUtils {
-
     fun toPoint(position: G2D): Point<G2D> = mkPoint(position, WGS84)
 
     fun toPoints(coords: List<LatLng>): List<Point<G2D>> = coords.map(LatLng::toGeolattePoint)
@@ -63,7 +62,10 @@ object GeolatteUtils {
         return mkLineString(positionSequenceBuilder.toPositionSequence(), WGS84)
     }
 
-    fun roundCoordinates(line: LineString<G2D>, decimalPrecision: Int): LineString<G2D> {
+    fun roundCoordinates(
+        line: LineString<G2D>,
+        decimalPrecision: Int
+    ): LineString<G2D> {
         val positionSequenceBuilder = PositionSequenceBuilders.variableSized(G2D::class.java)
 
         fun round(num: Double): Double {

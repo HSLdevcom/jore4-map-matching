@@ -18,7 +18,7 @@ class MatchingServiceImpl
     @Autowired
     constructor(
         val viaPointsOnLinksService: IMatchRouteViaPointsOnLinksService,
-        val viaNodesService: IMatchRouteViaNetworkNodesService,
+        val viaNodesService: IMatchRouteViaNetworkNodesService
     ) : IMatchingService {
         @Transactional(readOnly = true)
         override fun findMatchForPublicTransportRoute(
@@ -26,7 +26,7 @@ class MatchingServiceImpl
             sourceRouteGeometry: LineString<G2D>,
             sourceRoutePoints: List<RoutePoint>,
             vehicleType: VehicleType,
-            matchingParameters: PublicTransportRouteMatchingParameters,
+            matchingParameters: PublicTransportRouteMatchingParameters
         ): RoutingResponse {
             validateInputForRouteMatching(sourceRoutePoints, vehicleType)?.let { validationError ->
                 return RoutingResponse.invalidValue(validationError)
@@ -38,7 +38,7 @@ class MatchingServiceImpl
                         sourceRouteGeometry,
                         sourceRoutePoints,
                         vehicleType,
-                        matchingParameters,
+                        matchingParameters
                     )
 
             val routeName: String = sourceRouteId?.let { "route $it" } ?: "route"
@@ -65,7 +65,7 @@ class MatchingServiceImpl
                                         sourceRouteGeometry,
                                         sourceRoutePoints,
                                         vehicleType,
-                                        matchingParameters,
+                                        matchingParameters
                                     )
 
                             LOGGER.info {

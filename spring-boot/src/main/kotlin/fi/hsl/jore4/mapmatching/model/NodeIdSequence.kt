@@ -4,19 +4,19 @@ import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplica
 
 @JvmInline
 value class NodeIdSequence(val list: List<InfrastructureNodeId>) {
-
     val size: Int
         get() = list.count()
 
     fun isEmpty() = list.isEmpty()
 
     fun concat(other: NodeIdSequence): NodeIdSequence {
-        return if (list.isEmpty())
+        return if (list.isEmpty()) {
             other
-        else if (other.list.isEmpty())
+        } else if (other.list.isEmpty()) {
             this
-        else
+        } else {
             NodeIdSequence(list + other.list)
+        }
     }
 
     fun duplicatesRemoved() = NodeIdSequence(filterOutConsecutiveDuplicates(list))

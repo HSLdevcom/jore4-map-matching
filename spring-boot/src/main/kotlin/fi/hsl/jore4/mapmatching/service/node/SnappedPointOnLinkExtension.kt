@@ -6,13 +6,12 @@ import fi.hsl.jore4.mapmatching.model.TrafficFlowDirectionType.BIDIRECTIONAL
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 
 object SnappedPointOnLinkExtension {
-
     fun SnappedPointOnLink.toVisitedNodes(): VisitedNodesOnLink {
-        return if (!isOnLinkWithDiscreteNodes() || isSnappedToStartNode)
+        return if (!isOnLinkWithDiscreteNodes() || isSnappedToStartNode) {
             VisitSingleNode(startNodeId)
-        else if (isSnappedToEndNode)
+        } else if (isSnappedToEndNode) {
             VisitSingleNode(endNodeId)
-        else {
+        } else {
             when (trafficFlowDirectionType) {
                 BIDIRECTIONAL -> VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId)
 

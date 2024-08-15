@@ -1,7 +1,6 @@
 package fi.hsl.jore4.mapmatching.test.generators
 
 enum class SnapPointLocationAlongLinkFilter {
-
     AT_START,
     AT_MIDPOINT,
     AT_END,

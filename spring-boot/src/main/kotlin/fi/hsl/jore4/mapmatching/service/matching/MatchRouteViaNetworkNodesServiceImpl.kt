@@ -43,12 +43,12 @@ class MatchRouteViaNetworkNodesServiceImpl
         val publicTransportStopMatcher: IPublicTransportStopMatcher,
         val roadJunctionMatcher: IRoadJunctionMatcher,
         val nodeService: INodeServiceInternal,
-        val routingService: IRoutingServiceInternal,
+        val routingService: IRoutingServiceInternal
     ) : IMatchRouteViaNetworkNodesService {
         internal data class InfrastructureLinksOnRoute(
             val startLinkCandidates: List<TerminusLinkCandidate>,
             val endLinkCandidates: List<TerminusLinkCandidate>,
-            val viaLinksIndexedByRoutePointOrdering: Map<Int, SnappedPointOnLink>,
+            val viaLinksIndexedByRoutePointOrdering: Map<Int, SnappedPointOnLink>
         )
 
         @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
@@ -56,7 +56,7 @@ class MatchRouteViaNetworkNodesServiceImpl
             sourceRouteGeometry: LineString<G2D>,
             sourceRoutePoints: List<RoutePoint>,
             vehicleType: VehicleType,
-            matchingParameters: PublicTransportRouteMatchingParameters,
+            matchingParameters: PublicTransportRouteMatchingParameters
         ): RoutingResponse {
             val terminusLinkSelectionInput: TerminusLinkSelectionInput =
                 try {
@@ -65,7 +65,7 @@ class MatchRouteViaNetworkNodesServiceImpl
                         sourceRoutePoints,
                         vehicleType,
                         matchingParameters.terminusLinkQueryDistance,
-                        matchingParameters.terminusLinkQueryLimit,
+                        matchingParameters.terminusLinkQueryLimit
                     )
                 } catch (ex: RuntimeException) {
                     val errMessage: String =
@@ -79,9 +79,10 @@ class MatchRouteViaNetworkNodesServiceImpl
                         sourceRoutePoints,
                         vehicleType,
                         terminusLinkSelectionInput,
-                        matchingParameters,
+                        matchingParameters
                     )
                 } catch (ex: RuntimeException) {
+                    @Suppress("ktlint:standard:max-line-length")
                     val errMessage: String =
                         ex.message
                             ?: "Could not resolve node sequence candidates while map-matching via nodes (graph vertices)"
@@ -94,8 +95,8 @@ class MatchRouteViaNetworkNodesServiceImpl
                     vehicleType,
                     BufferAreaRestriction(
                         sourceRouteGeometry,
-                        matchingParameters.bufferRadiusInMeters,
-                    ),
+                        matchingParameters.bufferRadiusInMeters
+                    )
                 )
 
             return when (nodeSeqResult) {
@@ -118,8 +119,8 @@ class MatchRouteViaNetworkNodesServiceImpl
                                     sourceRouteGeometry,
                                     matchingParameters.bufferRadiusInMeters,
                                     pointOnStartLink,
-                                    pointOnEndLink,
-                                ),
+                                    pointOnEndLink
+                                )
                             ).also { routeLinks: List<RouteLink> ->
                                 if (routeLinks.isNotEmpty()) {
                                     LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
@@ -142,7 +143,7 @@ class MatchRouteViaNetworkNodesServiceImpl
             sourceRoutePoints: List<RoutePoint>,
             vehicleType: VehicleType,
             terminusLinkQueryDistance: Double,
-            terminusLinkQueryLimit: Int,
+            terminusLinkQueryLimit: Int
         ): TerminusLinkSelectionInput {
             // The terminus locations are extracted from the LineString geometry of the source route
             // instead of the route point entities (mostly stop point instances) since in this context
@@ -156,14 +157,14 @@ class MatchRouteViaNetworkNodesServiceImpl
                     endLocation,
                     vehicleType,
                     terminusLinkQueryDistance,
-                    terminusLinkQueryLimit,
+                    terminusLinkQueryLimit
                 )
 
             return TerminusLinkSelectionInput(
                 getSourceRouteTerminusPoint(sourceRoutePoints.first(), startLocation, true),
                 closestStartLinks,
                 getSourceRouteTerminusPoint(sourceRoutePoints.last(), endLocation, false),
-                closestEndLinks,
+                closestEndLinks
             )
         }
 
@@ -174,18 +175,18 @@ class MatchRouteViaNetworkNodesServiceImpl
             sourceRoutePoints: List<RoutePoint>,
             vehicleType: VehicleType,
             TerminusLinkSelectionInput: TerminusLinkSelectionInput,
-            matchingParams: PublicTransportRouteMatchingParameters,
+            matchingParams: PublicTransportRouteMatchingParameters
         ): List<NodeSequenceCandidatesBetweenSnappedLinks> {
             // Resolve infrastructure links to visit on route derived from the given geometry and route points.
             val (
                 startLinkCandidates: List<TerminusLinkCandidate>,
                 endLinkCandidates: List<TerminusLinkCandidate>,
-                fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedPointOnLink?>,
+                fromRouteStopPointIndexToInfrastructureLink: Map<Int, SnappedPointOnLink?>
             ) =
                 resolveInfrastructureLinksOnRoute(
                     sourceRoutePoints,
                     TerminusLinkSelectionInput,
-                    matchingParams.maxStopLocationDeviation,
+                    matchingParams.maxStopLocationDeviation
                 )
 
             // Resolve infrastructure network nodes to visit on route derived from the given route points.
@@ -196,7 +197,7 @@ class MatchRouteViaNetworkNodesServiceImpl
                             sourceRoutePoints,
                             vehicleType,
                             matchDistance,
-                            clearingDistance,
+                            clearingDistance
                         )
                     }
                     ?: emptyMap()
@@ -212,11 +213,11 @@ class MatchRouteViaNetworkNodesServiceImpl
                             is RouteStopPoint ->
                                 fromRouteStopPointIndexToInfrastructureLink[sourceRoutePointIndex]
                                     ?.let(
-                                        ::Left,
+                                        ::Left
                                     )
                             is RouteJunctionPoint ->
                                 fromRoutePointIndexToRoadJunctionNode[sourceRoutePointIndex]?.let(
-                                    ::Right,
+                                    ::Right
                                 )
                             else -> null
                         }
@@ -225,20 +226,20 @@ class MatchRouteViaNetworkNodesServiceImpl
             return MatchingServiceHelper.getSortedNodeSequenceCandidates(
                 startLinkCandidates,
                 endLinkCandidates,
-                viaNodeHolders,
+                viaNodeHolders
             )
         }
 
         internal fun resolveInfrastructureLinksOnRoute(
             sourceRoutePoints: List<RoutePoint>,
             terminusLinkSelectionInput: TerminusLinkSelectionInput,
-            maxStopLocationDeviation: Double,
+            maxStopLocationDeviation: Double
         ): InfrastructureLinksOnRoute {
             val fromRoutePointIndexToSnappedLinkOfMatchedStop: Map<Int, SnapStopToLinkResult> =
                 publicTransportStopMatcher
                     .findStopPointsByNationalIdsAndIndexByRoutePointOrdering(
                         sourceRoutePoints,
-                        maxStopLocationDeviation,
+                        maxStopLocationDeviation
                     )
 
             val fromStopNationalIdToInfrastructureLinkId: Map<Int, InfrastructureLinkId> =
@@ -249,7 +250,7 @@ class MatchRouteViaNetworkNodesServiceImpl
             val (startLinkCandidates: List<TerminusLinkCandidate>, endLinkCandidates: List<TerminusLinkCandidate>) =
                 MatchingServiceHelper.resolveTerminusLinkCandidates(
                     terminusLinkSelectionInput,
-                    fromStopNationalIdToInfrastructureLinkId,
+                    fromStopNationalIdToInfrastructureLinkId
                 )
 
             val fromRouteStopPointIndexToPointOnLink: Map<Int, SnappedPointOnLink> =
@@ -258,7 +259,7 @@ class MatchRouteViaNetworkNodesServiceImpl
             return InfrastructureLinksOnRoute(
                 startLinkCandidates,
                 endLinkCandidates,
-                fromRouteStopPointIndexToPointOnLink,
+                fromRouteStopPointIndexToPointOnLink
             )
         }
     }

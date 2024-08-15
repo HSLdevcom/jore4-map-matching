@@ -27,13 +27,13 @@ class RoutingServiceImpl
     @Autowired
     constructor(
         val linkRepository: ILinkRepository,
-        val routingServiceInternal: IRoutingServiceInternal,
+        val routingServiceInternal: IRoutingServiceInternal
     ) : IRoutingService {
         @Transactional(readOnly = true)
         override fun findRoute(
             viaPoints: List<Point<G2D>>,
             vehicleType: VehicleType,
-            extraParameters: RoutingExtraParameters,
+            extraParameters: RoutingExtraParameters
         ): RoutingResponse {
             val filteredPoints = filterOutConsecutiveDuplicates(viaPoints)
 
@@ -56,7 +56,7 @@ class RoutingServiceImpl
                     .findRouteViaPointsOnLinks(
                         sourceRoutePoints,
                         vehicleType,
-                        extraParameters.simplifyConsecutiveClosedLoopTraversals,
+                        extraParameters.simplifyConsecutiveClosedLoopTraversals
                     ).also { routeLinks: List<RouteLink> ->
                         if (routeLinks.isNotEmpty()) {
                             LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
@@ -69,7 +69,7 @@ class RoutingServiceImpl
         private fun findClosestInfrastructureLinks(
             points: List<Point<G2D>>,
             vehicleType: VehicleType,
-            linkQueryDistance: Int,
+            linkQueryDistance: Int
         ): List<SnapPointToLinkResult> =
             linkRepository
                 .findClosestLinks(points, vehicleType, linkQueryDistance.toDouble())
@@ -86,7 +86,7 @@ class RoutingServiceImpl
                 .map { snap ->
                     // The location is snapped to terminus node if within close distance.
                     snap.withLocationOnLinkSnappedToTerminusNodeIfWithinDistance(
-                        SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS,
+                        SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS
                     )
                 }
     }

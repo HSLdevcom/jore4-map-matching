@@ -35,13 +35,14 @@ import java.lang.IllegalArgumentException
  *
  * @throws IllegalArgumentException
  */
-data class PublicTransportRouteMatchingParameters(val bufferRadiusInMeters: Double,
-                                                  val terminusLinkQueryDistance: Double,
-                                                  val terminusLinkQueryLimit: Int,
-                                                  val maxStopLocationDeviation: Double,
-                                                  val fallbackToViaNodesAlgorithm: Boolean,
-                                                  val roadJunctionMatching: JunctionMatchingParameters?) {
-
+data class PublicTransportRouteMatchingParameters(
+    val bufferRadiusInMeters: Double,
+    val terminusLinkQueryDistance: Double,
+    val terminusLinkQueryLimit: Int,
+    val maxStopLocationDeviation: Double,
+    val fallbackToViaNodesAlgorithm: Boolean,
+    val roadJunctionMatching: JunctionMatchingParameters?
+) {
     /**
      * Contains distance properties to tune heuristics for matching route points
      * with infrastructure network nodes (of road junction type). It is
@@ -66,7 +67,6 @@ data class PublicTransportRouteMatchingParameters(val bufferRadiusInMeters: Doub
      * clearing distance
      */
     data class JunctionMatchingParameters(val matchDistance: Double, val clearingDistance: Double) {
-
         init {
             require(matchDistance <= clearingDistance) {
                 "matchDistance must not be greater than clearingDistance"

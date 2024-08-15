@@ -22,10 +22,11 @@ import org.geolatte.geom.LineString
  * @property explicitLinkReferences contains set of terminus link and node
  * identifiers with which terminus links can be explicitly referenced.
  */
-data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
-                                 val bufferRadiusInMeters: Double,
-                                 val explicitLinkReferences: ExplicitLinkReferences? = null) {
-
+data class BufferAreaRestriction(
+    val lineGeometry: LineString<G2D>,
+    val bufferRadiusInMeters: Double,
+    val explicitLinkReferences: ExplicitLinkReferences? = null
+) {
     /**
      * @property idsOfCandidatesForTerminusLinks the list of identifiers for
      * candidate terminus links on route. The terminus links may lie partly outside
@@ -36,14 +37,15 @@ data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
      * the buffer area. In such cases, they may be referenced explicitly by the
      * identifiers of their endpoint nodes.
      */
-    data class ExplicitLinkReferences(val idsOfCandidatesForTerminusLinks: Set<InfrastructureLinkId>,
-                                      val idsOfCandidatesForTerminusNodes: Set<InfrastructureNodeId>) {
-
+    data class ExplicitLinkReferences(
+        val idsOfCandidatesForTerminusLinks: Set<InfrastructureLinkId>,
+        val idsOfCandidatesForTerminusNodes: Set<InfrastructureNodeId>
+    ) {
         companion object {
-
-            fun fromTerminusPoints(pointOnStartLink: SnappedPointOnLink, pointOnEndLink: SnappedPointOnLink)
-                : ExplicitLinkReferences {
-
+            fun fromTerminusPoints(
+                pointOnStartLink: SnappedPointOnLink,
+                pointOnEndLink: SnappedPointOnLink
+            ): ExplicitLinkReferences {
                 val snappedStartNode: InfrastructureNodeId? = pointOnStartLink.getSnappedNodeOrNull()
                 val snappedEndNode: InfrastructureNodeId? = pointOnEndLink.getSnappedNodeOrNull()
 
@@ -62,17 +64,24 @@ data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
                     idsOfCandidatesForTerminusLinks = setOf(pointOnStartLink.infrastructureLinkId)
                     idsOfCandidatesForTerminusNodes = setOf(snappedEndNode)
                 } else {
-                    idsOfCandidatesForTerminusLinks = setOf(pointOnStartLink.infrastructureLinkId,
-                                                            pointOnEndLink.infrastructureLinkId)
+                    idsOfCandidatesForTerminusLinks =
+                        setOf(
+                            pointOnStartLink.infrastructureLinkId,
+                            pointOnEndLink.infrastructureLinkId
+                        )
                     idsOfCandidatesForTerminusNodes = emptySet()
                 }
 
-                return ExplicitLinkReferences(idsOfCandidatesForTerminusLinks,
-                                              idsOfCandidatesForTerminusNodes)
+                return ExplicitLinkReferences(
+                    idsOfCandidatesForTerminusLinks,
+                    idsOfCandidatesForTerminusNodes
+                )
             }
 
-            fun fromTerminusPoints(startPoint: PgRoutingPoint, endPoint: PgRoutingPoint): ExplicitLinkReferences {
-
+            fun fromTerminusPoints(
+                startPoint: PgRoutingPoint,
+                endPoint: PgRoutingPoint
+            ): ExplicitLinkReferences {
                 val idsOfCandidatesForTerminusLinks: MutableSet<InfrastructureLinkId> = HashSet(2)
                 val idsOfCandidatesForTerminusNodes: MutableSet<InfrastructureNodeId> = HashSet(2)
 
@@ -92,23 +101,32 @@ data class BufferAreaRestriction(val lineGeometry: LineString<G2D>,
     }
 
     companion object {
+        fun from(
+            lineGeometry: LineString<G2D>,
+            bufferRadiusInMeters: Double,
+            pointOnStartLink: SnappedPointOnLink,
+            pointOnEndLink: SnappedPointOnLink
+        ) = BufferAreaRestriction(
+            lineGeometry,
+            bufferRadiusInMeters,
+            ExplicitLinkReferences.fromTerminusPoints(
+                pointOnStartLink,
+                pointOnEndLink
+            )
+        )
 
-        fun from(lineGeometry: LineString<G2D>,
-                 bufferRadiusInMeters: Double,
-                 pointOnStartLink: SnappedPointOnLink,
-                 pointOnEndLink: SnappedPointOnLink) = BufferAreaRestriction(lineGeometry,
-                                                                             bufferRadiusInMeters,
-                                                                             ExplicitLinkReferences.fromTerminusPoints(
-                                                                                 pointOnStartLink,
-                                                                                 pointOnEndLink))
-
-        fun from(lineGeometry: LineString<G2D>,
-                 bufferRadiusInMeters: Double,
-                 startPoint: PgRoutingPoint,
-                 endPoint: PgRoutingPoint) = BufferAreaRestriction(lineGeometry,
-                                                                   bufferRadiusInMeters,
-                                                                   ExplicitLinkReferences.fromTerminusPoints(
-                                                                       startPoint,
-                                                                       endPoint))
+        fun from(
+            lineGeometry: LineString<G2D>,
+            bufferRadiusInMeters: Double,
+            startPoint: PgRoutingPoint,
+            endPoint: PgRoutingPoint
+        ) = BufferAreaRestriction(
+            lineGeometry,
+            bufferRadiusInMeters,
+            ExplicitLinkReferences.fromTerminusPoints(
+                startPoint,
+                endPoint
+            )
+        )
     }
 }

@@ -18,7 +18,6 @@ import java.sql.Types
 import java.util.Objects
 
 class PointBinding : Binding<Any, Point<C2D>> {
-
     override fun converter(): Converter<Any, Point<C2D>> = PointConverter.INSTANCE
 
     @Throws(SQLException::class)
@@ -47,12 +46,8 @@ class PointBinding : Binding<Any, Point<C2D>> {
     }
 
     @Throws(SQLException::class)
-    override fun set(ctx: BindingSetSQLOutputContext<Point<C2D>>) {
-        throw SQLFeatureNotSupportedException()
-    }
+    override fun set(ctx: BindingSetSQLOutputContext<Point<C2D>>): Unit = throw SQLFeatureNotSupportedException()
 
     @Throws(SQLException::class)
-    override fun get(ctx: BindingGetSQLInputContext<Point<C2D>>) {
-        throw SQLFeatureNotSupportedException()
-    }
+    override fun get(ctx: BindingGetSQLInputContext<Point<C2D>>): Unit = throw SQLFeatureNotSupportedException()
 }

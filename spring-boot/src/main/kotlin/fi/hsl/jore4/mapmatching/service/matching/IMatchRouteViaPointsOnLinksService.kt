@@ -7,7 +7,6 @@ import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
 
 interface IMatchRouteViaPointsOnLinksService {
-
     /**
      * Finds the shortest route through the infrastructure network provided by
      * the system that matches as closely as possible with the given source
@@ -33,9 +32,10 @@ interface IMatchRouteViaPointsOnLinksService {
      *
      * @return either a successful or failure-marking routing response.
      */
-    fun findMatchForPublicTransportRoute(sourceRouteGeometry: LineString<G2D>,
-                                         sourceRoutePoints: List<RoutePoint>,
-                                         vehicleType: VehicleType,
-                                         matchingParameters: PublicTransportRouteMatchingParameters)
-        : RoutingResponse
+    fun findMatchForPublicTransportRoute(
+        sourceRouteGeometry: LineString<G2D>,
+        sourceRoutePoints: List<RoutePoint>,
+        vehicleType: VehicleType,
+        matchingParameters: PublicTransportRouteMatchingParameters
+    ): RoutingResponse
 }

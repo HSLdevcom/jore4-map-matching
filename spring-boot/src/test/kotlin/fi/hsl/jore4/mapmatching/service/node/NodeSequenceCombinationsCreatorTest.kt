@@ -21,14 +21,13 @@ import org.quicktheories.generators.SourceDSL.lists
 import kotlin.reflect.KClass
 
 class NodeSequenceCombinationsCreatorTest {
-
     @Nested
     @DisplayName("When given instance of VisitSingleNode")
     inner class WhenGivenVisitSingleNode {
-
         @Test
         fun shouldContainOnlyOneNodeIdSequence() {
-            qt().forAll(infrastructureNodeId())
+            qt()
+                .forAll(infrastructureNodeId())
                 .checkAssert { nodeId ->
 
                     val nodesToVisit = VisitSingleNode(nodeId)
@@ -41,7 +40,8 @@ class NodeSequenceCombinationsCreatorTest {
 
         @Test
         fun shouldContainExactlyTheVisitedNodeId() {
-            qt().forAll(infrastructureNodeId())
+            qt()
+                .forAll(infrastructureNodeId())
                 .checkAssert { nodeId ->
 
                     val nodesToVisit = VisitSingleNode(nodeId)
@@ -52,8 +52,11 @@ class NodeSequenceCombinationsCreatorTest {
                             listOf(
                                 NodeIdSequence(
                                     listOf(
-                                        nodeId))
-                            ))
+                                        nodeId
+                                    )
+                                )
+                            )
+                        )
                 }
         }
     }
@@ -61,10 +64,10 @@ class NodeSequenceCombinationsCreatorTest {
     @Nested
     @DisplayName("When given instance of VisitNodesOfSingleLinkUnidirectionally")
     inner class WhenGivenVisitNodesOfSingleLinkUnidirectionally {
-
         @Test
         fun shouldContainOnlyOneNodeIdSequence() {
-            qt().forAll(pair(infrastructureNodeId()))
+            qt()
+                .forAll(pair(infrastructureNodeId()))
                 .checkAssert { (startNodeId, endNodeId) ->
 
                     val nodesToVisit = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
@@ -77,7 +80,8 @@ class NodeSequenceCombinationsCreatorTest {
 
         @Test
         fun shouldContainExactlyTheVisitedNodeIds() {
-            qt().forAll(pair(infrastructureNodeId()))
+            qt()
+                .forAll(pair(infrastructureNodeId()))
                 .checkAssert { (startNodeId, endNodeId) ->
 
                     val nodesToVisit = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
@@ -88,8 +92,12 @@ class NodeSequenceCombinationsCreatorTest {
                             listOf(
                                 NodeIdSequence(
                                     listOf(
-                                        startNodeId, endNodeId))
-                            ))
+                                        startNodeId,
+                                        endNodeId
+                                    )
+                                )
+                            )
+                        )
                 }
         }
     }
@@ -97,10 +105,10 @@ class NodeSequenceCombinationsCreatorTest {
     @Nested
     @DisplayName("When given instance of VisitNodesOfSingleLinkBidirectionally")
     inner class WhenGivenVisitNodesOfSingleLinkBidirectionally {
-
         @Test
         fun shouldContainTwoNodeIdSequences() {
-            qt().forAll(pair(infrastructureNodeId()))
+            qt()
+                .forAll(pair(infrastructureNodeId()))
                 .checkAssert { (firstNodeId, secondNodeId) ->
 
                     val nodesToVisit = VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
@@ -113,7 +121,8 @@ class NodeSequenceCombinationsCreatorTest {
 
         @Test
         fun shouldContainPermutationsOfVisitedNodeIds() {
-            qt().forAll(pair(infrastructureNodeId()))
+            qt()
+                .forAll(pair(infrastructureNodeId()))
                 .checkAssert { (firstNodeId, secondNodeId) ->
 
                     val nodesToVisit = VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
@@ -124,13 +133,18 @@ class NodeSequenceCombinationsCreatorTest {
                             listOf(
                                 NodeIdSequence(
                                     listOf(
-                                        firstNodeId, secondNodeId)
+                                        firstNodeId,
+                                        secondNodeId
+                                    )
                                 ),
                                 NodeIdSequence(
                                     listOf(
-                                        secondNodeId, firstNodeId)
+                                        secondNodeId,
+                                        firstNodeId
+                                    )
                                 )
-                            ))
+                            )
+                        )
                 }
         }
     }
@@ -138,19 +152,25 @@ class NodeSequenceCombinationsCreatorTest {
     @Nested
     @DisplayName("When given instance of VisitNodesOnMultipleLinks")
     inner class WhenGivenVisitNodesOnMultipleLinks {
-
         @Test
         fun numberOfNodeIdSequencesShouldBeBetween1AndFour() {
-            qt().forAll(generateVisitedNodesOnLink(),
-                        generateViaNodeIds(allowEmpty = true),
-                        generateVisitedNodesOnLink())
-                .checkAssert { someNodesToVisitOnStartLink,
-                               viaNodeIds,
-                               someNodesToVisitOnEndLink ->
+            qt()
+                .forAll(
+                    generateVisitedNodesOnLink(),
+                    generateViaNodeIds(allowEmpty = true),
+                    generateVisitedNodesOnLink()
+                ).checkAssert {
+                        someNodesToVisitOnStartLink,
+                        viaNodeIds,
+                        someNodesToVisitOnEndLink
+                    ->
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 someNodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .asList()
@@ -161,16 +181,23 @@ class NodeSequenceCombinationsCreatorTest {
 
         @Test
         fun alternativesShouldContainAtLeastOneNodeId() {
-            qt().forAll(generateVisitedNodesOnLink(),
-                        generateViaNodeIds(allowEmpty = true),
-                        generateVisitedNodesOnLink())
-                .checkAssert { someNodesToVisitOnStartLink,
-                               viaNodeIds,
-                               someNodesToVisitOnEndLink ->
+            qt()
+                .forAll(
+                    generateVisitedNodesOnLink(),
+                    generateViaNodeIds(allowEmpty = true),
+                    generateVisitedNodesOnLink()
+                ).checkAssert {
+                        someNodesToVisitOnStartLink,
+                        viaNodeIds,
+                        someNodesToVisitOnEndLink
+                    ->
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 someNodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -181,16 +208,23 @@ class NodeSequenceCombinationsCreatorTest {
 
         @Test
         fun nodeIdSequencesShouldBeIrreducibleWithRegardToConsecutiveDuplicates() {
-            qt().forAll(generateVisitedNodesOnLink(),
-                        generateViaNodeIds(allowEmpty = true),
-                        generateVisitedNodesOnLink())
-                .checkAssert { someNodesToVisitOnStartLink,
-                               viaNodeIds,
-                               someNodesToVisitOnEndLink ->
+            qt()
+                .forAll(
+                    generateVisitedNodesOnLink(),
+                    generateViaNodeIds(allowEmpty = true),
+                    generateVisitedNodesOnLink()
+                ).checkAssert {
+                        someNodesToVisitOnStartLink,
+                        viaNodeIds,
+                        someNodesToVisitOnEndLink
+                    ->
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 someNodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -204,32 +238,36 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When via node IDs are not overlapping with nodes of terminus links")
         inner class WhenViaNodeIdsNotOverlappingWithTerminusLinks {
-
             @Test
             fun alternativesShouldContainReducedViaNodeIds() {
                 val genNodesToVisitOnStartLink: Gen<VisitedNodesOnLink> = generateVisitedNodesOnLink()
                 val genNodesToVisitOnEndLink: Gen<VisitedNodesOnLink> = generateVisitedNodesOnLink()
 
-                val genVisitedNodes: Gen<VisitNodesOnMultipleLinks> = genNodesToVisitOnStartLink
-                    .flatMap { nodesToVisitOnStartLink ->
-                        genNodesToVisitOnEndLink
-                            .flatMap { nodesToVisitOnEndLink ->
+                val genVisitedNodes: Gen<VisitNodesOnMultipleLinks> =
+                    genNodesToVisitOnStartLink
+                        .flatMap { nodesToVisitOnStartLink ->
+                            genNodesToVisitOnEndLink
+                                .flatMap { nodesToVisitOnEndLink ->
 
-                                val nodeIdsToExclude: List<InfrastructureNodeId> =
-                                    nodesToVisitOnStartLink.toListOfNodeIds() + nodesToVisitOnEndLink.toListOfNodeIds()
+                                    val nodeIdsToExclude: List<InfrastructureNodeId> =
+                                        nodesToVisitOnStartLink.toListOfNodeIds() +
+                                            nodesToVisitOnEndLink.toListOfNodeIds()
 
-                                // Generate via node IDs that are not overlapping with nodes of terminus links.
-                                generateViaNodeIds(allowEmpty = false, excludedNodeIds = nodeIdsToExclude.toSet())
-                                    .map { viaNodeIds ->
+                                    // Generate via node IDs that are not overlapping with nodes of terminus links.
+                                    generateViaNodeIds(allowEmpty = false, excludedNodeIds = nodeIdsToExclude.toSet())
+                                        .map { viaNodeIds ->
 
-                                        VisitNodesOnMultipleLinks(nodesToVisitOnStartLink,
-                                                                  viaNodeIds,
-                                                                  nodesToVisitOnEndLink)
-                                    }
-                            }
-                    }
+                                            VisitNodesOnMultipleLinks(
+                                                nodesToVisitOnStartLink,
+                                                viaNodeIds,
+                                                nodesToVisitOnEndLink
+                                            )
+                                        }
+                                }
+                        }
 
-                qt().forAll(genVisitedNodes)
+                qt()
+                    .forAll(genVisitedNodes)
                     .checkAssert { nodesToVisit ->
 
                         val (someNodesToVisitOnStartLink, viaNodeIds, someNodesToVisitOnEndLink) = nodesToVisit
@@ -252,18 +290,23 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When visiting only single node on start link")
         inner class WhenVisitingOnlySingleNodeOnStartLink {
-
-            private fun forAll() = qt().forAll(infrastructureNodeId(),
-                                               generateViaNodeIds(allowEmpty = true),
-                                               generateVisitedNodesOnLink())
+            private fun forAll() =
+                qt().forAll(
+                    infrastructureNodeId(),
+                    generateViaNodeIds(allowEmpty = true),
+                    generateVisitedNodesOnLink()
+                )
 
             @Test
             fun shouldContainAtMostTwoNodeIdSequences() {
                 forAll().checkAssert { singleNodeIdOnStartLink, viaNodeIds, someNodesToVisitOnEndLink ->
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(VisitSingleNode(singleNodeIdOnStartLink),
-                                                                 viaNodeIds,
-                                                                 someNodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            VisitSingleNode(singleNodeIdOnStartLink),
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .asList()
@@ -275,9 +318,12 @@ class NodeSequenceCombinationsCreatorTest {
             fun alternativesShouldStartWithSingleNodeIdOfStartLink() {
                 forAll().checkAssert { singleNodeIdOnStartLink, viaNodeIds, someNodesToVisitOnEndLink ->
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(VisitSingleNode(singleNodeIdOnStartLink),
-                                                                 viaNodeIds,
-                                                                 someNodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            VisitSingleNode(singleNodeIdOnStartLink),
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -290,18 +336,23 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When visiting only single node on end link")
         inner class WhenVisitingOnlySingleNodeOnEndLink {
-
-            private fun forAll() = qt().forAll(generateVisitedNodesOnLink(),
-                                               generateViaNodeIds(allowEmpty = true),
-                                               infrastructureNodeId())
+            private fun forAll() =
+                qt().forAll(
+                    generateVisitedNodesOnLink(),
+                    generateViaNodeIds(allowEmpty = true),
+                    infrastructureNodeId()
+                )
 
             @Test
             fun shouldContainAtMostTwoNodeIdSequences() {
                 forAll().checkAssert { someNodesToVisitOnStartLink, viaNodeIds, singleNodeIdOnEndLink ->
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 VisitSingleNode(singleNodeIdOnEndLink))
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            VisitSingleNode(singleNodeIdOnEndLink)
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .asList()
@@ -313,9 +364,12 @@ class NodeSequenceCombinationsCreatorTest {
             fun alternativesShouldEndWithSingleNodeIdOfEndLink() {
                 forAll().checkAssert { someNodesToVisitOnStartLink, viaNodeIds, singleNodeIdOnEndLink ->
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 VisitSingleNode(singleNodeIdOnEndLink))
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            VisitSingleNode(singleNodeIdOnEndLink)
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -328,19 +382,23 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When visiting nodes on start link unidirectionally")
         inner class WhenVisitingNodesOnStartLinkUnidirectionally {
-
-            private fun forAll() = qt().forAll(discreteNodeIdPair(),
-                                               generateViaNodeIds(allowEmpty = true),
-                                               generateVisitedNodesOnLink())
+            private fun forAll() =
+                qt().forAll(
+                    discreteNodeIdPair(),
+                    generateViaNodeIds(allowEmpty = true),
+                    generateVisitedNodesOnLink()
+                )
 
             @Test
             fun shouldContainAtMostTwoNodeIdSequences() {
                 forAll().checkAssert { (startNodeId, endNodeId), viaNodeIds, someNodesToVisitOnEndLink ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId),
-                                                  viaNodeIds,
-                                                  someNodesToVisitOnEndLink)
+                        VisitNodesOnMultipleLinks(
+                            VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId),
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .asList()
@@ -353,9 +411,11 @@ class NodeSequenceCombinationsCreatorTest {
                 forAll().checkAssert { (startNodeId, endNodeId), viaNodeIds, someNodesToVisitOnEndLink ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId),
-                                                  viaNodeIds,
-                                                  someNodesToVisitOnEndLink)
+                        VisitNodesOnMultipleLinks(
+                            VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId),
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -370,9 +430,12 @@ class NodeSequenceCombinationsCreatorTest {
 
                     val nodesToVisitOnStartLink = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(nodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 someNodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            nodesToVisitOnStartLink,
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -385,19 +448,23 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When visiting nodes on end link unidirectionally")
         inner class WhenVisitingNodesOnEndLinkUnidirectionally {
-
-            private fun forAll() = qt().forAll(generateVisitedNodesOnLink(),
-                                               generateViaNodeIds(allowEmpty = true),
-                                               discreteNodeIdPair())
+            private fun forAll() =
+                qt().forAll(
+                    generateVisitedNodesOnLink(),
+                    generateViaNodeIds(allowEmpty = true),
+                    discreteNodeIdPair()
+                )
 
             @Test
             fun shouldContainAtMostTwoNodeIdSequences() {
                 forAll().checkAssert { someNodesToVisitOnStartLink, viaNodeIds, (startNodeId, endNodeId) ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                  viaNodeIds,
-                                                  VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId))
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .asList()
@@ -410,9 +477,11 @@ class NodeSequenceCombinationsCreatorTest {
                 forAll().checkAssert { someNodesToVisitOnStartLink, viaNodeIds, (startNodeId, endNodeId) ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                  viaNodeIds,
-                                                  VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId))
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -427,9 +496,12 @@ class NodeSequenceCombinationsCreatorTest {
 
                     val nodesToVisitOnEndLink = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 nodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            nodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -442,19 +514,23 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When visiting nodes on start link bidirectionally")
         inner class WhenVisitingNodesOnStartLinkBidirectionally {
-
-            private fun forAll() = qt().forAll(discreteNodeIdPair(),
-                                               generateViaNodeIds(allowEmpty = true),
-                                               generateVisitedNodesOnLink())
+            private fun forAll() =
+                qt().forAll(
+                    discreteNodeIdPair(),
+                    generateViaNodeIds(allowEmpty = true),
+                    generateVisitedNodesOnLink()
+                )
 
             @Test
             fun hasAtLeastTwoNodeIdSequences() {
                 forAll().checkAssert { (startNodeId, endNodeId), viaNodeIds, someNodesToVisitOnEndLink ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId),
-                                                  viaNodeIds,
-                                                  someNodesToVisitOnEndLink)
+                        VisitNodesOnMultipleLinks(
+                            VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId),
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .asList()
@@ -467,9 +543,11 @@ class NodeSequenceCombinationsCreatorTest {
                 forAll().checkAssert { (startNodeId, endNodeId), viaNodeIds, someNodesToVisitOnEndLink ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId),
-                                                  viaNodeIds,
-                                                  someNodesToVisitOnEndLink)
+                        VisitNodesOnMultipleLinks(
+                            VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId),
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -484,9 +562,12 @@ class NodeSequenceCombinationsCreatorTest {
 
                     val nodesToVisitOnStartLink = VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId)
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(nodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 someNodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            nodesToVisitOnStartLink,
+                            viaNodeIds,
+                            someNodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -503,19 +584,23 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When visiting nodes on end link bidirectionally")
         inner class WhenVisitingNodesOnEndLinkBidirectionally {
-
-            private fun forAll() = qt().forAll(generateVisitedNodesOnLink(),
-                                               generateViaNodeIds(allowEmpty = true),
-                                               discreteNodeIdPair())
+            private fun forAll() =
+                qt().forAll(
+                    generateVisitedNodesOnLink(),
+                    generateViaNodeIds(allowEmpty = true),
+                    discreteNodeIdPair()
+                )
 
             @Test
             fun haAtLeastTwoNodeIdSequences() {
                 forAll().checkAssert { someNodesToVisitOnStartLink, viaNodeIds, (startNodeId, endNodeId) ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                  viaNodeIds,
-                                                  VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId))
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId)
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .asList()
@@ -528,9 +613,11 @@ class NodeSequenceCombinationsCreatorTest {
                 forAll().checkAssert { someNodesToVisitOnStartLink, viaNodeIds, (startNodeId, endNodeId) ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                  viaNodeIds,
-                                                  VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId))
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId)
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -545,9 +632,12 @@ class NodeSequenceCombinationsCreatorTest {
 
                     val nodesToVisitOnEndLink = VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId)
 
-                    val nodesToVisit = VisitNodesOnMultipleLinks(someNodesToVisitOnStartLink,
-                                                                 viaNodeIds,
-                                                                 nodesToVisitOnEndLink)
+                    val nodesToVisit =
+                        VisitNodesOnMultipleLinks(
+                            someNodesToVisitOnStartLink,
+                            viaNodeIds,
+                            nodesToVisitOnEndLink
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -564,19 +654,23 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When visiting nodes of both terminus links bidirectionally")
         inner class WhenVisitingNodesOfBothTerminusLinksBidirectionally {
-
-            private fun forAll() = qt().forAll(discreteNodeIdPair(),
-                                               generateViaNodeIds(allowEmpty = true),
-                                               discreteNodeIdPair())
+            private fun forAll() =
+                qt().forAll(
+                    discreteNodeIdPair(),
+                    generateViaNodeIds(allowEmpty = true),
+                    discreteNodeIdPair()
+                )
 
             @Test
             fun numberOfNodeIdSequencesShouldBeFour() {
                 forAll().checkAssert { (startNodeId1, endNodeId1), viaNodeIds, (startNodeId2, endNodeId2) ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(VisitNodesOfSingleLinkBidirectionally(startNodeId1, endNodeId1),
-                                                  viaNodeIds,
-                                                  VisitNodesOfSingleLinkBidirectionally(startNodeId2, endNodeId2))
+                        VisitNodesOnMultipleLinks(
+                            VisitNodesOfSingleLinkBidirectionally(startNodeId1, endNodeId1),
+                            viaNodeIds,
+                            VisitNodesOfSingleLinkBidirectionally(startNodeId2, endNodeId2)
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .asList()
@@ -589,9 +683,11 @@ class NodeSequenceCombinationsCreatorTest {
                 forAll().checkAssert { (startNodeId1, endNodeId1), viaNodeIds, (startNodeId2, endNodeId2) ->
 
                     val nodesToVisit =
-                        VisitNodesOnMultipleLinks(VisitNodesOfSingleLinkBidirectionally(startNodeId1, endNodeId1),
-                                                  viaNodeIds,
-                                                  VisitNodesOfSingleLinkBidirectionally(startNodeId2, endNodeId2))
+                        VisitNodesOnMultipleLinks(
+                            VisitNodesOfSingleLinkBidirectionally(startNodeId1, endNodeId1),
+                            viaNodeIds,
+                            VisitNodesOfSingleLinkBidirectionally(startNodeId2, endNodeId2)
+                        )
 
                     assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                         .allMatch { nodeIdSeq ->
@@ -604,36 +700,45 @@ class NodeSequenceCombinationsCreatorTest {
         @Nested
         @DisplayName("When terminus links having discrete endpoints are unconnected")
         inner class WhenTerminusLinksHavingDiscreteEndpointsAreUnconnected {
-
             @Test
             fun alternativesShouldContainAtLeastFourNodeIds() {
-                fun createVisitedNodesOnLink(firstNodeId: InfrastructureNodeId,
-                                             secondNodeId: InfrastructureNodeId,
-                                             bidirectional: Boolean)
-                    : VisitedNodesOnLink {
-
-                    return if (bidirectional)
+                fun createVisitedNodesOnLink(
+                    firstNodeId: InfrastructureNodeId,
+                    secondNodeId: InfrastructureNodeId,
+                    bidirectional: Boolean
+                ): VisitedNodesOnLink =
+                    if (bidirectional) {
                         VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
-                    else
+                    } else {
                         VisitNodesOfSingleLinkUnidirectionally(firstNodeId, secondNodeId)
-                }
-
-                val genTerminusLinkPair: Gen<Pair<VisitedNodesOnLink, VisitedNodesOnLink>> =
-                    discreteNodeIdQuadruple().zip(booleans(),
-                                                  booleans()) { (nodeId1, nodeId2, nodeId3, nodeId4),
-                                                                isStartLinkBidirectional,
-                                                                isEndLinkBidirectional ->
-
-                        Pair(createVisitedNodesOnLink(nodeId1, nodeId2, isStartLinkBidirectional),
-                             createVisitedNodesOnLink(nodeId3, nodeId4, isEndLinkBidirectional))
                     }
 
-                qt().forAll(genTerminusLinkPair, generateViaNodeIds(allowEmpty = true))
+                val genTerminusLinkPair: Gen<Pair<VisitedNodesOnLink, VisitedNodesOnLink>> =
+                    discreteNodeIdQuadruple().zip(
+                        booleans(),
+                        booleans()
+                    ) {
+                            (nodeId1, nodeId2, nodeId3, nodeId4),
+                            isStartLinkBidirectional,
+                            isEndLinkBidirectional
+                        ->
+
+                        Pair(
+                            createVisitedNodesOnLink(nodeId1, nodeId2, isStartLinkBidirectional),
+                            createVisitedNodesOnLink(nodeId3, nodeId4, isEndLinkBidirectional)
+                        )
+                    }
+
+                qt()
+                    .forAll(genTerminusLinkPair, generateViaNodeIds(allowEmpty = true))
                     .checkAssert { (nodesToVisitOnStartLink, nodesToVisitOnendLink), viaNodeIds ->
 
-                        val nodesToVisit = VisitNodesOnMultipleLinks(nodesToVisitOnStartLink,
-                                                                     viaNodeIds,
-                                                                     nodesToVisitOnendLink)
+                        val nodesToVisit =
+                            VisitNodesOnMultipleLinks(
+                                nodesToVisitOnStartLink,
+                                viaNodeIds,
+                                nodesToVisitOnendLink
+                            )
 
                         assertThat(NodeSequenceCombinationsCreator.create(nodesToVisit))
                             .allMatch { nodeIdSeq ->
@@ -645,38 +750,45 @@ class NodeSequenceCombinationsCreatorTest {
     }
 
     companion object {
-
         private val GENERATE_VISITED_NODES_ON_LINK_KCLASS: Gen<KClass<out VisitedNodesOnLink>> =
-            pick(listOf(VisitSingleNode::class,
-                        VisitNodesOfSingleLinkUnidirectionally::class,
-                        VisitNodesOfSingleLinkBidirectionally::class))
+            pick(
+                listOf(
+                    VisitSingleNode::class,
+                    VisitNodesOfSingleLinkUnidirectionally::class,
+                    VisitNodesOfSingleLinkBidirectionally::class
+                )
+            )
 
-        fun generateVisitedNodesOnLink(): Gen<VisitedNodesOnLink> {
-            return GENERATE_VISITED_NODES_ON_LINK_KCLASS.flatMap { className ->
+        fun generateVisitedNodesOnLink(): Gen<VisitedNodesOnLink> =
+            GENERATE_VISITED_NODES_ON_LINK_KCLASS.flatMap { className ->
                 when (className) {
                     VisitSingleNode::class -> infrastructureNodeId().map(::VisitSingleNode)
-                    else -> discreteNodeIdPair()
-                        .map { (firstNodeId, secondNodeId) ->
+                    else ->
+                        discreteNodeIdPair()
+                            .map { (firstNodeId, secondNodeId) ->
 
-                            if (className == VisitNodesOfSingleLinkUnidirectionally::class)
-                                VisitNodesOfSingleLinkUnidirectionally(firstNodeId, secondNodeId)
-                            else
-                                VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
-                        }
+                                if (className == VisitNodesOfSingleLinkUnidirectionally::class) {
+                                    VisitNodesOfSingleLinkUnidirectionally(firstNodeId, secondNodeId)
+                                } else {
+                                    VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
+                                }
+                            }
                 }
             }
-        }
 
-        fun generateViaNodeIds(allowEmpty: Boolean, excludedNodeIds: Set<InfrastructureNodeId> = emptySet())
-            : Gen<List<InfrastructureNodeId>> {
-
+        fun generateViaNodeIds(
+            allowEmpty: Boolean,
+            excludedNodeIds: Set<InfrastructureNodeId> = emptySet()
+        ): Gen<List<InfrastructureNodeId>> {
             val minNumberOfNodes: Int = if (allowEmpty) 0 else 1
 
-            val genNodeId: Gen<InfrastructureNodeId> = if (excludedNodeIds.isEmpty())
-                infrastructureNodeId()
-            else
-                Retry(infrastructureNodeId()) { nodeId ->
-                    nodeId !in excludedNodeIds
+            val genNodeId: Gen<InfrastructureNodeId> =
+                if (excludedNodeIds.isEmpty()) {
+                    infrastructureNodeId()
+                } else {
+                    Retry(infrastructureNodeId()) { nodeId ->
+                        nodeId !in excludedNodeIds
+                    }
                 }
 
             return integers()

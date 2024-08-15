@@ -1,7 +1,6 @@
 package fi.hsl.jore4.mapmatching.repository.routing
 
 object PgRoutingEdgeQueries {
-
     private const val UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL = "''' || ? || '''"
 
     /**
@@ -49,10 +48,10 @@ object PgRoutingEdgeQueries {
      *
      * @return an SQL query enclosed in quotes as [java.lang.String]
      */
-    fun getVehicleTypeAndBufferAreaConstrainedLinksQuery(numberOfTerminusLinkIds: Int,
-                                                         numberOfTerminusNodeIds: Int)
-        : String {
-
+    fun getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+        numberOfTerminusLinkIds: Int,
+        numberOfTerminusNodeIds: Int
+    ): String {
         require(numberOfTerminusLinkIds >= 0) { "numberOfTerminusLinkIds must be non-negative" }
         require(numberOfTerminusNodeIds >= 0) { "numberOfTerminusNodeIds must be non-negative" }
 
@@ -61,9 +60,11 @@ object PgRoutingEdgeQueries {
         // actual values through PreparedStatement variable binding.
 
         fun getPlaceholdersConcatenated(numberOfPlaceholders: Int): String {
-            return CharArray(numberOfPlaceholders) { '?' }.joinToString(prefix = "''' || ",
-                                                                        separator = " || ''',''' || ",
-                                                                        postfix = " || '''")
+            return CharArray(numberOfPlaceholders) { '?' }.joinToString(
+                prefix = "''' || ",
+                separator = " || ''',''' || ",
+                postfix = " || '''"
+            )
         }
 
         val additionalTerminusPredicates: MutableList<String> = ArrayList()
@@ -80,19 +81,26 @@ object PgRoutingEdgeQueries {
         }
 
         // Buffer area restriction is always applied.
-        additionalTerminusPredicates.add(getBufferAreaRestriction(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
-                                                                  UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL))
+        additionalTerminusPredicates.add(
+            getBufferAreaRestriction(
+                UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL,
+                UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL
+            )
+        )
 
         val queryStart: String = getVehicleTypeConstrainedLinksQueryInternal(UNNAMED_BIND_VAR_INSIDE_QUOTED_SQL)
 
-        val queryEnd: String = when (additionalTerminusPredicates.size) {
+        val queryEnd: String =
+            when (additionalTerminusPredicates.size) {
+                1 -> "\n  AND " + additionalTerminusPredicates.first()
 
-            1 -> "\n  AND " + additionalTerminusPredicates.first()
-
-            else -> additionalTerminusPredicates.joinToString(prefix = "\n  AND (\n    ",
-                                                              separator = "\n    OR ",
-                                                              postfix = "\n  )")
-        }
+                else ->
+                    additionalTerminusPredicates.joinToString(
+                        prefix = "\n  AND (\n    ",
+                        separator = "\n    OR ",
+                        postfix = "\n  )"
+                    )
+            }
 
         return "'$queryStart$queryEnd'"
     }
@@ -121,12 +129,13 @@ object PgRoutingEdgeQueries {
      *
      * @return an SQL query enclosed in quotes as [java.lang.String]
      */
-    fun getVehicleTypeAndBufferAreaConstrainedLinksQuery(vehicleTypeVariableName: String,
-                                                         terminusLinkIdsVariableName: String? = null,
-                                                         terminusNodeIdsVariableName: String? = null,
-                                                         lineStringEwkbVariableName: String,
-                                                         bufferRadiusVariableName: String): String {
-
+    fun getVehicleTypeAndBufferAreaConstrainedLinksQuery(
+        vehicleTypeVariableName: String,
+        terminusLinkIdsVariableName: String? = null,
+        terminusNodeIdsVariableName: String? = null,
+        lineStringEwkbVariableName: String,
+        bufferRadiusVariableName: String
+    ): String {
         // Using SQL string concatenation in order to be able to inject a bind
         // variable placeholders into the query. This way we enable assigning the
         // actual values through PreparedStatement variable binding.
@@ -139,10 +148,14 @@ object PgRoutingEdgeQueries {
         val additionalTerminusPredicates: MutableList<String> = ArrayList()
 
         if (terminusLinkIdsVariableName != null) {
-            additionalTerminusPredicates.add("l.infrastructure_link_id = ANY((${wrapBindVariable(terminusLinkIdsVariableName)})::bigint[])")
+            additionalTerminusPredicates.add(
+                "l.infrastructure_link_id = ANY((${wrapBindVariable(terminusLinkIdsVariableName)})::bigint[])"
+            )
         }
         if (terminusNodeIdsVariableName != null) {
-            additionalTerminusPredicates.add("(${wrapBindVariable(terminusNodeIdsVariableName)})::bigint[] && ARRAY[l.start_node_id, l.end_node_id]")
+            additionalTerminusPredicates.add(
+                "(${wrapBindVariable(terminusNodeIdsVariableName)})::bigint[] && ARRAY[l.start_node_id, l.end_node_id]"
+            )
         }
 
         // Buffer area restriction is always applied.
@@ -150,19 +163,23 @@ object PgRoutingEdgeQueries {
 
         val queryStart: String = getVehicleTypeConstrainedLinksQueryInternal(wrappedVehicleType)
 
-        val queryEnd: String = when (additionalTerminusPredicates.size) {
+        val queryEnd: String =
+            when (additionalTerminusPredicates.size) {
+                1 -> "\n  AND " + additionalTerminusPredicates.first()
 
-            1 -> "\n  AND " + additionalTerminusPredicates.first()
-
-            else -> additionalTerminusPredicates.joinToString(prefix = "\n  AND (\n    ",
-                                                              separator = "\n    OR ",
-                                                              postfix = "\n  )")
-        }
+                else ->
+                    additionalTerminusPredicates.joinToString(
+                        prefix = "\n  AND (\n    ",
+                        separator = "\n    OR ",
+                        postfix = "\n  )"
+                    )
+            }
 
         return "$$ $queryStart$queryEnd$$"
     }
 
-    private fun getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter: String): String = """
+    private fun getVehicleTypeConstrainedLinksQueryInternal(vehicleTypeParameter: String): String =
+        """
         SELECT l.infrastructure_link_id AS id,
           l.start_node_id AS source,
           l.end_node_id AS target,
@@ -171,8 +188,12 @@ object PgRoutingEdgeQueries {
         FROM routing.infrastructure_link l
         INNER JOIN routing.infrastructure_link_safely_traversed_by_vehicle_type s
           ON s.infrastructure_link_id = l.infrastructure_link_id
-        WHERE s.vehicle_type = $vehicleTypeParameter""".trimIndent()
+        WHERE s.vehicle_type = $vehicleTypeParameter
+        """.trimIndent()
 
-    private fun getBufferAreaRestriction(lineStringEwkbParameter: String, bufferRadiusParameter: String): String =
+    private fun getBufferAreaRestriction(
+        lineStringEwkbParameter: String,
+        bufferRadiusParameter: String
+    ): String =
         "ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB($lineStringEwkbParameter), 3067), $bufferRadiusParameter), l.geom)"
 }

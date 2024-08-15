@@ -9,7 +9,6 @@ import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate.longRange
 
 object InfrastructureNodeIdGenerator {
-
     private val ID_VALUE: Gen<Long> = longRange(10_000L, 99_999L)
 
     fun infrastructureNodeId(): Gen<InfrastructureNodeId> = ID_VALUE.map(::InfrastructureNodeId)
@@ -19,18 +18,26 @@ object InfrastructureNodeIdGenerator {
         discretePair(infrastructureNodeId())
 
     // pair of node IDs
-    fun nodeIdPair(discrete: Boolean): Gen<Pair<InfrastructureNodeId, InfrastructureNodeId>> = if (discrete)
-        discreteNodeIdPair()
-    else
-        infrastructureNodeId().map { id -> id to id }
+    fun nodeIdPair(discrete: Boolean): Gen<Pair<InfrastructureNodeId, InfrastructureNodeId>> =
+        if (discrete) {
+            discreteNodeIdPair()
+        } else {
+            infrastructureNodeId().map { id -> id to id }
+        }
 
     // triple of discrete node IDs
     fun discreteNodeIdTriple(): Gen<Triple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>> =
         discreteTriple(infrastructureNodeId())
 
     // quadruple of discrete node IDs
-    fun discreteNodeIdQuadruple()
-        : Gen<Quadruple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>> =
+    fun discreteNodeIdQuadruple(): Gen<
+        Quadruple<
+            InfrastructureNodeId,
+            InfrastructureNodeId,
+            InfrastructureNodeId,
+            InfrastructureNodeId
+        >
+    > =
         discreteQuadruple(infrastructureNodeId())
 
     /**
@@ -42,14 +49,14 @@ object InfrastructureNodeIdGenerator {
      *
      * @return [Quadruple] containing four node identifiers.
      */
-    fun nodeIdQuadrupleForSingleLink(discreteNodes: Boolean)
-        : Gen<Quadruple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>> {
-
-        return if (discreteNodes)
+    fun nodeIdQuadrupleForSingleLink(
+        discreteNodes: Boolean
+    ): Gen<Quadruple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>> =
+        if (discreteNodes) {
             discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id2, id1, id2) }
-        else
+        } else {
             infrastructureNodeId().map { id -> Quadruple(id, id, id, id) }
-    }
+        }
 
     /**
      * Generate quadruple of node IDs for two infrastructure links.
@@ -63,31 +70,34 @@ object InfrastructureNodeIdGenerator {
      *
      * @return [Quadruple] containing four node identifiers.
      */
-    fun nodeIdQuadrupleForTwoLinks(discreteNodesOnFirstLink: Boolean,
-                                   discreteNodesOnSecondLink: Boolean,
-                                   isCommonNode: Boolean)
-        : Gen<Quadruple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>> {
-
-        return if (discreteNodesOnFirstLink && discreteNodesOnSecondLink) {
-            if (isCommonNode)
+    fun nodeIdQuadrupleForTwoLinks(
+        discreteNodesOnFirstLink: Boolean,
+        discreteNodesOnSecondLink: Boolean,
+        isCommonNode: Boolean
+    ): Gen<Quadruple<InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId, InfrastructureNodeId>> =
+        if (discreteNodesOnFirstLink && discreteNodesOnSecondLink) {
+            if (isCommonNode) {
                 discreteNodeIdTriple().map { (id1, id2, id3) -> Quadruple(id1, id2, id2, id3) }
-            else
+            } else {
                 discreteNodeIdQuadruple()
+            }
         } else if (discreteNodesOnFirstLink) {
-            if (isCommonNode)
+            if (isCommonNode) {
                 discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id2, id2, id2) }
-            else
+            } else {
                 discreteNodeIdTriple().map { (id1, id2, id3) -> Quadruple(id1, id2, id3, id3) }
+            }
         } else if (discreteNodesOnSecondLink) {
-            if (isCommonNode)
+            if (isCommonNode) {
                 discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id1, id1, id2) }
-            else
+            } else {
                 discreteNodeIdTriple().map { (id1, id2, id3) -> Quadruple(id1, id1, id2, id3) }
+            }
         } else {
-            if (isCommonNode)
+            if (isCommonNode) {
                 infrastructureNodeId().map { id -> Quadruple(id, id, id, id) }
-            else
+            } else {
                 discreteNodeIdPair().map { (id1, id2) -> Quadruple(id1, id1, id2, id2) }
+            }
         }
-    }
 }

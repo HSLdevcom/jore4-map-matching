@@ -17,16 +17,18 @@ import org.quicktheories.QuickTheory.qt
 
 @DisplayName("Test SnappedPointOnLinkTest class")
 class SnappedPointOnLinkTest {
-
     @Nested
     @DisplayName("isSnappedToStartNode")
     inner class IsSnappedToStartNode {
-
         @Test
         @DisplayName("When projected closest point is within snap-to-endpoint distance to link start")
         fun whenClosestPointWithinSnapDistanceToLinkStart() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             AT_START))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    AT_START
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToStartNode).isEqualTo(true)
@@ -36,8 +38,12 @@ class SnappedPointOnLinkTest {
         @Test
         @DisplayName("When projected closest point is outside of snap-to-endpoint distance to link start")
         fun whenClosestPointOutsideSnapDistanceToLinkStart() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             NOT_AT_START))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    NOT_AT_START
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToStartNode).isEqualTo(false)
@@ -48,12 +54,15 @@ class SnappedPointOnLinkTest {
     @Nested
     @DisplayName("isSnappedToEndNode")
     inner class IsSnappedToEndNode {
-
         @Test
         @DisplayName("When projected closest point is within snap-to-endpoint distance to link end")
         fun whenClosestPointWithinSnapDistanceToLinkEnd() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             AT_END))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    AT_END
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToEndNode).isEqualTo(true)
@@ -63,8 +72,12 @@ class SnappedPointOnLinkTest {
         @Test
         @DisplayName("When projected closest point is outside of snap-to-endpoint distance to link end")
         fun whenClosestPointOutsideSnapDistanceToLinkEnd() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             NOT_AT_END))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    NOT_AT_END
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToEndNode).isEqualTo(false)
@@ -75,12 +88,15 @@ class SnappedPointOnLinkTest {
     @Nested
     @DisplayName("getSnappedNodeOrNull")
     inner class GetSnappedNodeOrNull {
-
         @Test
         @DisplayName("When projected closest point is within snap-to-endpoint distance to link start")
         fun whenClosestPointWithinSnapDistanceToLinkStart() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             AT_START))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    AT_START
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.getSnappedNodeOrNull()).isEqualTo(pointOnLink.startNodeId)
@@ -90,8 +106,12 @@ class SnappedPointOnLinkTest {
         @Test
         @DisplayName("When projected closest point is within snap-to-endpoint distance to link end")
         fun whenClosestPointWithinSnapDistanceToLinkEnd() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             AT_END))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    AT_END
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.getSnappedNodeOrNull()).isEqualTo(pointOnLink.endNodeId)
@@ -101,8 +121,12 @@ class SnappedPointOnLinkTest {
         @Test
         @DisplayName("When projected closest point is outside a snap-to-endpoint distance from link endpoints")
         fun whenClosestPointOutsideOfSnapDistanceFromLinkEndpoints() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             BETWEEN_ENDPOINTS_EXCLUSIVE))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    BETWEEN_ENDPOINTS_EXCLUSIVE
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.getSnappedNodeOrNull()).isNull()
@@ -113,15 +137,20 @@ class SnappedPointOnLinkTest {
     @Nested
     @DisplayName("withSnappedToTerminusNode")
     inner class WithSnappedToTerminusNode {
-
-        private fun divideLinkLength(pointOnLink: SnappedPointOnLink, divisor: Int): Double =
-            pointOnLink.infrastructureLinkLength / divisor
+        private fun divideLinkLength(
+            pointOnLink: SnappedPointOnLink,
+            divisor: Int
+        ): Double = pointOnLink.infrastructureLinkLength / divisor
 
         @Test
         @DisplayName("When closest point is already projected to link start")
         fun whenClosestPointAlreadyAtLinkStart() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             AT_START))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    AT_START
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToStartNode).isEqualTo(true)
@@ -138,8 +167,12 @@ class SnappedPointOnLinkTest {
         @Test
         @DisplayName("When closest point is already projected to link end")
         fun whenClosestPointAlreadyAtLinkEnd() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             AT_END))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    AT_END
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToStartNode).isEqualTo(false)
@@ -156,8 +189,12 @@ class SnappedPointOnLinkTest {
         @Test
         @DisplayName("When closest point is not already projected to start node but expected to be snapped to it")
         fun whenClosestPointIsNotAlreadyProjectedToStartNodeButExpectedToBeSnappedToIt() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             CLOSE_TO_START))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    CLOSE_TO_START
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToStartNode).isEqualTo(false)
@@ -174,8 +211,12 @@ class SnappedPointOnLinkTest {
         @Test
         @DisplayName("When closest point is not already projected to end node but expected to be snapped to it")
         fun whenClosestPointIsNotAlreadyProjectedToEndNodeButExpectedToBeSnappedToIt() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             CLOSE_TO_END))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    CLOSE_TO_END
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToStartNode).isEqualTo(false)
@@ -192,8 +233,12 @@ class SnappedPointOnLinkTest {
         @Test
         @DisplayName("When closest point is not projected to terminus nodes and not expected to be snapped to them")
         fun whenClosestPointIsNotProjectedToTerminusNodesAndNotExpectedToBeSnappedToThem() {
-            qt().forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = true,
-                                                             AT_MIDPOINT))
+            qt().forAll(
+                SnappedPointOnLinkGenerator.snapLink(
+                    hasDiscreteEndpoints = true,
+                    AT_MIDPOINT
+                )
+            )
                 .checkAssert { pointOnLink: SnappedPointOnLink ->
 
                     assertThat(pointOnLink.isSnappedToStartNode).isEqualTo(false)
@@ -211,7 +256,6 @@ class SnappedPointOnLinkTest {
     @Nested
     @DisplayName("isOnLinkTerminatedByNode")
     inner class IsOnLinkTerminatedByNode {
-
         @Test
         @DisplayName("Should return true when given ID of start node")
         fun shouldReturnTrueForStartNodeId() {
@@ -238,8 +282,10 @@ class SnappedPointOnLinkTest {
             qt().forAll(SnappedPointOnLinkGenerator.snapTwoUnconnectedLinks())
                 .checkAssert { (firstPointOnLink: SnappedPointOnLink, secondPointOnLink: SnappedPointOnLink) ->
 
-                    assertThat(firstPointOnLink.isOnLinkTerminatedByNode(secondPointOnLink.startNodeId)
-                                   || firstPointOnLink.isOnLinkTerminatedByNode(secondPointOnLink.endNodeId))
+                    assertThat(
+                        firstPointOnLink.isOnLinkTerminatedByNode(secondPointOnLink.startNodeId) ||
+                            firstPointOnLink.isOnLinkTerminatedByNode(secondPointOnLink.endNodeId)
+                    )
                         .isEqualTo(false)
                 }
         }
@@ -248,7 +294,6 @@ class SnappedPointOnLinkTest {
     @Nested
     @DisplayName("isOnLinkWithDiscreteNodes")
     inner class IsOnLinkWithDiscreteNodes {
-
         @Test
         @DisplayName("When endpoint nodes of infrastructure links are discrete")
         fun whenEndpointNodesAreDiscrete() {

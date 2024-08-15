@@ -37,20 +37,19 @@ import org.quicktheories.generators.Generate.oneOf
 
 @Suppress("MemberVisibilityCanBePrivate")
 class VisitedNodesResolverTest {
-
     @Nested
     @DisplayName("When start link is same as end link")
     inner class WhenStartLinksIsSameAsEndLink {
-
         @Nested
         @DisplayName("When endpoints of single link are non-discrete (link starts from and ends at same node)")
         inner class WhenEndpointsOfLinkAreNonDiscrete {
-
-            fun forInputs(viaNodeGenerationScheme: ViaNodeGenerationScheme)
-                : TheoryBuilder<VisitedNodesResolverParams> {
-
-                return forAll(withSingleLink(TerminusLinkProperties.from(NON_DISCRETE_NODES),
-                                             viaNodeGenerationScheme))
+            fun forInputs(viaNodeGenerationScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> {
+                return forAll(
+                    withSingleLink(
+                        TerminusLinkProperties.from(NON_DISCRETE_NODES),
+                        viaNodeGenerationScheme
+                    )
+                )
             }
 
             @Test
@@ -60,7 +59,6 @@ class VisitedNodesResolverTest {
 
                         assertThat(createOutput(input))
                             .isInstanceOfSatisfying(VisitSingleNode::class.java) {
-
                                 assertThat(it.nodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                             }
                     }
@@ -73,7 +71,6 @@ class VisitedNodesResolverTest {
 
                         assertThat(createOutput(input))
                             .isInstanceOfSatisfying(VisitSingleNode::class.java) {
-
                                 assertThat(it.nodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                             }
                     }
@@ -93,33 +90,35 @@ class VisitedNodesResolverTest {
         @Nested
         @DisplayName("When endpoints of single link are discrete")
         inner class WhenEndpointsOfSingleLinkAreDiscrete {
-
-            fun withSingleLink(linkDirection: LinkDirection,
-                               snapPointLocation: SnapPointLocation,
-                               viaNodeScheme: ViaNodeGenerationScheme)
-                : Gen<VisitedNodesResolverParams> {
-
-                return withSingleLink(TerminusLinkProperties(DISCRETE_NODES, linkDirection, snapPointLocation),
-                                      viaNodeScheme)
+            fun withSingleLink(
+                linkDirection: LinkDirection,
+                snapPointLocation: SnapPointLocation,
+                viaNodeScheme: ViaNodeGenerationScheme
+            ): Gen<VisitedNodesResolverParams> {
+                return withSingleLink(
+                    TerminusLinkProperties(DISCRETE_NODES, linkDirection, snapPointLocation),
+                    viaNodeScheme
+                )
             }
 
             @Nested
             @DisplayName("When single link is bidirectional")
             inner class WhenSingleLinkIsBidirectional {
-
-                fun forInputs(snapPointLocation: SnapPointLocation, viaNodeScheme: ViaNodeGenerationScheme)
-                    : TheoryBuilder<VisitedNodesResolverParams> {
-
+                fun forInputs(
+                    snapPointLocation: SnapPointLocation,
+                    viaNodeScheme: ViaNodeGenerationScheme
+                ): TheoryBuilder<VisitedNodesResolverParams> {
                     return forAll(withSingleLink(BIDIRECTIONAL, snapPointLocation, viaNodeScheme))
                 }
 
                 @Nested
                 @DisplayName("When first snap point is closer to link start")
                 inner class WhenFirstSnapPointIsCloserToLinkStart {
-
-                    fun forInputs(viaNodeScheme: ViaNodeGenerationScheme)
-                        : TheoryBuilder<VisitedNodesResolverParams> = forInputs(AT_OR_CLOSE_TO_START,
-                                                                                viaNodeScheme)
+                    fun forInputs(viaNodeScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> =
+                        forInputs(
+                            AT_OR_CLOSE_TO_START,
+                            viaNodeScheme
+                        )
 
                     @Test
                     fun whenNoViaNodesAreGiven() {
@@ -128,7 +127,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                         assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                         assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                     }
@@ -142,7 +140,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                         assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                         assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                     }
@@ -163,10 +160,11 @@ class VisitedNodesResolverTest {
                 @Nested
                 @DisplayName("When first snap point is closer to link end")
                 inner class WhenFirstSnapPointIsCloserToLinkEnd {
-
-                    fun forInputs(viaNodeScheme: ViaNodeGenerationScheme)
-                        : TheoryBuilder<VisitedNodesResolverParams> = forInputs(AT_OR_CLOSE_TO_END,
-                                                                                viaNodeScheme)
+                    fun forInputs(viaNodeScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> =
+                        forInputs(
+                            AT_OR_CLOSE_TO_END,
+                            viaNodeScheme
+                        )
 
                     @Test
                     fun whenNoViaNodesAreGiven() {
@@ -175,7 +173,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                         assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                         assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
@@ -189,7 +186,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                         assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                         assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
@@ -210,10 +206,11 @@ class VisitedNodesResolverTest {
                 @Nested
                 @DisplayName("When first snap point is equal to second snap point")
                 inner class WhenFirstSnapPointIsEqualToSecondSnapPoint {
-
                     fun forInputs(viaNodeScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> =
-                        forInputs(AT_MIDPOINT,
-                                  viaNodeScheme)
+                        forInputs(
+                            AT_MIDPOINT,
+                            viaNodeScheme
+                        )
 
                     @Test
                     fun whenNoViaNodesAreGiven() {
@@ -222,7 +219,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitSingleNode::class.java) {
-
                                         assertThat(it.nodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
                             }
@@ -235,7 +231,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitSingleNode::class.java) {
-
                                         assertThat(it.nodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
                             }
@@ -256,21 +251,23 @@ class VisitedNodesResolverTest {
             @Nested
             @DisplayName("When single link is one-way and against digitised direction")
             inner class WhenSingleLinkIsOneWayAndAgainstDigitisedDirection {
-
                 @Nested
                 @DisplayName("When first snap point is NOT closer to link start")
                 inner class WhenFirstSnapPointIsNotCloserToLinkStart {
-
-                    fun withSingleLink(snapPointLocation: SnapPointLocation,
-                                       viaNodeScheme: ViaNodeGenerationScheme)
-                        : Gen<VisitedNodesResolverParams> {
-
+                    fun withSingleLink(
+                        snapPointLocation: SnapPointLocation,
+                        viaNodeScheme: ViaNodeGenerationScheme
+                    ): Gen<VisitedNodesResolverParams> {
                         return withSingleLink(ONE_WAY_AGAINST_DIGITISED_DIRECTION, snapPointLocation, viaNodeScheme)
                     }
 
                     fun forInputs(viaNodeScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> {
-                        return forAll(oneOf(withSingleLink(AT_OR_CLOSE_TO_END, viaNodeScheme),
-                                            withSingleLink(AT_MIDPOINT, viaNodeScheme)))
+                        return forAll(
+                            oneOf(
+                                withSingleLink(AT_OR_CLOSE_TO_END, viaNodeScheme),
+                                withSingleLink(AT_MIDPOINT, viaNodeScheme)
+                            )
+                        )
                     }
 
                     @Test
@@ -280,7 +277,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                         assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                         assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
@@ -294,7 +290,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                         assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                         assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                     }
@@ -315,17 +310,19 @@ class VisitedNodesResolverTest {
                 @Nested
                 @DisplayName("When first snap point is closer to link start")
                 inner class WhenFirstSnapPointIsCloserToLinkStart {
-
                     fun forInputs(viaNodeScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> {
-                        return forAll(withSingleLink(ONE_WAY_AGAINST_DIGITISED_DIRECTION,
-                                                     AT_OR_CLOSE_TO_START,
-                                                     viaNodeScheme))
+                        return forAll(
+                            withSingleLink(
+                                ONE_WAY_AGAINST_DIGITISED_DIRECTION,
+                                AT_OR_CLOSE_TO_START,
+                                viaNodeScheme
+                            )
+                        )
                     }
 
                     @Nested
                     @DisplayName("When no via nodes are given")
                     inner class WhenNoViaNodesAreGiven {
-
                         fun forInputs(): TheoryBuilder<VisitedNodesResolverParams> = forInputs(VIA_NODES_EMPTY)
 
                         @Test
@@ -334,7 +331,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                         assertThat(it.viaNodeIds)
                                             .asList()
                                             .isEmpty()
@@ -348,10 +344,11 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                         val expectedNodesToVisit =
-                                            VisitNodesOfSingleLinkUnidirectionally(input.pointOnStartLink.endNodeId,
-                                                                                   input.pointOnStartLink.startNodeId)
+                                            VisitNodesOfSingleLinkUnidirectionally(
+                                                input.pointOnStartLink.endNodeId,
+                                                input.pointOnStartLink.startNodeId
+                                            )
 
                                         assertThat(it.nodesToVisitOnStartLink).isEqualTo(expectedNodesToVisit)
                                         assertThat(it.nodesToVisitOnEndLink).isEqualTo(expectedNodesToVisit)
@@ -363,7 +360,6 @@ class VisitedNodesResolverTest {
                     @Nested
                     @DisplayName("When via node IDs are fully redundant")
                     inner class WhenViaNodeIdsAreFullyRedundant {
-
                         fun forInputs(): TheoryBuilder<VisitedNodesResolverParams> =
                             forInputs(VIA_NODES_FULLY_REDUNDANT)
 
@@ -373,7 +369,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                         assertThat(it.viaNodeIds)
                                             .asList()
                                             .isEmpty()
@@ -387,10 +382,11 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                         val expectedNodesToVisit =
-                                            VisitNodesOfSingleLinkUnidirectionally(input.pointOnStartLink.endNodeId,
-                                                                                   input.pointOnStartLink.startNodeId)
+                                            VisitNodesOfSingleLinkUnidirectionally(
+                                                input.pointOnStartLink.endNodeId,
+                                                input.pointOnStartLink.startNodeId
+                                            )
 
                                         assertThat(it.nodesToVisitOnStartLink).isEqualTo(expectedNodesToVisit)
                                         assertThat(it.nodesToVisitOnEndLink).isEqualTo(expectedNodesToVisit)
@@ -402,7 +398,6 @@ class VisitedNodesResolverTest {
                     @Nested
                     @DisplayName("When via node IDs are not redundant")
                     inner class WhenViaNodeIdsAreNotRedundant {
-
                         @Test
                         fun viaNodeIdsShouldNotBeEmpty() {
                             forInputs(VIA_NODES_NON_REDUNDANT)
@@ -410,7 +405,6 @@ class VisitedNodesResolverTest {
 
                                     assertThat(createOutput(input))
                                         .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                             assertThat(it.viaNodeIds)
                                                 .asList()
                                                 .isNotEmpty()
@@ -424,21 +418,23 @@ class VisitedNodesResolverTest {
             @Nested
             @DisplayName("When single link is one-way and along digitised direction")
             inner class WhenSingleLinkIsOneWayAndAlongDigitisedDirection {
-
                 @Nested
                 @DisplayName("When first snap point is NOT closer to link end")
                 inner class WhenFirstSnapPointIsNotCloserToLinkEnd {
-
-                    fun withSingleLink(snapPointLocation: SnapPointLocation,
-                                       viaNodeScheme: ViaNodeGenerationScheme)
-                        : Gen<VisitedNodesResolverParams> {
-
+                    fun withSingleLink(
+                        snapPointLocation: SnapPointLocation,
+                        viaNodeScheme: ViaNodeGenerationScheme
+                    ): Gen<VisitedNodesResolverParams> {
                         return withSingleLink(ONE_WAY_ALONG_DIGITISED_DIRECTION, snapPointLocation, viaNodeScheme)
                     }
 
                     fun forInputs(viaNodeScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> {
-                        return forAll(oneOf(withSingleLink(AT_OR_CLOSE_TO_START, viaNodeScheme),
-                                            withSingleLink(AT_MIDPOINT, viaNodeScheme)))
+                        return forAll(
+                            oneOf(
+                                withSingleLink(AT_OR_CLOSE_TO_START, viaNodeScheme),
+                                withSingleLink(AT_MIDPOINT, viaNodeScheme)
+                            )
+                        )
                     }
 
                     @Test
@@ -448,7 +444,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                         assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                         assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                     }
@@ -462,7 +457,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                         assertThat(it.startNodeId).isEqualTo(input.pointOnStartLink.startNodeId)
                                         assertThat(it.endNodeId).isEqualTo(input.pointOnStartLink.endNodeId)
                                     }
@@ -483,17 +477,19 @@ class VisitedNodesResolverTest {
                 @Nested
                 @DisplayName("When first snap point is closer to link end")
                 inner class WhenFirstSnapPointIsCloserToLinkEnd {
-
                     fun forInputs(viaNodeScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> {
-                        return forAll(withSingleLink(ONE_WAY_ALONG_DIGITISED_DIRECTION,
-                                                     AT_OR_CLOSE_TO_END,
-                                                     viaNodeScheme))
+                        return forAll(
+                            withSingleLink(
+                                ONE_WAY_ALONG_DIGITISED_DIRECTION,
+                                AT_OR_CLOSE_TO_END,
+                                viaNodeScheme
+                            )
+                        )
                     }
 
                     @Nested
                     @DisplayName("When no via nodes are given")
                     inner class WhenNoViaNodesAreGiven {
-
                         fun forInputs(): TheoryBuilder<VisitedNodesResolverParams> = forInputs(VIA_NODES_EMPTY)
 
                         @Test
@@ -502,7 +498,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                         assertThat(it.viaNodeIds)
                                             .asList()
                                             .isEmpty()
@@ -516,10 +511,11 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                         val expectedNodesToVisit =
-                                            VisitNodesOfSingleLinkUnidirectionally(input.pointOnStartLink.startNodeId,
-                                                                                   input.pointOnStartLink.endNodeId)
+                                            VisitNodesOfSingleLinkUnidirectionally(
+                                                input.pointOnStartLink.startNodeId,
+                                                input.pointOnStartLink.endNodeId
+                                            )
 
                                         assertThat(it.nodesToVisitOnStartLink).isEqualTo(expectedNodesToVisit)
                                         assertThat(it.nodesToVisitOnEndLink).isEqualTo(expectedNodesToVisit)
@@ -531,7 +527,6 @@ class VisitedNodesResolverTest {
                     @Nested
                     @DisplayName("When via node IDs are fully redundant")
                     inner class WhenViaNodeIdsAreFullyRedundant {
-
                         fun forInputs(): TheoryBuilder<VisitedNodesResolverParams> =
                             forInputs(VIA_NODES_FULLY_REDUNDANT)
 
@@ -541,7 +536,6 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                         assertThat(it.viaNodeIds)
                                             .asList()
                                             .isEmpty()
@@ -555,10 +549,11 @@ class VisitedNodesResolverTest {
 
                                 assertThat(createOutput(input))
                                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                         val expectedNodesToVisit =
-                                            VisitNodesOfSingleLinkUnidirectionally(input.pointOnStartLink.startNodeId,
-                                                                                   input.pointOnStartLink.endNodeId)
+                                            VisitNodesOfSingleLinkUnidirectionally(
+                                                input.pointOnStartLink.startNodeId,
+                                                input.pointOnStartLink.endNodeId
+                                            )
 
                                         assertThat(it.nodesToVisitOnStartLink).isEqualTo(expectedNodesToVisit)
                                         assertThat(it.nodesToVisitOnEndLink).isEqualTo(expectedNodesToVisit)
@@ -570,7 +565,6 @@ class VisitedNodesResolverTest {
                     @Nested
                     @DisplayName("When via node IDs are not redundant")
                     inner class WhenViaNodeIdsAreNotRedundant {
-
                         @Test
                         fun viaNodeIdsShouldNotBeEmpty() {
                             forInputs(VIA_NODES_NON_REDUNDANT)
@@ -578,7 +572,6 @@ class VisitedNodesResolverTest {
 
                                     assertThat(createOutput(input))
                                         .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                             assertThat(it.viaNodeIds)
                                                 .asList()
                                                 .isNotEmpty()
@@ -594,11 +587,14 @@ class VisitedNodesResolverTest {
     @Nested
     @DisplayName("When start link is NOT same as end link")
     inner class WhenStartLinksIsNotSameAsEndLink {
-
         @Test
         fun assertTypeOfVisitedNodes() {
-            forAll(createInput(DISCRETE_LINKS,
-                               ViaNodeGenerationScheme.ANY))
+            forAll(
+                createInput(
+                    DISCRETE_LINKS,
+                    ViaNodeGenerationScheme.ANY
+                )
+            )
                 .checkAssert { input: VisitedNodesResolverParams ->
 
                     assertThat(createOutput(input))
@@ -609,10 +605,13 @@ class VisitedNodesResolverTest {
         @Nested
         @DisplayName("Verify via node IDs")
         inner class VerifyViaNodeIds {
-
             fun forInputs(viaNodeScheme: ViaNodeGenerationScheme): TheoryBuilder<VisitedNodesResolverParams> =
-                forAll(createInput(DISCRETE_LINKS,
-                                   viaNodeScheme))
+                forAll(
+                    createInput(
+                        DISCRETE_LINKS,
+                        viaNodeScheme
+                    )
+                )
 
             @Test
             fun whenListOfViaNodeIdsIsEmpty() {
@@ -621,7 +620,6 @@ class VisitedNodesResolverTest {
 
                         assertThat(createOutput(input))
                             .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                 assertThat(it.viaNodeIds)
                                     .asList()
                                     .isEmpty()
@@ -636,7 +634,6 @@ class VisitedNodesResolverTest {
 
                         assertThat(createOutput(input))
                             .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                 assertThat(it.viaNodeIds)
                                     .asList()
                                     .isNotEmpty()
@@ -651,7 +648,6 @@ class VisitedNodesResolverTest {
 
                         assertThat(createOutput(input))
                             .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) {
-
                                 assertThat(it.viaNodeIds)
                                     .asList()
                                     .isNotEmpty()
@@ -663,29 +659,27 @@ class VisitedNodesResolverTest {
         @Nested
         @DisplayName("Verify visited nodes on start link")
         inner class VerifyVisitedNodesOnStartLink {
-
             fun expectVisitSingleNode(input: VisitedNodesResolverParams) {
                 assertThat(createOutput(input))
                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) { visit ->
 
                         assertThat(visit.nodesToVisitOnStartLink)
                             .isInstanceOfSatisfying(VisitSingleNode::class.java) {
-
                                 assertThat(it.nodeId)
                                     .isEqualTo(input.pointOnStartLink.closerNodeId)
                             }
                     }
             }
 
-            fun expectVisitNodesOfSingleLinkUnidirectionally(input: VisitedNodesResolverParams,
-                                                             nodesReversed: Boolean = false) {
-
+            fun expectVisitNodesOfSingleLinkUnidirectionally(
+                input: VisitedNodesResolverParams,
+                nodesReversed: Boolean = false
+            ) {
                 assertThat(createOutput(input))
                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) { visit ->
 
                         assertThat(visit.nodesToVisitOnStartLink)
                             .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                 val pointOnLink: SnappedPointOnLink = input.pointOnStartLink
 
                                 if (nodesReversed) {
@@ -705,7 +699,6 @@ class VisitedNodesResolverTest {
 
                         assertThat(visit.nodesToVisitOnStartLink)
                             .isInstanceOfSatisfying(VisitNodesOfSingleLinkBidirectionally::class.java) {
-
                                 val pointOnLink: SnappedPointOnLink = input.pointOnStartLink
 
                                 assertThat(it.firstNodeId).isEqualTo(pointOnLink.startNodeId)
@@ -716,47 +709,64 @@ class VisitedNodesResolverTest {
 
             @Test
             fun whenStartLinkHasNonDiscreteNodes() {
-                forAll(withStartLink(DISCRETE_LINKS,
-                                     TerminusLinkProperties.NON_DISCRETE_NODES,
-                                     ViaNodeGenerationScheme.ANY))
+                forAll(
+                    withStartLink(
+                        DISCRETE_LINKS,
+                        TerminusLinkProperties.NON_DISCRETE_NODES,
+                        ViaNodeGenerationScheme.ANY
+                    )
+                )
                     .checkAssert { expectVisitSingleNode(it) }
             }
 
             @Nested
             @DisplayName("When start link has discrete nodes")
             inner class WhenStartLinkHasDiscreteNodes {
-
                 @Test
                 fun whenSnappedToStartNodeOfStartLink() {
-                    forAll(withStartLink(DISCRETE_LINKS,
-                                         TerminusLinkProperties(DISCRETE_NODES,
-                                                                LinkDirection.ANY,
-                                                                AT_START),
-                                         ViaNodeGenerationScheme.ANY))
+                    forAll(
+                        withStartLink(
+                            DISCRETE_LINKS,
+                            TerminusLinkProperties(
+                                DISCRETE_NODES,
+                                LinkDirection.ANY,
+                                AT_START
+                            ),
+                            ViaNodeGenerationScheme.ANY
+                        )
+                    )
                         .checkAssert { expectVisitSingleNode(it) }
                 }
 
                 @Test
                 fun whenSnappedToEndNodeOfStartLink() {
-                    forAll(withStartLink(DISCRETE_LINKS,
-                                         TerminusLinkProperties(DISCRETE_NODES,
-                                                                LinkDirection.ANY,
-                                                                AT_END),
-                                         ViaNodeGenerationScheme.ANY))
+                    forAll(
+                        withStartLink(
+                            DISCRETE_LINKS,
+                            TerminusLinkProperties(
+                                DISCRETE_NODES,
+                                LinkDirection.ANY,
+                                AT_END
+                            ),
+                            ViaNodeGenerationScheme.ANY
+                        )
+                    )
                         .checkAssert { expectVisitSingleNode(it) }
                 }
 
                 @Nested
                 @DisplayName("When further node from snapped start link location appears at start of via nodes")
                 inner class WhenFurtherNodeFromSnappedStartLinkLocationAppearsAtStartOfViaNodes {
-
-                    fun forInputs(linkDirection: LinkDirection, snapPointLocation: SnapPointLocation)
-                        : TheoryBuilder<VisitedNodesResolverParams> {
-
+                    fun forInputs(
+                        linkDirection: LinkDirection,
+                        snapPointLocation: SnapPointLocation
+                    ): TheoryBuilder<VisitedNodesResolverParams> {
                         val genParams: Gen<VisitedNodesResolverParams> =
-                            withStartLink(DISCRETE_LINKS_UNCONNECTED,
-                                          TerminusLinkProperties(DISCRETE_NODES, linkDirection, snapPointLocation),
-                                          VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS)
+                            withStartLink(
+                                DISCRETE_LINKS_UNCONNECTED,
+                                TerminusLinkProperties(DISCRETE_NODES, linkDirection, snapPointLocation),
+                                VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS
+                            )
                                 .map { params ->
                                     params.run {
                                         withViaNodeIds(listOf(pointOnStartLink.furtherNodeId) + viaNodeIds)
@@ -769,18 +779,21 @@ class VisitedNodesResolverTest {
 
                     @Test
                     fun whenStartLinkIsBidirectional() {
-                        forInputs(BIDIRECTIONAL,
-                                  BETWEEN_ENDPOINTS_EXCLUSIVE)
+                        forInputs(
+                            BIDIRECTIONAL,
+                            BETWEEN_ENDPOINTS_EXCLUSIVE
+                        )
                             .checkAssert { expectVisitSingleNode(it) }
                     }
 
                     @Nested
                     @DisplayName("When start link is one-way and direction is along digitised direction")
                     inner class WhenStartLinkIsAlongDigitisedDirection {
-
                         fun forInputs(snapPointLocation: SnapPointLocation): TheoryBuilder<VisitedNodesResolverParams> =
-                            forInputs(ONE_WAY_ALONG_DIGITISED_DIRECTION,
-                                      snapPointLocation)
+                            forInputs(
+                                ONE_WAY_ALONG_DIGITISED_DIRECTION,
+                                snapPointLocation
+                            )
 
                         @Test
                         fun whenSnapPointLocationIsCloserToStartNode() {
@@ -804,10 +817,11 @@ class VisitedNodesResolverTest {
                     @Nested
                     @DisplayName("When start link is one-way and direction is against digitised direction")
                     inner class WhenStartLinkIsAgainstDigitisedDirection {
-
                         fun forInputs(snapPointLocation: SnapPointLocation): TheoryBuilder<VisitedNodesResolverParams> =
-                            forInputs(ONE_WAY_AGAINST_DIGITISED_DIRECTION,
-                                      snapPointLocation)
+                            forInputs(
+                                ONE_WAY_AGAINST_DIGITISED_DIRECTION,
+                                snapPointLocation
+                            )
 
                         @Test
                         fun whenSnapPointLocationIsCloserToStartNode() {
@@ -832,13 +846,18 @@ class VisitedNodesResolverTest {
                 @Nested
                 @DisplayName("When further node from snapped start link location DOES NOT appear at start of via nodes")
                 inner class WhenFurtherNodeFromSnappedStartLinkLocationDoesNotAppearAtStartOfViaNodes {
-
                     fun forInputs(linkDirection: LinkDirection): TheoryBuilder<VisitedNodesResolverParams> {
-                        return forAll(withStartLink(DISCRETE_LINKS,
-                                                    TerminusLinkProperties(DISCRETE_NODES,
-                                                                           linkDirection,
-                                                                           BETWEEN_ENDPOINTS_EXCLUSIVE),
-                                                    VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS))
+                        return forAll(
+                            withStartLink(
+                                DISCRETE_LINKS,
+                                TerminusLinkProperties(
+                                    DISCRETE_NODES,
+                                    linkDirection,
+                                    BETWEEN_ENDPOINTS_EXCLUSIVE
+                                ),
+                                VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS
+                            )
+                        )
                     }
 
                     @Test
@@ -865,29 +884,27 @@ class VisitedNodesResolverTest {
         @Nested
         @DisplayName("Verify visited nodes on end link")
         inner class VerifyVisitedNodesOnEndLink {
-
             fun expectVisitSingleNode(input: VisitedNodesResolverParams) {
                 assertThat(createOutput(input))
                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) { visit ->
 
                         assertThat(visit.nodesToVisitOnEndLink)
                             .isInstanceOfSatisfying(VisitSingleNode::class.java) {
-
                                 assertThat(it.nodeId)
                                     .isEqualTo(input.pointOnEndLink.closerNodeId)
                             }
                     }
             }
 
-            fun expectVisitNodesOfSingleLinkUnidirectionally(input: VisitedNodesResolverParams,
-                                                             nodesReversed: Boolean = false) {
-
+            fun expectVisitNodesOfSingleLinkUnidirectionally(
+                input: VisitedNodesResolverParams,
+                nodesReversed: Boolean = false
+            ) {
                 assertThat(createOutput(input))
                     .isInstanceOfSatisfying(VisitNodesOnMultipleLinks::class.java) { visit ->
 
                         assertThat(visit.nodesToVisitOnEndLink)
                             .isInstanceOfSatisfying(VisitNodesOfSingleLinkUnidirectionally::class.java) {
-
                                 val pointOnLink: SnappedPointOnLink = input.pointOnEndLink
 
                                 if (nodesReversed) {
@@ -907,7 +924,6 @@ class VisitedNodesResolverTest {
 
                         assertThat(visit.nodesToVisitOnEndLink)
                             .isInstanceOfSatisfying(VisitNodesOfSingleLinkBidirectionally::class.java) {
-
                                 val pointOnLink: SnappedPointOnLink = input.pointOnEndLink
 
                                 assertThat(it.firstNodeId).isEqualTo(pointOnLink.startNodeId)
@@ -918,47 +934,64 @@ class VisitedNodesResolverTest {
 
             @Test
             fun whenEndLinkHasNonDiscreteNodes() {
-                forAll(withEndLink(DISCRETE_LINKS,
-                                   TerminusLinkProperties.NON_DISCRETE_NODES,
-                                   ViaNodeGenerationScheme.ANY))
+                forAll(
+                    withEndLink(
+                        DISCRETE_LINKS,
+                        TerminusLinkProperties.NON_DISCRETE_NODES,
+                        ViaNodeGenerationScheme.ANY
+                    )
+                )
                     .checkAssert { expectVisitSingleNode(it) }
             }
 
             @Nested
             @DisplayName("When end link has discrete nodes")
             inner class WhenEndLinkHasDiscreteNodes {
-
                 @Test
                 fun whenSnappedToStartNodeOfEndLink() {
-                    forAll(withEndLink(DISCRETE_LINKS,
-                                       TerminusLinkProperties(DISCRETE_NODES,
-                                                              LinkDirection.ANY,
-                                                              AT_START),
-                                       ViaNodeGenerationScheme.ANY))
+                    forAll(
+                        withEndLink(
+                            DISCRETE_LINKS,
+                            TerminusLinkProperties(
+                                DISCRETE_NODES,
+                                LinkDirection.ANY,
+                                AT_START
+                            ),
+                            ViaNodeGenerationScheme.ANY
+                        )
+                    )
                         .checkAssert { expectVisitSingleNode(it) }
                 }
 
                 @Test
                 fun whenSnappedToEndNodeOfEndLink() {
-                    forAll(withEndLink(DISCRETE_LINKS,
-                                       TerminusLinkProperties(DISCRETE_NODES,
-                                                              LinkDirection.ANY,
-                                                              AT_END),
-                                       ViaNodeGenerationScheme.ANY))
+                    forAll(
+                        withEndLink(
+                            DISCRETE_LINKS,
+                            TerminusLinkProperties(
+                                DISCRETE_NODES,
+                                LinkDirection.ANY,
+                                AT_END
+                            ),
+                            ViaNodeGenerationScheme.ANY
+                        )
+                    )
                         .checkAssert { expectVisitSingleNode(it) }
                 }
 
                 @Nested
                 @DisplayName("When further node from snapped end link location appears at end of via nodes")
                 inner class WhenFurtherNodeFromSnappedEndLinkLocationAppearsAtEndOfViaNodes {
-
-                    fun forInputs(linkDirection: LinkDirection, snapPointLocation: SnapPointLocation)
-                        : TheoryBuilder<VisitedNodesResolverParams> {
-
+                    fun forInputs(
+                        linkDirection: LinkDirection,
+                        snapPointLocation: SnapPointLocation
+                    ): TheoryBuilder<VisitedNodesResolverParams> {
                         val genParams: Gen<VisitedNodesResolverParams> =
-                            withEndLink(DISCRETE_LINKS_UNCONNECTED,
-                                        TerminusLinkProperties(DISCRETE_NODES, linkDirection, snapPointLocation),
-                                        VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS)
+                            withEndLink(
+                                DISCRETE_LINKS_UNCONNECTED,
+                                TerminusLinkProperties(DISCRETE_NODES, linkDirection, snapPointLocation),
+                                VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS
+                            )
                                 .map { params ->
                                     params.run {
                                         withViaNodeIds(viaNodeIds + pointOnEndLink.furtherNodeId)
@@ -971,18 +1004,21 @@ class VisitedNodesResolverTest {
 
                     @Test
                     fun whenEndLinkIsBidirectional() {
-                        forInputs(BIDIRECTIONAL,
-                                  BETWEEN_ENDPOINTS_EXCLUSIVE)
+                        forInputs(
+                            BIDIRECTIONAL,
+                            BETWEEN_ENDPOINTS_EXCLUSIVE
+                        )
                             .checkAssert { expectVisitSingleNode(it) }
                     }
 
                     @Nested
                     @DisplayName("When end link is one-way and direction is along digitised direction")
                     inner class WhenEndLinkIsAlongDigitisedDirection {
-
                         fun forInputs(snapPointLocation: SnapPointLocation): TheoryBuilder<VisitedNodesResolverParams> =
-                            forInputs(ONE_WAY_ALONG_DIGITISED_DIRECTION,
-                                      snapPointLocation)
+                            forInputs(
+                                ONE_WAY_ALONG_DIGITISED_DIRECTION,
+                                snapPointLocation
+                            )
 
                         @Test
                         fun whenSnapPointLocationIsCloserToStartNode() {
@@ -1006,10 +1042,11 @@ class VisitedNodesResolverTest {
                     @Nested
                     @DisplayName("When end link is one-way and direction is against digitised direction")
                     inner class WhenEndLinkIsAgainstDigitisedDirection {
-
                         fun forInputs(snapPointLocation: SnapPointLocation): TheoryBuilder<VisitedNodesResolverParams> =
-                            forInputs(ONE_WAY_AGAINST_DIGITISED_DIRECTION,
-                                      snapPointLocation)
+                            forInputs(
+                                ONE_WAY_AGAINST_DIGITISED_DIRECTION,
+                                snapPointLocation
+                            )
 
                         @Test
                         fun whenSnapPointLocationIsCloserToStartNode() {
@@ -1034,13 +1071,18 @@ class VisitedNodesResolverTest {
                 @Nested
                 @DisplayName("When further node from snapped end link location DOES NOT appear at end of via nodes")
                 inner class WhenFurtherNodeFromSnappedEndLinkLocationDoesNotAppearAtEndOfViaNodes {
-
                     fun forInputs(linkDirection: LinkDirection): TheoryBuilder<VisitedNodesResolverParams> {
-                        return forAll(withEndLink(DISCRETE_LINKS,
-                                                  TerminusLinkProperties(DISCRETE_NODES,
-                                                                         linkDirection,
-                                                                         BETWEEN_ENDPOINTS_EXCLUSIVE),
-                                                  VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS))
+                        return forAll(
+                            withEndLink(
+                                DISCRETE_LINKS,
+                                TerminusLinkProperties(
+                                    DISCRETE_NODES,
+                                    linkDirection,
+                                    BETWEEN_ENDPOINTS_EXCLUSIVE
+                                ),
+                                VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS
+                            )
+                        )
                     }
 
                     @Test
@@ -1066,21 +1108,21 @@ class VisitedNodesResolverTest {
     }
 
     companion object {
-
-        private fun forAll(inputGen: Gen<VisitedNodesResolverParams>, randomnessSeed: Long = System.nanoTime())
-            : TheoryBuilder<VisitedNodesResolverParams> {
-
+        private fun forAll(
+            inputGen: Gen<VisitedNodesResolverParams>,
+            randomnessSeed: Long = System.nanoTime()
+        ): TheoryBuilder<VisitedNodesResolverParams> {
             return qt()
                 .withFixedSeed(randomnessSeed)
                 .forAll(inputGen)
         }
 
-        private fun createInput(terminusLinkRelation: TerminusLinkRelation,
-                                startLinkProperties: TerminusLinkProperties,
-                                endLinkProperties: TerminusLinkProperties,
-                                viaNodeGenerationScheme: ViaNodeGenerationScheme)
-            : Gen<VisitedNodesResolverParams> {
-
+        private fun createInput(
+            terminusLinkRelation: TerminusLinkRelation,
+            startLinkProperties: TerminusLinkProperties,
+            endLinkProperties: TerminusLinkProperties,
+            viaNodeGenerationScheme: ViaNodeGenerationScheme
+        ): Gen<VisitedNodesResolverParams> {
             return VisitedNodesResolverParamsGenerator
                 .builder()
                 .withTerminusLinkRelation(terminusLinkRelation)
@@ -1091,60 +1133,65 @@ class VisitedNodesResolverTest {
                 .describedAs(this::prettyPrint)
         }
 
-        private fun createInput(terminusLinkRelation: TerminusLinkRelation,
-                                viaNodeGenerationScheme: ViaNodeGenerationScheme)
-            : Gen<VisitedNodesResolverParams> {
-
-            return createInput(terminusLinkRelation,
-                               TerminusLinkProperties.ANY_VALUES,
-                               TerminusLinkProperties.ANY_VALUES,
-                               viaNodeGenerationScheme)
+        private fun createInput(
+            terminusLinkRelation: TerminusLinkRelation,
+            viaNodeGenerationScheme: ViaNodeGenerationScheme
+        ): Gen<VisitedNodesResolverParams> {
+            return createInput(
+                terminusLinkRelation,
+                TerminusLinkProperties.ANY_VALUES,
+                TerminusLinkProperties.ANY_VALUES,
+                viaNodeGenerationScheme
+            )
         }
 
-        private fun withSingleLink(linkProperties: TerminusLinkProperties,
-                                   viaNodeGenerationScheme: ViaNodeGenerationScheme)
-            : Gen<VisitedNodesResolverParams> {
-
+        private fun withSingleLink(
+            linkProperties: TerminusLinkProperties,
+            viaNodeGenerationScheme: ViaNodeGenerationScheme
+        ): Gen<VisitedNodesResolverParams> {
             return withTerminusLink(SAME_LINK, linkProperties, viaNodeGenerationScheme, true)
         }
 
-        private fun withStartLink(terminusLinkRelation: TerminusLinkRelation,
-                                  startLinkProperties: TerminusLinkProperties,
-                                  viaNodeGenerationScheme: ViaNodeGenerationScheme)
-            : Gen<VisitedNodesResolverParams> {
-
+        private fun withStartLink(
+            terminusLinkRelation: TerminusLinkRelation,
+            startLinkProperties: TerminusLinkProperties,
+            viaNodeGenerationScheme: ViaNodeGenerationScheme
+        ): Gen<VisitedNodesResolverParams> {
             require(terminusLinkRelation != SAME_LINK)
 
             return withTerminusLink(terminusLinkRelation, startLinkProperties, viaNodeGenerationScheme, true)
         }
 
-        private fun withEndLink(terminusLinkRelation: TerminusLinkRelation,
-                                endLinkProperties: TerminusLinkProperties,
-                                viaNodeGenerationScheme: ViaNodeGenerationScheme)
-            : Gen<VisitedNodesResolverParams> {
-
+        private fun withEndLink(
+            terminusLinkRelation: TerminusLinkRelation,
+            endLinkProperties: TerminusLinkProperties,
+            viaNodeGenerationScheme: ViaNodeGenerationScheme
+        ): Gen<VisitedNodesResolverParams> {
             require(terminusLinkRelation != SAME_LINK)
 
             return withTerminusLink(terminusLinkRelation, endLinkProperties, viaNodeGenerationScheme, false)
         }
 
-        private fun withTerminusLink(terminusLinkRelation: TerminusLinkRelation,
-                                     linkProperties: TerminusLinkProperties,
-                                     viaNodeGenerationScheme: ViaNodeGenerationScheme,
-                                     isStartLink: Boolean)
-            : Gen<VisitedNodesResolverParams> {
-
+        private fun withTerminusLink(
+            terminusLinkRelation: TerminusLinkRelation,
+            linkProperties: TerminusLinkProperties,
+            viaNodeGenerationScheme: ViaNodeGenerationScheme,
+            isStartLink: Boolean
+        ): Gen<VisitedNodesResolverParams> {
             require(terminusLinkRelation != TerminusLinkRelation.ANY)
 
-            return createInput(terminusLinkRelation,
-                               if (isStartLink) linkProperties else TerminusLinkProperties.ANY_VALUES,
-                               if (isStartLink) TerminusLinkProperties.ANY_VALUES else linkProperties,
-                               viaNodeGenerationScheme)
+            return createInput(
+                terminusLinkRelation,
+                if (isStartLink) linkProperties else TerminusLinkProperties.ANY_VALUES,
+                if (isStartLink) TerminusLinkProperties.ANY_VALUES else linkProperties,
+                viaNodeGenerationScheme
+            )
         }
 
-        private fun prettyPrint(params: VisitedNodesResolverParams): String = params.run {
-            // Making assertion failures more readable.
-            """
+        private fun prettyPrint(params: VisitedNodesResolverParams): String =
+            params.run {
+                // Making assertion failures more readable.
+                """
                 {
                     startLink: {
                         id: ${pointOnStartLink.infrastructureLinkId},
@@ -1162,13 +1209,15 @@ class VisitedNodesResolverTest {
                         endNodeId: ${pointOnEndLink.endNodeId}
                     }
                 }
-            """.trimIndent()
-        }
+                """.trimIndent()
+            }
 
         private fun createOutput(params: VisitedNodesResolverParams): VisitedNodes {
-            return VisitedNodesResolver.resolve(params.pointOnStartLink,
-                                                params.viaNodeIds,
-                                                params.pointOnEndLink)
+            return VisitedNodesResolver.resolve(
+                params.pointOnStartLink,
+                params.viaNodeIds,
+                params.pointOnEndLink
+            )
         }
     }
 }

@@ -19,13 +19,13 @@ private val LOGGER = KotlinLogging.logger {}
 class NodeServiceInternalImpl
     @Autowired
     constructor(
-        val nodeRepository: INodeRepository,
+        val nodeRepository: INodeRepository
     ) : INodeServiceInternal {
         @Transactional(readOnly = true, noRollbackFor = [IllegalStateException::class])
         override fun resolveNodeIdSequence(
             nodeSequenceCandidates: List<NodeSequenceCandidatesBetweenSnappedLinks>,
             vehicleType: VehicleType,
-            bufferAreaRestriction: BufferAreaRestriction?,
+            bufferAreaRestriction: BufferAreaRestriction?
         ): NodeSequenceResolutionResult {
             fun getDebugLogMessageForNodeSequenceCombinations(nodeIdSequences: List<NodeIdSequence>) =
                 "Resolving best node identifier sequence from combinations: ${joinToLogString(nodeIdSequences)}"
@@ -38,7 +38,7 @@ class NodeServiceInternalImpl
                     return NodeSequenceResolutionSucceeded(
                         nodeIdSequences.first(),
                         candidatesBetweenLinks.pointOnStartLink,
-                        candidatesBetweenLinks.pointOnEndLink,
+                        candidatesBetweenLinks.pointOnEndLink
                     )
                 }
 
@@ -58,7 +58,7 @@ class NodeServiceInternalImpl
                     NodeSequenceCandidate(
                         candidates.pointOnStartLink.infrastructureLinkId,
                         candidates.pointOnEndLink.infrastructureLinkId,
-                        nodeIdSequence,
+                        nodeIdSequence
                     )
                 }
 
@@ -71,7 +71,7 @@ class NodeServiceInternalImpl
                                 lineGeometry,
                                 bufferRadiusInMeters,
                                 candidatesBetweenTwoLinks.pointOnStartLink,
-                                candidatesBetweenTwoLinks.pointOnEndLink,
+                                candidatesBetweenTwoLinks.pointOnEndLink
                             )
                         }
 
@@ -79,7 +79,7 @@ class NodeServiceInternalImpl
                         .resolveBestNodeSequences(
                             flattenCandidates(candidatesBetweenTwoLinks),
                             vehicleType,
-                            bufferAreaRestrictionWithTerminusLinkIds,
+                            bufferAreaRestrictionWithTerminusLinkIds
                         ).takeIf { it.isNotEmpty() }
                 }
 
@@ -89,8 +89,8 @@ class NodeServiceInternalImpl
 
                 return NodeSequenceResolutionFailed(
                     "Could not resolve node identifier sequence from ${joinToLogString(
-                        flattenedNodeSequenceCandidates,
-                    )}",
+                        flattenedNodeSequenceCandidates
+                    )}"
                 )
             }
 

@@ -31,7 +31,6 @@ fun main(args: Array<String>) {
 )
 @EnableTransactionManagement
 class MapMatchingApplication {
-
     @Bean
     fun methodValidationPostProcessor(): MethodValidationPostProcessor {
         val mv = MethodValidationPostProcessor()
@@ -50,14 +49,16 @@ class MapMatchingApplication {
 
         return ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            .registerModule(KotlinModule.Builder()
-                                .withReflectionCacheSize(512)
-                                .configure(KotlinFeature.NullToEmptyCollection, false)
-                                .configure(KotlinFeature.NullToEmptyMap, false)
-                                .configure(KotlinFeature.NullIsSameAsDefault, false)
-                                .configure(KotlinFeature.SingletonSupport, false)
-                                .configure(KotlinFeature.StrictNullChecks, true)
-                                .build())
+            .registerModule(
+                KotlinModule.Builder()
+                    .withReflectionCacheSize(512)
+                    .configure(KotlinFeature.NullToEmptyCollection, false)
+                    .configure(KotlinFeature.NullToEmptyMap, false)
+                    .configure(KotlinFeature.NullIsSameAsDefault, false)
+                    .configure(KotlinFeature.SingletonSupport, false)
+                    .configure(KotlinFeature.StrictNullChecks, true)
+                    .build()
+            )
             .registerModule(geolatteModule)
     }
 }
