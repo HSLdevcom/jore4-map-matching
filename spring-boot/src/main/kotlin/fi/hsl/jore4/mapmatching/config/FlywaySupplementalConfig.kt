@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 class FlywaySupplementalConfig : FlywayConfigurationCustomizer {
-
     override fun customize(configuration: FluentConfiguration?) {
         // Customising `search_path` is required at least by migrations that add PostGIS geometry columns.
         configuration?.run {

@@ -9,7 +9,6 @@ import org.jooq.Converter
  * Converts between LineString geometries and PostGIS EWKT/EWKB formats.
  */
 class LineStringConverter : Converter<Any, LineString<C2D>> {
-
     override fun from(databaseObject: Any?) = CONVERTER.from(databaseObject) as LineString?
 
     override fun to(userObject: LineString<C2D>): Any? = GeometryConverter.to(userObject)

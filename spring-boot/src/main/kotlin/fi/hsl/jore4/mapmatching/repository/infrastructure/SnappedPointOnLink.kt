@@ -26,15 +26,16 @@ import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
  * the infrastructure link
  */
 @Suppress("MemberVisibilityCanBePrivate")
-data class SnappedPointOnLink(val infrastructureLinkId: InfrastructureLinkId,
-                              val closestDistance: Double,
-                              val closestPointFractionalMeasure: Double,
-                              val trafficFlowDirectionType: TrafficFlowDirectionType,
-                              val infrastructureLinkLength: Double,
-                              val startNodeId: InfrastructureNodeId,
-                              val endNodeId: InfrastructureNodeId)
-    : HasInfrastructureNodeId {
-
+data class SnappedPointOnLink(
+    val infrastructureLinkId: InfrastructureLinkId,
+    val closestDistance: Double,
+    val closestPointFractionalMeasure: Double,
+    val trafficFlowDirectionType: TrafficFlowDirectionType,
+    val infrastructureLinkLength: Double,
+    val startNodeId: InfrastructureNodeId,
+    val endNodeId: InfrastructureNodeId
+) :
+    HasInfrastructureNodeId {
     init {
         // check validity
 
@@ -73,12 +74,13 @@ data class SnappedPointOnLink(val infrastructureLinkId: InfrastructureLinkId,
     fun isStartNodeCloser(): Boolean = closestPointFractionalMeasure <= 0.5
 
     fun getSnappedNodeOrNull(): InfrastructureNodeId? {
-        return if (isSnappedToStartNode)
+        return if (isSnappedToStartNode) {
             startNodeId
-        else if (isSnappedToEndNode)
+        } else if (isSnappedToEndNode) {
             endNodeId
-        else
+        } else {
             null
+        }
     }
 
     fun isOnLinkTerminatedByNode(nodeId: InfrastructureNodeId) = startNodeId == nodeId || endNodeId == nodeId
@@ -95,16 +97,21 @@ data class SnappedPointOnLink(val infrastructureLinkId: InfrastructureLinkId,
     fun withSnappedToTerminusNode(thresholdDistanceOfSnappingToLinkEndpointInMeters: Double): SnappedPointOnLink {
         val distanceToStartOfLink: Double = getDistanceToStartOfLink()
 
-        return if (distanceToStartOfLink.isWithinTolerance(0.0,
-                                                           thresholdDistanceOfSnappingToLinkEndpointInMeters)
-        )
+        return if (distanceToStartOfLink.isWithinTolerance(
+                0.0,
+                thresholdDistanceOfSnappingToLinkEndpointInMeters
+            )
+        ) {
             withClosestPointFractionalMeasure(0.0)
-        else if (distanceToStartOfLink.isWithinTolerance(infrastructureLinkLength,
-                                                         thresholdDistanceOfSnappingToLinkEndpointInMeters)
-        )
+        } else if (distanceToStartOfLink.isWithinTolerance(
+                infrastructureLinkLength,
+                thresholdDistanceOfSnappingToLinkEndpointInMeters
+            )
+        ) {
             withClosestPointFractionalMeasure(1.0)
-        else
+        } else {
             this
+        }
     }
 
     /**
@@ -120,12 +127,13 @@ data class SnappedPointOnLink(val infrastructureLinkId: InfrastructureLinkId,
         }
 
         val overriddenClosestPointFractionalMeasure: Double? =
-            if (isSnappedToStartNode)
+            if (isSnappedToStartNode) {
                 inwardsOffsetInMeters / infrastructureLinkLength
-            else if (isSnappedToEndNode)
+            } else if (isSnappedToEndNode) {
                 1.0 - (inwardsOffsetInMeters / infrastructureLinkLength)
-            else
+            } else {
                 null
+            }
 
         return overriddenClosestPointFractionalMeasure
             ?.let(this::withClosestPointFractionalMeasure)
@@ -133,11 +141,13 @@ data class SnappedPointOnLink(val infrastructureLinkId: InfrastructureLinkId,
     }
 
     private fun withClosestPointFractionalMeasure(newClosestPointFractionalMeasure: Double) =
-        SnappedPointOnLink(infrastructureLinkId,
-                           closestDistance,
-                           newClosestPointFractionalMeasure,
-                           trafficFlowDirectionType,
-                           infrastructureLinkLength,
-                           startNodeId,
-                           endNodeId)
+        SnappedPointOnLink(
+            infrastructureLinkId,
+            closestDistance,
+            newClosestPointFractionalMeasure,
+            trafficFlowDirectionType,
+            infrastructureLinkLength,
+            startNodeId,
+            endNodeId
+        )
 }

@@ -4,7 +4,6 @@ import fi.hsl.jore4.mapmatching.model.NodeIdSequence
 import fi.hsl.jore4.mapmatching.model.VehicleType
 
 interface IRoutingRepository {
-
     /**
      * Finds the shortest route through infrastructure network via given nodes
      * (graph vertices) and constrained by the given vehicle type and optional
@@ -25,10 +24,11 @@ interface IRoutingRepository {
      * reference to an infrastructure link and the direction of traversal on it.
      * If a route could not be found then an empty list is returned.
      */
-    fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
-                                 vehicleType: VehicleType,
-                                 bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLink>
+    fun findRouteViaNetworkNodes(
+        nodeIdSequence: NodeIdSequence,
+        vehicleType: VehicleType,
+        bufferAreaRestriction: BufferAreaRestriction? = null
+    ): List<RouteLink>
 
     /**
      * Finds the shortest route through infrastructure network via given nodes
@@ -56,12 +56,13 @@ interface IRoutingRepository {
      * reference to an infrastructure link and the direction of traversal on it.
      * If a route could not be found then an empty list is returned.
      */
-    fun findRouteViaNetworkNodes(nodeIdSequence: NodeIdSequence,
-                                 vehicleType: VehicleType,
-                                 fractionalStartLocationOnFirstLink: Double,
-                                 fractionalEndLocationOnLastLink: Double,
-                                 bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLink>
+    fun findRouteViaNetworkNodes(
+        nodeIdSequence: NodeIdSequence,
+        vehicleType: VehicleType,
+        fractionalStartLocationOnFirstLink: Double,
+        fractionalEndLocationOnLastLink: Double,
+        bufferAreaRestriction: BufferAreaRestriction? = null
+    ): List<RouteLink>
 
     /**
      * Finds the shortest route through infrastructure network via given points
@@ -83,8 +84,9 @@ interface IRoutingRepository {
      * reference to an infrastructure link and the direction of traversal on it.
      * If a route could not be found then an empty list is returned.
      */
-    fun findRouteViaPointsOnLinks(points: List<PgRoutingPoint>,
-                                  vehicleType: VehicleType,
-                                  bufferAreaRestriction: BufferAreaRestriction? = null)
-        : List<RouteLink>
+    fun findRouteViaPointsOnLinks(
+        points: List<PgRoutingPoint>,
+        vehicleType: VehicleType,
+        bufferAreaRestriction: BufferAreaRestriction? = null
+    ): List<RouteLink>
 }

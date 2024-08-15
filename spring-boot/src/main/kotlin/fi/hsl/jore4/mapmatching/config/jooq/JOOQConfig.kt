@@ -14,7 +14,6 @@ import org.springframework.context.annotation.PropertySource
 @Configuration
 @PropertySource("classpath:db/jooq.properties")
 class JOOQConfig {
-
     @Bean
     fun settings(): Settings =
         SettingsTools.defaultSettings()

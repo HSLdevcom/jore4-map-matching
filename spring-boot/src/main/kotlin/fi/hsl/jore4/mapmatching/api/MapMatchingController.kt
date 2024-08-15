@@ -25,15 +25,15 @@ private val LOGGER = KotlinLogging.logger {}
 class MapMatchingController
     @Autowired
     constructor(
-        val matchingService: IMatchingService,
+        val matchingService: IMatchingService
     ) {
         @PostMapping(
             "/$TRANSPORTATION_MODE_PARAM",
-            "/$TRANSPORTATION_MODE_PARAM.json",
+            "/$TRANSPORTATION_MODE_PARAM.json"
         )
         fun findMatchForPublicTransportRoute(
             @PathVariable transportationMode: String,
-            @Valid @RequestBody request: PublicTransportRouteMatchRequestDTO,
+            @Valid @RequestBody request: PublicTransportRouteMatchRequestDTO
         ): RoutingResponse {
             LOGGER.debug { "Given transportation mode: $transportationMode" }
 
@@ -46,12 +46,12 @@ class MapMatchingController
 
         @PostMapping(
             "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM",
-            "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM.json",
+            "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM.json"
         )
         fun findMatchForPublicTransportRoute(
             @PathVariable transportationMode: String,
             @PathVariable vehicleTypeParam: String,
-            @Valid @RequestBody request: PublicTransportRouteMatchRequestDTO,
+            @Valid @RequestBody request: PublicTransportRouteMatchRequestDTO
         ): RoutingResponse {
             LOGGER.debug { "Given profile: $transportationMode/$vehicleTypeParam" }
 
@@ -64,7 +64,7 @@ class MapMatchingController
 
         private fun findMatch(
             request: PublicTransportRouteMatchRequestDTO,
-            vehicleType: VehicleType,
+            vehicleType: VehicleType
         ): RoutingResponse {
             LOGGER.debug { "Given route geometry: ${request.routeGeometry}" }
             LOGGER.debug {
@@ -81,7 +81,7 @@ class MapMatchingController
                     request.routeGeometry,
                     request.routePoints,
                     vehicleType,
-                    getMatchingParameters(request),
+                    getMatchingParameters(request)
                 )
             } catch (ex: Exception) {
                 RoutingResponse.invalidUrl(ex.message ?: "Map-matching failed")
@@ -104,7 +104,7 @@ class MapMatchingController
             private const val DEFAULT_JUNCTION_NODE_CLEARING_DISTANCE: Double = 30.0
 
             fun getMatchingParameters(
-                request: PublicTransportRouteMatchRequestDTO,
+                request: PublicTransportRouteMatchRequestDTO
             ): PublicTransportRouteMatchingParameters {
                 val parameters: MapMatchingParametersDTO? = request.matchingParameters
 
@@ -136,7 +136,7 @@ class MapMatchingController
                     terminusLinkQueryLimit,
                     maxStopLocationDeviation,
                     fallbackToViaNodesAlgorithm,
-                    roadJunctionMatchingParameters,
+                    roadJunctionMatchingParameters
                 )
             }
         }

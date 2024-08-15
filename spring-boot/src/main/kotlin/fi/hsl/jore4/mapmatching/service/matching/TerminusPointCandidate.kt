@@ -15,6 +15,8 @@ import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
  * @property snapDistance the distance to target point from observation point of map-matching
  * request. This is used while sorting terminus point candidates.
  */
-data class TerminusPointCandidate(val targetPoint: PgRoutingPoint,
-                                  val isAStopPointMatchedByNationalId: Boolean,
-                                  val snapDistance: Double)
+data class TerminusPointCandidate(
+    val targetPoint: PgRoutingPoint,
+    val isAStopPointMatchedByNationalId: Boolean,
+    val snapDistance: Double
+)

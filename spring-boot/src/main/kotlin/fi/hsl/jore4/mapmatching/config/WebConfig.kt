@@ -11,7 +11,6 @@ import org.springframework.web.servlet.resource.PathResourceResolver
 
 @Configuration
 class WebConfig : WebMvcConfigurer {
-
     @Development
     @Configuration
     class DevelopmentWebConfig : WebMvcConfigurer {

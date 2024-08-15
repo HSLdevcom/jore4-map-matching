@@ -4,7 +4,6 @@ import java.math.BigDecimal
 import java.math.MathContext
 
 object MathUtils {
-
     const val DEFAULT_DOUBLE_TOLERANCE = 0.00001
 
     private const val MAX_DECIMAL_PRECISION_FOR_TOLERANCE_CHECKING = 10
@@ -13,7 +12,10 @@ object MathUtils {
 
     fun Double.isWithinTolerance(other: Double): Boolean = isWithinTolerance(other, DEFAULT_DOUBLE_TOLERANCE)
 
-    fun Double.isWithinTolerance(other: Double, tolerance: Double): Boolean {
+    fun Double.isWithinTolerance(
+        other: Double,
+        tolerance: Double
+    ): Boolean {
         val refinedTolerance = bigDecimalForToleranceChecking(tolerance)
 
         require(refinedTolerance >= MIN_DOUBLE_TOLERANCE) { "tolerance must be >= $MIN_DOUBLE_TOLERANCE" }

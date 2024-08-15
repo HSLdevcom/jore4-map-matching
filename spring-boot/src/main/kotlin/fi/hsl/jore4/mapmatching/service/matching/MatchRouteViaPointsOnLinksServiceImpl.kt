@@ -36,12 +36,12 @@ class MatchRouteViaPointsOnLinksServiceImpl
         val closestTerminusLinksResolver: IClosestTerminusLinksResolver,
         val publicTransportStopMatcher: IPublicTransportStopMatcher,
         val roadJunctionMatcher: IRoadJunctionMatcher,
-        val routingService: IRoutingServiceInternal,
+        val routingService: IRoutingServiceInternal
     ) : IMatchRouteViaPointsOnLinksService {
         internal data class TerminusPointCandidatesAndStopPoints(
             val targetStartPointCandidates: List<TerminusPointCandidate>,
             val targetEndPointCandidates: List<TerminusPointCandidate>,
-            val targetStopPointsIndexedByRoutePointOrdering: Map<Int, PgRoutingPoint>,
+            val targetStopPointsIndexedByRoutePointOrdering: Map<Int, PgRoutingPoint>
         )
 
         @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
@@ -49,7 +49,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
             sourceRouteGeometry: LineString<G2D>,
             sourceRoutePoints: List<RoutePoint>,
             vehicleType: VehicleType,
-            matchingParameters: PublicTransportRouteMatchingParameters,
+            matchingParameters: PublicTransportRouteMatchingParameters
         ): RoutingResponse {
             val terminusLinkSelectionInput: TerminusLinkSelectionInput =
                 try {
@@ -58,7 +58,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
                         sourceRoutePoints,
                         vehicleType,
                         matchingParameters.terminusLinkQueryDistance,
-                        matchingParameters.terminusLinkQueryLimit,
+                        matchingParameters.terminusLinkQueryLimit
                     )
                 } catch (ex: RuntimeException) {
                     val errMessage: String =
@@ -71,20 +71,20 @@ class MatchRouteViaPointsOnLinksServiceImpl
                     sourceRoutePoints,
                     vehicleType,
                     terminusLinkSelectionInput,
-                    matchingParameters,
+                    matchingParameters
                 )
 
             return findFirstMatchingRouteOrNull(
                 sourceRouteGeometry,
                 vehicleType,
                 targetRoutePointSequenceCandidates,
-                matchingParameters.bufferRadiusInMeters,
+                matchingParameters.bufferRadiusInMeters
             )?.let { routeLinks: List<RouteLink> ->
                 LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
                 RoutingResponseCreator.create(routeLinks)
             }
                 ?: RoutingResponse.noSegment(
-                    "Could not find route while map-matching via graph edges (points on links)",
+                    "Could not find route while map-matching via graph edges (points on links)"
                 )
         }
 
@@ -97,7 +97,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
             sourceRoutePoints: List<RoutePoint>,
             vehicleType: VehicleType,
             terminusLinkQueryDistance: Double,
-            terminusLinkQueryLimit: Int,
+            terminusLinkQueryLimit: Int
         ): TerminusLinkSelectionInput {
             // The terminus locations are extracted from the LineString geometry of the source route
             // instead of the route point entities (mostly stop point instances) since in this context
@@ -111,7 +111,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
                     endLocation,
                     vehicleType,
                     terminusLinkQueryDistance,
-                    terminusLinkQueryLimit,
+                    terminusLinkQueryLimit
                 )
 
             fun snapToTerminusNodes(pointsOnLinks: List<SnappedPointOnLink>): List<SnappedPointOnLink> =
@@ -124,7 +124,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
                 getSourceRouteTerminusPoint(sourceRoutePoints.first(), startLocation, true),
                 snapToTerminusNodes(closestStartLinks),
                 getSourceRouteTerminusPoint(sourceRoutePoints.last(), endLocation, false),
-                snapToTerminusNodes(closestEndLinks),
+                snapToTerminusNodes(closestEndLinks)
             )
         }
 
@@ -132,17 +132,17 @@ class MatchRouteViaPointsOnLinksServiceImpl
             sourceRoutePoints: List<RoutePoint>,
             vehicleType: VehicleType,
             terminusLinkSelectionInput: TerminusLinkSelectionInput,
-            matchingParams: PublicTransportRouteMatchingParameters,
+            matchingParams: PublicTransportRouteMatchingParameters
         ): List<List<PgRoutingPoint>> {
             val (
                 targetStartPointCandidates: List<TerminusPointCandidate>,
                 targetEndPointCandidates: List<TerminusPointCandidate>,
-                fromRoutePointIndexToTargetStopPoint: Map<Int, PgRoutingPoint>,
+                fromRoutePointIndexToTargetStopPoint: Map<Int, PgRoutingPoint>
             ) =
                 resolveTerminusPointCandidatesAndStopPoints(
                     sourceRoutePoints,
                     terminusLinkSelectionInput,
-                    matchingParams.maxStopLocationDeviation,
+                    matchingParams.maxStopLocationDeviation
                 )
 
             // Resolve infrastructure network nodes to visit on route derived from the given route points.
@@ -153,7 +153,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
                             sourceRoutePoints,
                             vehicleType,
                             matchDistance,
-                            clearingDistance,
+                            clearingDistance
                         )
                     }
                     ?: emptyMap()
@@ -179,20 +179,20 @@ class MatchRouteViaPointsOnLinksServiceImpl
             return MatchingServiceHelper.getSortedRoutePointSequenceCandidates(
                 targetStartPointCandidates,
                 targetEndPointCandidates,
-                targetViaRoutePoints,
+                targetViaRoutePoints
             )
         }
 
         internal fun resolveTerminusPointCandidatesAndStopPoints(
             sourceRoutePoints: List<RoutePoint>,
             terminusLinkSelectionInput: TerminusLinkSelectionInput,
-            maxStopLocationDeviation: Double,
+            maxStopLocationDeviation: Double
         ): TerminusPointCandidatesAndStopPoints {
             val fromRoutePointIndexToSnappedLinkOfMatchedStop: Map<Int, SnapStopToLinkResult> =
                 publicTransportStopMatcher
                     .findStopPointsByNationalIdsAndIndexByRoutePointOrdering(
                         sourceRoutePoints,
-                        maxStopLocationDeviation,
+                        maxStopLocationDeviation
                     )
 
             val fromNationalIdToTargetStopPoint: Map<Int, PgRoutingPoint> =
@@ -211,11 +211,11 @@ class MatchRouteViaPointsOnLinksServiceImpl
 
             val (
                 targetStartPointCandidates: List<TerminusPointCandidate>,
-                targetEndPointCandidates: List<TerminusPointCandidate>,
+                targetEndPointCandidates: List<TerminusPointCandidate>
             ) =
                 MatchingServiceHelper.createPairwiseCandidatesForRouteTerminusPoints(
                     terminusLinkSelectionInput,
-                    fromNationalIdToTargetStopPoint,
+                    fromNationalIdToTargetStopPoint
                 )
 
             val fromRoutePointIndexToTargetStopPoint: Map<Int, PgRoutingPoint> =
@@ -228,7 +228,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
             return TerminusPointCandidatesAndStopPoints(
                 targetStartPointCandidates,
                 targetEndPointCandidates,
-                fromRoutePointIndexToTargetStopPoint,
+                fromRoutePointIndexToTargetStopPoint
             )
         }
 
@@ -236,7 +236,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
             sourceRouteGeometry: LineString<G2D>,
             vehicleType: VehicleType,
             targetRoutePointSequenceCandidates: List<List<PgRoutingPoint>>,
-            bufferRadiusInMeters: Double,
+            bufferRadiusInMeters: Double
         ): List<RouteLink>? =
             targetRoutePointSequenceCandidates.firstNotNullOfOrNull { targetRoutePoints ->
 
@@ -245,7 +245,7 @@ class MatchRouteViaPointsOnLinksServiceImpl
                         sourceRouteGeometry,
                         bufferRadiusInMeters,
                         targetRoutePoints.first(),
-                        targetRoutePoints.last(),
+                        targetRoutePoints.last()
                     )
 
                 routingService

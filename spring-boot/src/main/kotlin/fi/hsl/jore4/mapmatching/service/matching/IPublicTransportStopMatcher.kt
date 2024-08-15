@@ -4,7 +4,6 @@ import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnapStopToLinkResult
 
 interface IPublicTransportStopMatcher {
-
     /**
      * Finds public transport stop points from the local database whose national
      * identifier matches with the one given for some [routePoints] item. Only
@@ -26,7 +25,8 @@ interface IPublicTransportStopMatcher {
      * these two type of locations exceeds [maxStopLocationDeviation] for a stop
      * point, then the stop point is not included in the results.
      */
-    fun findStopPointsByNationalIdsAndIndexByRoutePointOrdering(routePoints: List<RoutePoint>,
-                                                                maxStopLocationDeviation: Double)
-        : Map<Int, SnapStopToLinkResult>
+    fun findStopPointsByNationalIdsAndIndexByRoutePointOrdering(
+        routePoints: List<RoutePoint>,
+        maxStopLocationDeviation: Double
+    ): Map<Int, SnapStopToLinkResult>
 }

@@ -7,7 +7,6 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 object ParameterUtils {
-
     private const val DECIMAL = "\\d+(?:\\.\\d+)?"
     private const val COORDINATE = "$DECIMAL,$DECIMAL"
     const val COORDINATE_LIST: String = "$COORDINATE(?:~$COORDINATE)*"
@@ -34,13 +33,19 @@ object ParameterUtils {
             }
     }
 
-    fun findVehicleType(transportationModeParam: String, vehicleTypeParam: String?): VehicleType? {
+    fun findVehicleType(
+        transportationModeParam: String,
+        vehicleTypeParam: String?
+    ): VehicleType? {
         return VehicleMode.from(transportationModeParam)?.let { vehicleMode: VehicleMode ->
             findVehicleType(vehicleMode, vehicleTypeParam)
         }
     }
 
-    fun findVehicleType(vehicleMode: VehicleMode, vehicleTypeParam: String?): VehicleType? {
+    fun findVehicleType(
+        vehicleMode: VehicleMode,
+        vehicleTypeParam: String?
+    ): VehicleType? {
         if (vehicleTypeParam != null) {
             // Vehicle type must match with its vehicle mode.
             return VehicleType.from(vehicleTypeParam)?.takeIf { it.vehicleMode == vehicleMode }

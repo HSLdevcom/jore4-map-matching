@@ -6,7 +6,6 @@ import org.quicktheories.core.Gen
 import org.quicktheories.generators.Generate.longRange
 
 object InfrastructureLinkIdGenerator {
-
     private val ID_VALUE: Gen<Long> = longRange(1, 9_999)
 
     fun infrastructureLinkId(): Gen<InfrastructureLinkId> = ID_VALUE.map(::InfrastructureLinkId)

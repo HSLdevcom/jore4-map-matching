@@ -10,15 +10,14 @@ import org.geolatte.geom.builder.DSL.linestring
 import org.geolatte.geom.builder.DSL.point
 import org.geolatte.geom.crs.CrsRegistry
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
 import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
 class GeometryConverterTest {
-
     companion object {
         private val EPSG_3067 = CrsRegistry.getProjectedCoordinateReferenceSystemForEPSG(3067)
 
@@ -37,9 +36,10 @@ class GeometryConverterTest {
 
     @Test
     fun testFrom_withPoint_whenTypeNameIsSetAsLineString() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            GeometryConverter(GeometryType.LINESTRING).from(EWKB_POINT)
-        }
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                GeometryConverter(GeometryType.LINESTRING).from(EWKB_POINT)
+            }
         assertThat(exception.message, equalTo("Unsupported geometry type: Point"))
     }
 
@@ -48,15 +48,18 @@ class GeometryConverterTest {
         val lineString: Geometry<C2D>? = GeometryConverter(GeometryType.LINESTRING).from(EWKB_LINESTRING)
 
         assertThat(lineString, `is`(notNullValue()))
-        assertThat(lineString,
-                   equalTo(linestring(EPSG_3067, c(385795.1, 6672185.2), c(386284.0, 6673127.0))))
+        assertThat(
+            lineString,
+            equalTo(linestring(EPSG_3067, c(385795.1, 6672185.2), c(386284.0, 6673127.0)))
+        )
     }
 
     @Test
     fun testFrom_withLineString_whenTypeNameIsSetAsPoint() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            GeometryConverter(GeometryType.POINT).from(EWKB_LINESTRING)
-        }
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                GeometryConverter(GeometryType.POINT).from(EWKB_LINESTRING)
+            }
         assertThat(exception.message, equalTo("Unsupported geometry type: LineString"))
     }
 
@@ -77,8 +80,10 @@ class GeometryConverterTest {
     fun testTo_withLineString() {
         val lineString: LineString<C2D> = linestring(EPSG_3067, c(385795.1, 6672185.2), c(386284.0, 6673127.0))
 
-        assertThat(GeometryConverter.to(lineString),
-                   equalTo("SRID=3067;LINESTRING(385795.1 6672185.2,386284 6673127)"))
+        assertThat(
+            GeometryConverter.to(lineString),
+            equalTo("SRID=3067;LINESTRING(385795.1 6672185.2,386284 6673127)")
+        )
     }
 
     @Test

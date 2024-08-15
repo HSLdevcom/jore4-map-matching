@@ -4,7 +4,6 @@ import fi.hsl.jore4.mapmatching.model.InfrastructureLinkTraversal
 import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 
 object ClosedLoopPostProcessor {
-
     /**
      * Consecutive traversals (full, partial, reversed, reversed partial) on a
      * closed-loop shaped infrastructure link are replaced by one full traversal
@@ -25,29 +24,29 @@ object ClosedLoopPostProcessor {
             lastAddedTraversal
                 ?.let { lastAdded: InfrastructureLinkTraversal ->
 
-                    if (linkTraversal.isClosedLoop
-                        && lastAdded.isClosedLoop
-                        && linkTraversal.infrastructureLinkId == lastAdded.infrastructureLinkId
+                    if (linkTraversal.isClosedLoop &&
+                        lastAdded.isClosedLoop &&
+                        linkTraversal.infrastructureLinkId == lastAdded.infrastructureLinkId
                     ) {
                         // Let's skip current link traversal and modify the last added traversal.
 
                         val (routeSeqNum: Int) = modifiedRouteLinks.removeLast()
 
-                        val replacementLinkTraversal = InfrastructureLinkTraversal(
-                            lastAdded.infrastructureLinkId,
-                            lastAdded.externalLinkRef,
-                            lastAdded.linkGeometry,
-                            lastAdded.linkGeometry, // traversedGeometry is replaced by linkGeometry
-                            lastAdded.isTraversalForwards,
-                            lastAdded.linkLength,
-                            lastAdded.linkLength, // traversedDistance is replaced by linkLength
-                            true,
-                            lastAdded.infrastructureLinkName
-                        )
+                        val replacementLinkTraversal =
+                            InfrastructureLinkTraversal(
+                                lastAdded.infrastructureLinkId,
+                                lastAdded.externalLinkRef,
+                                lastAdded.linkGeometry,
+                                lastAdded.linkGeometry, // traversedGeometry is replaced by linkGeometry
+                                lastAdded.isTraversalForwards,
+                                lastAdded.linkLength,
+                                lastAdded.linkLength, // traversedDistance is replaced by linkLength
+                                true,
+                                lastAdded.infrastructureLinkName
+                            )
 
                         modifiedRouteLinks.add(RouteLink(routeSeqNum, replacementLinkTraversal))
                         lastAddedTraversal = replacementLinkTraversal
-
                     } else {
                         modifiedRouteLinks.add(routeLink)
                         lastAddedTraversal = linkTraversal

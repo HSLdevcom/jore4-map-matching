@@ -12,39 +12,50 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 
 @InternalService
-class ClosestTerminusLinksResolverImpl @Autowired constructor(val linkRepository: ILinkRepository)
-    : IClosestTerminusLinksResolver {
+class ClosestTerminusLinksResolverImpl
+    @Autowired
+    constructor(
+        val linkRepository: ILinkRepository
+    ) : IClosestTerminusLinksResolver {
+        @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
+        override fun findClosestInfrastructureLinksForRouteEndpoints(
+            startPoint: Point<G2D>,
+            endPoint: Point<G2D>,
+            vehicleType: VehicleType,
+            linkQueryDistance: Double,
+            linkQueryLimit: Int
+        ): Pair<List<SnappedPointOnLink>, List<SnappedPointOnLink>> {
+            // The method findNClosestLinks returns one-based index.
+            // The number of the closest links searched is limited by linkQueryLimit parameter.
+            val linkSearchResults: Map<Int, SnapPointToLinksResult> =
+                linkRepository.findNClosestLinks(
+                    listOf(startPoint, endPoint),
+                    vehicleType,
+                    linkQueryDistance,
+                    linkQueryLimit
+                )
 
-    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
-    override fun findClosestInfrastructureLinksForRouteEndpoints(startPoint: Point<G2D>,
-                                                                 endPoint: Point<G2D>,
-                                                                 vehicleType: VehicleType,
-                                                                 linkQueryDistance: Double,
-                                                                 linkQueryLimit: Int)
-        : Pair<List<SnappedPointOnLink>, List<SnappedPointOnLink>> {
+            fun getExceptionIfNoLinksFound(
+                terminusPoint: Point<G2D>,
+                isStartPoint: Boolean
+            ): IllegalStateException {
+                val terminusType = if (isStartPoint) TerminusType.START else TerminusType.END
 
-        // The method findNClosestLinks returns one-based index.
-        // The number of the closest links searched is limited by linkQueryLimit parameter.
-        val linkSearchResults: Map<Int, SnapPointToLinksResult> =
-            linkRepository.findNClosestLinks(listOf(startPoint, endPoint),
-                                             vehicleType,
-                                             linkQueryDistance,
-                                             linkQueryLimit)
+                return IllegalStateException(
+                    "Could not find any infrastructure link within $linkQueryDistance meter distance " +
+                        "from source route $terminusType point ($terminusPoint) " +
+                        "while applying vehicle type constraint '$vehicleType'"
+                )
+            }
 
-        fun getExceptionIfNoLinksFound(terminusPoint: Point<G2D>, isStartPoint: Boolean): IllegalStateException {
-            val terminusType = if (isStartPoint) TerminusType.START else TerminusType.END
+            val closestStartLinks: List<SnappedPointOnLink> =
+                linkSearchResults[1]?.closestLinks
+                    ?: throw getExceptionIfNoLinksFound(startPoint, true)
 
-            return IllegalStateException(
-                "Could not find any infrastructure link within $linkQueryDistance meter distance from source route " +
-                    "$terminusType point ($terminusPoint) while applying vehicle type constraint '$vehicleType'")
+            val closestEndLinks: List<SnappedPointOnLink> =
+                linkSearchResults[2]?.closestLinks
+                    ?: throw getExceptionIfNoLinksFound(endPoint, false)
+
+            return closestStartLinks to closestEndLinks
         }
-
-        val closestStartLinks: List<SnappedPointOnLink> = linkSearchResults[1]?.closestLinks
-            ?: throw getExceptionIfNoLinksFound(startPoint, true)
-
-        val closestEndLinks: List<SnappedPointOnLink> = linkSearchResults[2]?.closestLinks
-            ?: throw getExceptionIfNoLinksFound(endPoint, false)
-
-        return closestStartLinks to closestEndLinks
     }
-}

@@ -14,7 +14,13 @@ import jakarta.validation.constraints.Pattern
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -24,18 +30,18 @@ private val LOGGER = KotlinLogging.logger {}
 class RouteController
     @Autowired
     constructor(
-        val routingService: IRoutingService,
+        val routingService: IRoutingService
     ) {
         @Deprecated("GET request should be replaced with POST")
         @GetMapping(
             "/$TRANSPORTATION_MODE_PARAM/{coords}",
-            "/$TRANSPORTATION_MODE_PARAM/{coords}.json",
+            "/$TRANSPORTATION_MODE_PARAM/{coords}.json"
         )
         fun findRoute(
             @PathVariable transportationMode: String,
             @Pattern(regexp = ParameterUtils.COORDINATE_LIST) @PathVariable coords: String,
             @RequestParam(required = false) linkSearchRadius: Int?,
-            @RequestParam(required = false) simplifyClosedLoopTraversals: Boolean?,
+            @RequestParam(required = false) simplifyClosedLoopTraversals: Boolean?
         ): RoutingResponse {
             LOGGER.debug { "Given transportation mode: $transportationMode" }
             LOGGER.debug { "Given coordinate sequence: $coords" }
@@ -50,7 +56,7 @@ class RouteController
         @PostMapping("/$TRANSPORTATION_MODE_PARAM", consumes = [MediaType.APPLICATION_JSON_VALUE])
         fun findRoute(
             @PathVariable transportationMode: String,
-            @Valid @RequestBody request: PublicTransportRouteFindRequestDTO,
+            @Valid @RequestBody request: PublicTransportRouteFindRequestDTO
         ): RoutingResponse {
             LOGGER.debug { "Given transportation mode: $transportationMode" }
             LOGGER.debug { "Given coordinate points: ${request.routePoints}" }
@@ -63,21 +69,21 @@ class RouteController
                 request.routePoints,
                 vehicleType,
                 request.linkSearchRadius,
-                request.simplifyClosedLoopTraversals,
+                request.simplifyClosedLoopTraversals
             )
         }
 
         @Deprecated("GET request should be replaced with POST")
         @GetMapping(
             "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}",
-            "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}.json",
+            "/$TRANSPORTATION_MODE_PARAM/$VEHICLE_TYPE_PARAM/{coords}.json"
         )
         fun findRoute(
             @PathVariable transportationMode: String,
             @PathVariable vehicleTypeParam: String,
             @Pattern(regexp = ParameterUtils.COORDINATE_LIST) @PathVariable coords: String,
             @RequestParam(required = false) linkSearchRadius: Int?,
-            @RequestParam(required = false) simplifyClosedLoopTraversals: Boolean?,
+            @RequestParam(required = false) simplifyClosedLoopTraversals: Boolean?
         ): RoutingResponse {
             LOGGER.debug { "Given profile: $transportationMode/$vehicleTypeParam" }
             LOGGER.debug { "Given coordinate sequence: $coords" }
@@ -93,7 +99,7 @@ class RouteController
         fun findRoute(
             @PathVariable transportationMode: String,
             @PathVariable vehicleTypeParam: String,
-            @Valid @RequestBody request: PublicTransportRouteFindRequestDTO,
+            @Valid @RequestBody request: PublicTransportRouteFindRequestDTO
         ): RoutingResponse {
             LOGGER.debug { "Given profile: $transportationMode/$vehicleTypeParam" }
             LOGGER.debug { "Given coordinate points: ${request.routePoints}" }
@@ -106,7 +112,7 @@ class RouteController
                 request.routePoints,
                 vehicleType,
                 request.linkSearchRadius,
-                request.simplifyClosedLoopTraversals,
+                request.simplifyClosedLoopTraversals
             )
         }
 
@@ -114,7 +120,7 @@ class RouteController
             coords: String,
             vehicleType: VehicleType,
             linkSearchRadius: Int?,
-            simplifyClosedLoopTraversals: Boolean?,
+            simplifyClosedLoopTraversals: Boolean?
         ): RoutingResponse {
             val parsedCoordinates: List<LatLng>
 
@@ -128,7 +134,7 @@ class RouteController
                 parsedCoordinates,
                 vehicleType,
                 linkSearchRadius,
-                simplifyClosedLoopTraversals,
+                simplifyClosedLoopTraversals
             )
         }
 
@@ -136,15 +142,15 @@ class RouteController
             coords: List<LatLng>,
             vehicleType: VehicleType,
             linkSearchRadius: Int?,
-            simplifyClosedLoopTraversals: Boolean?,
+            simplifyClosedLoopTraversals: Boolean?
         ): RoutingResponse =
             routingService.findRoute(
                 toPoints(coords),
                 vehicleType,
                 RoutingExtraParameters(
                     linkSearchRadius ?: DEFAULT_LINK_SEARCH_RADIUS,
-                    simplifyClosedLoopTraversals ?: DEFAULT_SIMPLIFY_CLOSED_LOOP_TRAVERSALS,
-                ),
+                    simplifyClosedLoopTraversals ?: DEFAULT_SIMPLIFY_CLOSED_LOOP_TRAVERSALS
+                )
             )
 
         companion object {

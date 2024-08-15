@@ -18,7 +18,6 @@ import java.sql.Types
 import java.util.Objects
 
 class LineStringBinding : Binding<Any, LineString<C2D>> {
-
     override fun converter(): Converter<Any, LineString<C2D>> = LineStringConverter.INSTANCE
 
     @Throws(SQLException::class)

@@ -5,7 +5,6 @@ import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 
 interface ILinkRepository {
-
     /**
      * Find the closest link for every given point within the given distance.
      *
@@ -23,10 +22,11 @@ interface ILinkRepository {
      * the result map. The result map contains at most the same amount of
      * entries as there are points in the parameter list.
      */
-    fun findClosestLinks(points: List<Point<G2D>>,
-                         vehicleType: VehicleType,
-                         distanceInMeters: Double)
-        : Map<Int, SnapPointToLinkResult>
+    fun findClosestLinks(
+        points: List<Point<G2D>>,
+        vehicleType: VehicleType,
+        distanceInMeters: Double
+    ): Map<Int, SnapPointToLinkResult>
 
     /**
      * Find multiple closest links for every given point within the given
@@ -49,9 +49,10 @@ interface ILinkRepository {
      * the result map. The result map contains at most the same amount of
      * entries as there are points in the parameter list.
      */
-    fun findNClosestLinks(points: List<Point<G2D>>,
-                          vehicleType: VehicleType,
-                          distanceInMeters: Double,
-                          limit: Int)
-        : Map<Int, SnapPointToLinksResult>
+    fun findNClosestLinks(
+        points: List<Point<G2D>>,
+        vehicleType: VehicleType,
+        distanceInMeters: Double,
+        limit: Int
+    ): Map<Int, SnapPointToLinksResult>
 }

@@ -6,8 +6,8 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
 import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.parseCoordinates
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -23,11 +23,9 @@ import java.util.stream.Stream
 import kotlin.test.assertFailsWith
 
 class ParameterUtilsTest {
-
     @Nested
     @DisplayName("Parse coordinates")
     inner class ParseCoordinates {
-
         @Test
         @DisplayName("When given valid coordinates with decimal part")
         fun shouldParseValidCoordinatesWithDecimalPart() {
@@ -82,9 +80,10 @@ class ParameterUtilsTest {
                 // no Z axis allowed
                 "24.123,60.456,789"
             ).forEach { invalidCoord ->
-                val exception = assertFailsWith<IllegalArgumentException> {
-                    parseCoordinates(invalidCoord)
-                }
+                val exception =
+                    assertFailsWith<IllegalArgumentException> {
+                        parseCoordinates(invalidCoord)
+                    }
                 assertThat(exception.message, equalTo("Invalid coordinate sequence: \"$invalidCoord\""))
             }
         }
@@ -93,11 +92,9 @@ class ParameterUtilsTest {
     @Nested
     @DisplayName("Find vehicle type")
     inner class FindVehicleType {
-
         @Nested
         @DisplayName("When transportation mode is given as string")
         inner class WhenTransportationModeIsGivenAsString {
-
             @ParameterizedTest
             @EnumSource(VehicleType::class)
             fun shouldReturnVehicleTypeEnumWhenGivenMatchingVehicleModeString(vehicleType: VehicleType) {
@@ -113,7 +110,7 @@ class ParameterUtilsTest {
             @ArgumentsSource(VehicleModeTypeToDefaultVehicleTypeArgumentsProvider::class)
             fun shouldReturnDefaultVehicleTypeForVehicleModeWhenVehicleTypeParameterIsNull(
                 vehicleMode: VehicleMode,
-                expectedVehicleType: VehicleType,
+                expectedVehicleType: VehicleType
             ) {
                 val vehicleModeString: String = vehicleMode.value
                 val result: VehicleType? = findVehicleType(vehicleModeString, null)
@@ -151,7 +148,6 @@ class ParameterUtilsTest {
         @Nested
         @DisplayName("When transportation mode is given as enum")
         inner class WhenTransportationModeIsGivenAsEnum {
-
             @ParameterizedTest
             @EnumSource(VehicleType::class)
             fun shouldReturnVehicleTypeEnumWhenGivenMatchingVehicleMode(vehicleType: VehicleType) {
@@ -165,7 +161,7 @@ class ParameterUtilsTest {
             @ArgumentsSource(VehicleModeTypeToDefaultVehicleTypeArgumentsProvider::class)
             fun shouldReturnDefaultVehicleTypeForVehicleModeWhenVehicleTypeParameterIsNull(
                 vehicleMode: VehicleMode,
-                expectedVehicleType: VehicleType,
+                expectedVehicleType: VehicleType
             ) {
                 val result: VehicleType? = findVehicleType(vehicleMode, null)
 

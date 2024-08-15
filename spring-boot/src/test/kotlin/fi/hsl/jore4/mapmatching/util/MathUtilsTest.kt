@@ -1,30 +1,29 @@
 package fi.hsl.jore4.mapmatching.util
 
 import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.quicktheories.QuickTheory.qt
 import org.quicktheories.core.Gen
 import org.quicktheories.generators.SourceDSL.doubles
-import org.assertj.core.api.Assertions.assertThat
-import org.quicktheories.QuickTheory.qt
 import org.quicktheories.generators.SourceDSL.integers
 import java.math.BigDecimal
 
 class MathUtilsTest {
-
-    private data class ToleranceTestTriple(val tolerance: Double,
-                                           val arbitraryNumber: Double,
-                                           val deltaWithinOrOutsideTolerance: Double)
+    private data class ToleranceTestTriple(
+        val tolerance: Double,
+        val arbitraryNumber: Double,
+        val deltaWithinOrOutsideTolerance: Double
+    )
 
     @Nested
     @DisplayName("isWithinTolerance")
     inner class IsWithinTolerance {
-
         @Nested
         @DisplayName("Test start of nominal range [0-1]")
         inner class TestStartOfNominalRange {
-
             private val tolerance: Double = 0.00001
 
             @Test
@@ -41,7 +40,6 @@ class MathUtilsTest {
         @Nested
         @DisplayName("Test end of nominal range [0-1]")
         inner class TestEndOfNominalRange {
-
             private val tolerance: Double = 0.00001
 
             @Test
@@ -58,15 +56,14 @@ class MathUtilsTest {
         @Nested
         @DisplayName("Test using large set of generated values")
         inner class GenerativeTests {
-
-            private val genTolerance: Gen<Double> = integers().between(-2, 10).map { decimalPrecision ->
-                BigDecimal.ONE.movePointLeft(decimalPrecision).toDouble()
-            }
+            private val genTolerance: Gen<Double> =
+                integers().between(-2, 10).map { decimalPrecision ->
+                    BigDecimal.ONE.movePointLeft(decimalPrecision).toDouble()
+                }
 
             @Test
             @DisplayName("With generated numbers within tolerance")
             fun withGeneratedNumbersWithinTolerance() {
-
                 val genTriple: Gen<ToleranceTestTriple> =
                     genTolerance.flatMap { tolerance ->
                         genFiniteDouble(tolerance).flatMap { arbitraryNumber: Double ->
@@ -117,21 +114,27 @@ class MathUtilsTest {
     }
 
     companion object {
-
-        private fun genFiniteDouble(tolerance: Double): Gen<Double> = doubles().between(minDouble(tolerance),
-                                                                                        maxDouble(tolerance))
+        private fun genFiniteDouble(tolerance: Double): Gen<Double> =
+            doubles().between(
+                minDouble(tolerance),
+                maxDouble(tolerance)
+            )
 
         private fun minDouble(tolerance: Double): Double = Double.MIN_VALUE + tolerance
 
         private fun maxDouble(tolerance: Double): Double = Double.MAX_VALUE - tolerance
 
-        private fun plusOrMinusResultingFinite(n1: Double, n2: Double): Double {
+        private fun plusOrMinusResultingFinite(
+            n1: Double,
+            n2: Double
+        ): Double {
             val addition: Double = n1 + n2
 
-            return if (java.lang.Double.isFinite(addition))
+            return if (java.lang.Double.isFinite(addition)) {
                 addition
-            else
+            } else {
                 n1 - n2
+            }
         }
     }
 }

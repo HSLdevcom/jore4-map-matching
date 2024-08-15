@@ -5,7 +5,6 @@ import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 
 interface IRoadJunctionMatcher {
-
     /**
      * Searches the local database for infrastructure nodes that can be
      * associated with the given source route points unambiguously, i.e. there
@@ -42,9 +41,10 @@ interface IRoadJunctionMatcher {
      * @throws IllegalArgumentException if match distance is greater than
      * clearing distance
      */
-    fun findInfrastructureNodesMatchingRoadJunctions(routePoints: List<RoutePoint>,
-                                                     vehicleType: VehicleType,
-                                                     matchDistance: Double,
-                                                     clearingDistance: Double)
-        : Map<Int, NodeProximity?>
+    fun findInfrastructureNodesMatchingRoadJunctions(
+        routePoints: List<RoutePoint>,
+        vehicleType: VehicleType,
+        matchDistance: Double,
+        clearingDistance: Double
+    ): Map<Int, NodeProximity?>
 }

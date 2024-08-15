@@ -43,7 +43,7 @@ class CommonErrorHandler {
             Consumer { error: ObjectError ->
                 val fieldName = (error as FieldError).field
                 errors[fieldName] = error.getDefaultMessage()
-            },
+            }
         )
 
         val message =
