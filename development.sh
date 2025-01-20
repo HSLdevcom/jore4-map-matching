@@ -101,7 +101,14 @@ print_usage() {
   "
 }
 
-case $1 in
+COMMAND=${1:-}
+
+if [[ -z $COMMAND ]]; then
+  print_usage
+  exit 1
+fi
+
+case $COMMAND in
 start)
   start
   ;;
@@ -138,6 +145,9 @@ help)
   ;;
 
 *)
+  echo ""
+  echo "Unknown command: '${COMMAND}'"
   print_usage
+  exit 1
   ;;
 esac
