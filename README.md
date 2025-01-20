@@ -35,7 +35,7 @@ In the `dev` profile, all three databases are involved:
 With the `dev` profile one needs to create a user-specific build configuration file as follows:
 
 ```sh
-touch spring-boot/profiles/dev/config.$(whoami).properties
+touch profiles/dev/config.$(whoami).properties
 ```
 
 ### Running app from Docker container

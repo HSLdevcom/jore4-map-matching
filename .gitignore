@@ -1,7 +1,7 @@
 # Compiled source #
 ###################
 *.class
-spring-boot/target/**
+target/**
 
 # IntelliJ Idea files #
 #######################
@@ -14,7 +14,7 @@ spring-boot/target/**
 
 # Developer profiles #
 ######################
-spring-boot/profiles/dev/config.*.properties
+profiles/dev/config.*.properties
 
 # Logs and databases #
 ######################

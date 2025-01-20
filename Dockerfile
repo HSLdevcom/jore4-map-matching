@@ -4,13 +4,13 @@ FROM maven:3-eclipse-temurin-17 AS builder
 WORKDIR /build
 
 # download dependencies
-COPY ./spring-boot/pom.xml /build
+COPY ./pom.xml /build
 RUN mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
 
 # copy sources
-COPY ./spring-boot/src /build/src
+COPY ./src /build/src
 # package using "prod" profile
-COPY ./spring-boot/profiles/prod /build/profiles/prod
+COPY ./profiles/prod /build/profiles/prod
 RUN mvn -Pprod -DskipTests=true clean package spring-boot:repackage
 
 FROM eclipse-temurin:17.0.8_7-jre
