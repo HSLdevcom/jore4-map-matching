@@ -73,31 +73,35 @@ remove_all() {
 
 print_usage() {
   echo "
-  Usage $0 <command>
+  Usage: $(basename "$0") <command>
 
   start
-    Start pre-populated database (same data as in production) and map-matching service in Docker container
+    Start pre-populated database (same data as in production) and map-matching
+    service in Docker containers.
 
   start:dev
-    Start all databases (development, test, pre-populated) in Docker containers and the app locally via Maven (using 'dev' profile)
+    Start all databases (development, test, pre-populated) in Docker containers
+    and the app locally via Maven (using 'dev' profile).
 
   start:devdeps
-    Start all databases (development, test, pre-populated) to be used while developing the application
+    Start all databases (development, test, pre-populated) to be used while
+    developing the application.
 
   test
-    Run JUnit tests via Maven using 'dev' profile. Start pre-populated & test database if not already up.
+    Run JUnit tests via Maven using 'dev' profile. Start pre-populated & test
+    database if not already up.
 
   generate:jooq
-    Generate jOOQ classes using test database as dependency
+    Generate jOOQ classes using test database as dependency.
 
   stop
-    Stop all map-matching related Docker containers
+    Stop all map-matching related Docker containers.
 
   remove
-    Stop and remove all map-matching related Docker containers
+    Stop and remove all map-matching related Docker containers.
 
   help
-    Show this usage information
+    Show this usage information.
   "
 }
 
