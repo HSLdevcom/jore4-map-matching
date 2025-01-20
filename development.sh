@@ -58,17 +58,17 @@ run_tests() {
   cd "${WD}/spring-boot" && mvn clean verify
 }
 
+generate_jooq() {
+  cd ./spring-boot
+  mvn clean process-resources
+}
+
 stop_all() {
   $DOCKER_COMPOSE_CMD stop
 }
 
 remove_all() {
   $DOCKER_COMPOSE_CMD down
-}
-
-generate_jooq() {
-  cd ./spring-boot
-  mvn clean process-resources
 }
 
 print_usage() {
@@ -87,14 +87,14 @@ print_usage() {
   test
     Run JUnit tests via Maven using 'dev' profile. Start pre-populated & test database if not already up.
 
+  generate:jooq
+    Generate jOOQ classes using test database as dependency
+
   stop
     Stop all map-matching related Docker containers
 
   remove
     Stop and remove all map-matching related Docker containers
-
-  generate:jooq
-    Generate jOOQ classes using test database as dependency
 
   help
     Show this usage information
@@ -123,14 +123,6 @@ start:devdeps)
   start_prod_database_blocking
   ;;
 
-stop)
-  stop_all
-  ;;
-
-remove)
-  remove_all
-  ;;
-
 test)
   run_tests
   ;;
@@ -138,6 +130,14 @@ test)
 generate:jooq)
   start_test_database_blocking
   generate_jooq
+  ;;
+
+stop)
+  stop_all
+  ;;
+
+remove)
+  remove_all
   ;;
 
 help)
