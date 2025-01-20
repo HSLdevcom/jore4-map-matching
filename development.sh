@@ -101,7 +101,12 @@ print_usage() {
   "
 }
 
-case $1 in
+if [[ $# -eq 0 ]]; then
+  print_usage
+  exit 1
+fi
+
+case "$1" in
 start)
   start
   ;;
@@ -138,6 +143,9 @@ help)
   ;;
 
 *)
+  echo ""
+  echo "Unknown command: '${1}'"
   print_usage
+  exit 1
   ;;
 esac
