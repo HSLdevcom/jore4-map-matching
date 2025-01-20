@@ -71,7 +71,7 @@ generate_jooq() {
   mvn clean process-resources
 }
 
-usage() {
+print_usage() {
   echo "
   Usage $0 <command>
 
@@ -134,10 +134,10 @@ generate:jooq)
   ;;
 
 help)
-  usage
+  print_usage
   ;;
 
 *)
-  usage
+  print_usage
   ;;
 esac
