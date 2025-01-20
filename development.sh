@@ -8,19 +8,19 @@ cd "${WD}"
 
 DOCKER_COMPOSE_CMD="docker compose -f ./docker/docker-compose.yml"
 
-function start_prod_database {
+start_prod_database() {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingdb
 }
 
-function start_dev_database {
+start_dev_database() {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingdevdb
 }
 
-function start_test_database {
+start_test_database() {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingtestdb
 }
 
-function start_prod_database_blocking {
+start_prod_database_blocking() {
   start_prod_database
   while ! pg_isready -h localhost -p 19000
   do
@@ -29,7 +29,7 @@ function start_prod_database_blocking {
   done
 }
 
-function start_test_database_blocking {
+start_test_database_blocking() {
   start_test_database
   while ! pg_isready -h localhost -p 20000
   do
@@ -38,12 +38,12 @@ function start_test_database_blocking {
   done
 }
 
-function start {
+start() {
   start_prod_database_blocking
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatching
 }
 
-function start_dev {
+start_dev() {
   start_dev_database
   # pre-populated database (same data as in production) is used in integration tests
   start_prod_database_blocking
@@ -51,27 +51,27 @@ function start_dev {
   cd "${WD}/spring-boot" && mvn clean spring-boot:run
 }
 
-function run_tests {
+run_tests() {
   # pre-populated database (same data as in production) is used in integration tests
   start_prod_database_blocking
   start_test_database_blocking
   cd "${WD}/spring-boot" && mvn clean verify
 }
 
-function stop_all {
+stop_all() {
   $DOCKER_COMPOSE_CMD stop
 }
 
-function remove_all {
+remove_all() {
   $DOCKER_COMPOSE_CMD down
 }
 
-function generate_jooq() {
+generate_jooq() {
   cd ./spring-boot
   mvn clean process-resources
 }
 
-function usage {
+usage() {
   echo "
   Usage $0 <command>
 
