@@ -30,10 +30,10 @@ RUN curl -o /tmp/read-secrets.sh "https://raw.githubusercontent.com/HSLdevcom/jo
 COPY ./scripts/build-jdbc-urls.sh /tmp/build-jdbc-urls.sh
 
 # copy compiled jar from builder stage
-COPY --from=builder /build/target/*.jar /usr/src/jore4-map-matching/jore4-map-matching-backend.jar
+COPY --from=builder /build/target/*.jar /usr/src/jore4-map-matching/jore4-map-matching.jar
 
 # read Docker secrets into environment variables and run application
-CMD /bin/bash -c "source /tmp/read-secrets.sh && source /tmp/build-jdbc-urls.sh && java -jar /usr/src/jore4-map-matching/jore4-map-matching-backend.jar"
+CMD /bin/bash -c "source /tmp/read-secrets.sh && source /tmp/build-jdbc-urls.sh && java -jar /usr/src/jore4-map-matching/jore4-map-matching.jar"
 
 HEALTHCHECK --interval=1m --timeout=5s \
   CMD curl --fail http://localhost:8080/actuator/health
