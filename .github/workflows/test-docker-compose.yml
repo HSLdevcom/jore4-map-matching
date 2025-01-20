@@ -9,14 +9,14 @@ on:
 
 jobs:
   test-docker-compose:
-    name: verify docker-compose setup
+    name: Verify Docker Compose setup
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Start databases and map-matching service
+      - name: Start databases and the map-matching service
         run: ./development.sh start
 
       - name: Verify that dockerized map-matching API is up and running

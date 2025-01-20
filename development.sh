@@ -20,47 +20,50 @@ start_test_database() {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingtestdb
 }
 
-start_prod_database_blocking() {
-  start_prod_database
-  while ! pg_isready -h localhost -p 19000
-  do
+wait_for_prod_database_to_be_ready() {
+  while ! pg_isready -h localhost -p 19000; do
     echo "waiting for pre-populated database to spin up"
     sleep 2;
   done
 }
 
-start_test_database_blocking() {
-  start_test_database
-  while ! pg_isready -h localhost -p 20000
-  do
+wait_for_test_database_to_be_ready() {
+  while ! pg_isready -h localhost -p 20000; do
     echo "waiting for test database to spin up"
     sleep 2;
   done
 }
 
 start() {
-  start_prod_database_blocking
+  start_prod_database
+  wait_for_prod_database_to_be_ready
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatching
 }
 
-start_dev() {
+start_deps() {
+  # Pre-populated database (same data as in production) is used in integration
+  # tests.
+  start_prod_database
+
   start_dev_database
-  # pre-populated database (same data as in production) is used in integration tests
-  start_prod_database_blocking
-  start_test_database_blocking
-  cd "${WD}/spring-boot" && mvn clean spring-boot:run
+  start_test_database
+}
+
+run() {
+  wait_for_test_database_to_be_ready
+  wait_for_prod_database_to_be_ready
+  cd spring-boot && mvn spring-boot:run
 }
 
 run_tests() {
-  # pre-populated database (same data as in production) is used in integration tests
-  start_prod_database_blocking
-  start_test_database_blocking
-  cd "${WD}/spring-boot" && mvn clean verify
+  wait_for_test_database_to_be_ready
+  wait_for_prod_database_to_be_ready
+  cd spring-boot && mvn clean verify
 }
 
 generate_jooq() {
-  cd ./spring-boot
-  mvn clean process-resources
+  wait_for_test_database_to_be_ready
+  cd spring-boot && mvn clean process-resources
 }
 
 stop_all() {
@@ -79,17 +82,16 @@ print_usage() {
     Start pre-populated database (same data as in production) and map-matching
     service in Docker containers.
 
-  start:dev
-    Start all databases (development, test, pre-populated) in Docker containers
-    and the app locally via Maven (using 'dev' profile).
-
-  start:devdeps
+  start:deps
     Start all databases (development, test, pre-populated) to be used while
     developing the application.
 
+  run
+    Run the application locally via Maven (using 'dev' profile). All the
+    databases need to be already running.
+
   test
-    Run JUnit tests via Maven using 'dev' profile. Start pre-populated & test
-    database if not already up.
+    Run JUnit tests via Maven using 'dev' profile.
 
   generate:jooq
     Generate jOOQ classes using test database as dependency.
@@ -115,14 +117,12 @@ start)
   start
   ;;
 
-start:dev)
-  start_dev
+start:deps)
+  start_deps
   ;;
 
-start:devdeps)
-  start_dev_database
-  start_test_database_blocking
-  start_prod_database_blocking
+run)
+  run
   ;;
 
 test)
@@ -130,7 +130,6 @@ test)
   ;;
 
 generate:jooq)
-  start_test_database_blocking
   generate_jooq
   ;;
 
