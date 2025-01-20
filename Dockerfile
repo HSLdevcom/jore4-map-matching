@@ -27,7 +27,7 @@ RUN apt update \
 RUN curl -o /tmp/read-secrets.sh "https://raw.githubusercontent.com/HSLdevcom/jore4-tools/main/docker/read-secrets.sh"
 
 # add helper script for constructing JDBC URL
-COPY ./docker/build-jdbc-urls.sh /tmp/build-jdbc-urls.sh
+COPY ./scripts/build-jdbc-urls.sh /tmp/build-jdbc-urls.sh
 
 # copy compiled jar from builder stage
 COPY --from=builder /build/target/*.jar /usr/src/jore4-map-matching/jore4-map-matching-backend.jar
