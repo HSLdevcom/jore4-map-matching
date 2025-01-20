@@ -12,6 +12,11 @@ target/**
 *.iws
 *.eml
 
+# Docker
+docker/**
+!docker/docker-compose.custom.yml
+!docker/docker-compose.dev.yml
+
 # Developer profiles #
 ######################
 profiles/dev/config.*.properties

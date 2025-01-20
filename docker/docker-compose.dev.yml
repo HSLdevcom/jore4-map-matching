@@ -1,0 +1,32 @@
+---
+services:
+  # empty database used in development while running service (instead of
+  # "jore4-mapmatchingdb")
+  jore4-mapmatchingdb-dev:
+    build:
+      context: "./docker-pgrouting"
+    container_name: mapmatchingdb-dev
+    restart: "unless-stopped"
+    networks:
+      - jore4
+    ports:
+      - "127.0.0.1:18000:5432"
+    environment:
+      - POSTGRES_DB=jore4mapmatching
+      - POSTGRES_USER=mapmatching
+      - POSTGRES_PASSWORD=password
+
+  # empty database for tests and jOOQ code generation
+  jore4-mapmatchingdb-test:
+    build:
+      context: "./docker-pgrouting"
+    container_name: mapmatchingdb-test
+    restart: "unless-stopped"
+    networks:
+      - jore4
+    ports:
+      - "127.0.0.1:20000:5432"
+    environment:
+      - POSTGRES_DB=jore4mapmatching
+      - POSTGRES_USER=mapmatching
+      - POSTGRES_PASSWORD=password

@@ -1,0 +1,35 @@
+---
+services:
+  # build and run the local image instead
+  # note: it's currently exposed on port 3005
+  jore4-mapmatching:
+    build:
+      context: ".."
+    restart: "unless-stopped"
+    networks:
+      - jore4
+    ports:
+      - "127.0.0.1:3005:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      DB_HOSTNAME: "jore4-mapmatchingdb"
+      DB_PORT: "5432"
+      DB_DATABASE: "jore4mapmatching"
+      SECRET_STORE_BASE_PATH: "/mnt/secrets-store"
+    secrets:
+      - source: mapmatching-db-password
+        target: /mnt/secrets-store/db-password
+      - source: mapmatching-db-username
+        target: /mnt/secrets-store/db-username
+    depends_on:
+      jore4-mapmatchingdb:
+        condition: service_healthy
+
+  # pre-populated with infrastructure network data and pgRouting topology
+  jore4-mapmatchingdb:
+    extends:
+      file: docker-compose.base.yml
+      service: jore4-mapmatchingdb-base
+    container_name: mapmatchingdb
+    image: "hsldevcom/jore4-postgres:mapmatching-main--20240905-5127bc444d3b324a8bb76f6fe3705166e9cf10ac"

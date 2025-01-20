@@ -4,6 +4,9 @@ on:
   # this workflow is only called by others, won't be executed on itself
   workflow_call:
 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   run-tests:
     name: Run Kotlin tests
