@@ -6,15 +6,15 @@ on:
 
 jobs:
   run-tests:
-    name: Run java tests
+    name: Run Java tests
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Start databases (blocking until up)
-        run: ./development.sh start:devdeps
+      - name: Start database dependencies
+        run: ./development.sh start:deps
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -32,4 +32,4 @@ jobs:
           touch ./spring-boot/profiles/dev/config.${RUNNER_USERNAME}.properties
 
           # run tests
-          cd ./spring-boot && mvn clean verify
+          ./development.sh test
