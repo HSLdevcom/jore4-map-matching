@@ -31,7 +31,7 @@ jobs:
         run: |
           # create mandatory Maven configuration file for runner user
           RUNNER_USERNAME=$(whoami)
-          touch ./spring-boot/profiles/dev/config.${RUNNER_USERNAME}.properties
+          touch ./profiles/dev/config.${RUNNER_USERNAME}.properties
 
           # generate jOOQ classes
           ./development.sh generate:jooq

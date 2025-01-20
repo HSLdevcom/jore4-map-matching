@@ -52,18 +52,18 @@ start_deps() {
 run() {
   wait_for_test_database_to_be_ready
   wait_for_prod_database_to_be_ready
-  cd spring-boot && mvn spring-boot:run
+  mvn spring-boot:run
 }
 
 run_tests() {
   wait_for_test_database_to_be_ready
   wait_for_prod_database_to_be_ready
-  cd spring-boot && mvn clean verify
+  mvn clean verify
 }
 
 generate_jooq() {
   wait_for_test_database_to_be_ready
-  cd spring-boot && mvn clean process-resources
+  mvn clean process-resources
 }
 
 stop_all() {
