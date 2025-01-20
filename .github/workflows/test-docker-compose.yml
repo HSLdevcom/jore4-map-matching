@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   test-docker-compose:
     name: Verify Docker Compose setup
