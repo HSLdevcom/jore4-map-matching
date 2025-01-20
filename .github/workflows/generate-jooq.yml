@@ -1,4 +1,4 @@
-name: Generate jooq
+name: Test jOOQ code generation
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   generate-jooq:
-    name: Verifies whether generated jooq classes have been updated
+    name: Verifies whether generated jOOQ classes have been updated
     runs-on: ubuntu-24.04
 
     steps:
@@ -23,6 +23,9 @@ jobs:
           architecture: x64
           distribution: temurin
           cache: maven
+
+      - name: Start database dependencies
+        run: ./development.sh start:deps
 
       - name: Run jOOQ class generation
         run: |

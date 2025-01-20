@@ -12,27 +12,33 @@ The microservice consists of:
 1. Spring Boot application written in [Kotlin](https://kotlinlang.org/)
 2. PostgreSQL database enabled with [PostGIS](https://postgis.net/) and [pgRouting](https://pgrouting.org/) extensions
 
-## Running app in production setup
+## Running app from Docker container
 
-The application is started with:
+To start the application from a Docker container, run:
 
 ```sh
 ./development.sh start
 ```
 
-The application will be available through http://localhost:3005. The application uses a pre-populated database and is ready for use.
+The application is available at http://localhost:3005. The application uses a database containing Digiroad infrastructure links and is ready to use as such.
 
-## Running app within development
+## Running app as local Java process
 
-Within development the application can be started with:
+During development, the application is started with its database dependencies as follows:
 
 ```sh
-./development.sh start:dev
+./development.sh run
 ```
 
-This avoids rebuilding Docker image every the code is changed. The application is started locally via Maven (not inside a Docker container) but the database dependencies are launched via docker-compose setup.
+This avoids having to rebuild the Docker image every time the code is changed. The application is started locally via Maven (not inside a Docker container), but the database dependencies are started as Docker containers.
 
-The application will be available through http://localhost:8080. The database used by the application is initially empty. Hence, no meaningful routing results can be expected (unless some data is populated e.g. from a dump available through [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import)).
+The application is then available at http://localhost:8080. The database used by the application is initially empty. Hence, meaningful routing results cannot be expected unless some data is populated e.g. from a database dump that is available through [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import).
+
+If you want to start only the database dependencies first and start the application itself later, for example from your IDE, you can run:
+
+```sh
+./development.sh start:deps
+```
 
 ## Routing API
 
@@ -290,7 +296,7 @@ Within developing the application, the currently recommended way of importing in
 1. Start map-matching server with the commands below. Within launch, the server will run database migration scripts into the development database. The scripts will initialise schemas, tables, constraints and indices. Also a couple of enumeration tables are populated with a fixed set of data.
 
     ```sh
-    ./development.sh start:dev
+    ./development.sh run
     ```
 2. Populate data (infrastructure links, infrastructure sources, network topology, associations of links to vehicle types and public transport stops) from [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import). This does not involve creating tables neither populating enumeration tables (which already contain data coming from the migration scripts).
 
