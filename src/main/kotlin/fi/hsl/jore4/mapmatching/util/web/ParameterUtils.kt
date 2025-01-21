@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.web.util
+package fi.hsl.jore4.mapmatching.util.web
 
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleMode

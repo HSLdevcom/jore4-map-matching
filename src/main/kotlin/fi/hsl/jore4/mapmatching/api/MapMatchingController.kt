@@ -7,7 +7,7 @@ import fi.hsl.jore4.mapmatching.service.matching.IMatchingService
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
-import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
+import fi.hsl.jore4.mapmatching.util.web.ParameterUtils.findVehicleType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,10 +1,10 @@
-package fi.hsl.jore4.mapmatching.web.util
+package fi.hsl.jore4.mapmatching.util.web
 
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
-import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
-import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.parseCoordinates
+import fi.hsl.jore4.mapmatching.util.web.ParameterUtils.findVehicleType
+import fi.hsl.jore4.mapmatching.util.web.ParameterUtils.parseCoordinates
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.`is`
