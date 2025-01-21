@@ -12,7 +12,33 @@ The microservice consists of:
 1. Spring Boot application written in [Kotlin](https://kotlinlang.org/)
 2. PostgreSQL database enabled with [PostGIS](https://postgis.net/) and [pgRouting](https://pgrouting.org/) extensions
 
-## Running app from Docker container
+## Development
+
+### Necessary tools
+
+- Maven
+- JDK17+
+
+## Maven profiles
+
+The application is built with [Maven](https://maven.apache.org/). The application uses [Flyway](https://flywaydb.org/) for database migrations and [jOOQ](https://www.jooq.org/) as a query builder.
+
+There exist two Maven profiles: `dev` and `prod`. By default, Maven uses `dev` profile.
+
+In the `prod` profile, the database is expected to be already set up with the schema definitions and infrastructure data. Hence, database migrations are not performed during application startup.
+
+In the `dev` profile, all three databases are involved:
+-  The _development database_ contains the application data. The database is initially empty. Database migrations are run into the database during application startup.
+- The _test database_ is used to generate jOOQ code. Database migrations are run during Maven build within the `process-resource` lifecycle phase which occurs just before source code compilation. The jOOQ classes are updated in the same lifecycle phase after the migrations.
+- The _pre-populated database_ is used for Spring integration tests based on pre-populated data from [Digiroad](https://vayla.fi/en/transport-network/data/digiroad/data) (currently the same data as in production).
+
+With the `dev` profile one needs to create a user-specific build configuration file as follows:
+
+```sh
+touch spring-boot/profiles/dev/config.$(whoami).properties
+```
+
+### Running app from Docker container
 
 To start the application from a Docker container, run:
 
@@ -22,7 +48,7 @@ To start the application from a Docker container, run:
 
 The application is available at http://localhost:3005. The application uses a database containing Digiroad infrastructure links and is ready to use as such.
 
-## Running app as local Java process
+### Running app as local Java process
 
 During development, the application is started with its database dependencies as follows:
 
@@ -32,13 +58,27 @@ During development, the application is started with its database dependencies as
 
 This avoids having to rebuild the Docker image every time the code is changed. The application is started locally via Maven (not inside a Docker container), but the database dependencies are started as Docker containers.
 
-The application is then available at http://localhost:8080. The database used by the application is initially empty. Hence, meaningful routing results cannot be expected unless some data is populated e.g. from a database dump that is available through [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import).
+The application is then available at http://localhost:8080. The database used by the application is initially empty. Hence, meaningful routing results cannot be expected unless some data is populated e.g. from a database dump that is available through [Digiroad import repository](https://github.com/HSLdevcom/jore4-digiroad-import). See a [separate section for populating data](#populating-data-to-development-database).
 
 If you want to start only the database dependencies first and start the application itself later, for example from your IDE, you can run:
 
 ```sh
 ./development.sh start:deps
 ```
+
+### Other development notes
+
+Within each Maven build cycle, the test database is cleaned and re-initialised with database migrations and jOOQ code generation is invoked. This way, the validity of migration scripts is always verified and the jOOQ classes are kept up-to-date.
+
+The development database can be re-initialised (without recreating it) by running:
+
+```sh
+mvn properties:read-project-properties flyway:clean flyway:migrate
+```
+
+Currently, there is a discrepancy between pre-populated database and the development/test database with regard to schema arrangement. In pre-populated database, **postgis** and **pgrouting** extensions are created into _public_ schema whereas in the development/test database the extensions are created into a separate _extensions_ schema.  Having a separate _extensions_ schema makes it easier to develop the app. This discrepancy does not affect the functioning of the app.
+
+In the development/test database there exists also a `flyway` schema (for keeping account of database migrations) that is not present in the pre-populated database since database migrations are not run in the production setup.
 
 ## Routing API
 
@@ -271,25 +311,6 @@ The optional adjustable map-matching parameters are described in the following b
 | `junctionNodeMatchDistance`    | The distance, in meters, within which a node in the infrastructure network must be located from a source route point at road junction, so that the node can be concluded to be the equivalent of the route point. Must not be greater than `junctionNodeClearingDistance`. Defaults to 5 meters. |
 | `junctionNodeClearingDistance` | The distance, in meters, within which an infrastructure node must be the only node in the vicinity of a given source route point (at road junction) to be reliably accepted as its peer. In other words, there must be no other infrastructure network nodes at this distance from the route point in order to have a match with high certainty. Without this condition, the false one can be chosen from two (or more) nearby nodes. This distance must be greater than or equal to `matchDistance`. Defaults to 30 meters. |
 
-## Building
-
-The application is built with [Maven](https://maven.apache.org/). The application is using [Flyway](https://flywaydb.org/) for database migrations and [jOOQ](https://www.jooq.org/) as query builder.
-
-There exist two Maven profiles: `dev` and `prod`. By default, Maven uses `dev` profile.
-
-In `prod` profile, the database is expected to be already set up with the schema definitions and infrastructure data. Hence, no database migrations are run during application start.
-
-In `dev` profile, all three databases are involved:
--  _Development database_ containing the application data. The database is initially empty. Database migrations are run into the database during application start.
-- _Test database_ that is used in jOOQ code generation. Database migrations are run during Maven build within the `process-resource` lifecycle phase which occurs just before source code compilation. The jOOQ classes are updated in the same lifecycle phase after the migrations.
-- _Pre-populated database_ is used in Spring integration tests which rely upon pre-populated data (currently same data as in production) originating from [Digiroad](https://vayla.fi/en/transport-network/data/digiroad/data).
-
-With `dev` profile one needs to create a user-specific build configuration file e.g. as follows:
-
-```sh
-touch spring-boot/profiles/dev/config.$(whoami).properties
-```
-
 ## Populating data to development database
 
 Within developing the application, the currently recommended way of importing infrastructure data is to:
@@ -311,24 +332,10 @@ To generate a Digiroad-based dump, issue the following commands in the Digiroad 
 To restore table data from the dump (generated into `workdir/pgdump` directory), issue the following command (with `<date>` placeholder replaced with a proper value):
 
 ```sh
-pg_restore -1 -a --use-list=digiroad_r_routing_<date>.pgdump.no-enums.links-and-stops.list -h localhost -p 18000 -d jore4mapmatching -U mapmatching digiroad_r_routing_<date>.pgdump 
+pg_restore -1 -a --use-list=digiroad_r_routing_<date>.pgdump.no-enums.links-and-stops.list -h localhost -p 18000 -d jore4mapmatching -U mapmatching digiroad_r_routing_<date>.pgdump
 ```
 
 The list argument passed to `pg_restore` command will constrain the restoration of the dump file to data of selected tables only. Hence, enumeration tables are excluded as well as create table statements.
-
-## Development notes
-
-Within each build cycle, the test database is cleaned and re-initialised with database migrations and jOOQ code generation is invoked. This way, the validity of migration scripts is always verified and the jOOQ classes are kept up-to-date.
-
-The development database can be re-initialised (without recreating it) by running:
-
-```sh
-mvn properties:read-project-properties flyway:clean flyway:migrate
-```
-
-Currently, there is a discrepancy between pre-populated database and the development/test database with regard to schema arrangement. In pre-populated database, **postgis** and **pgrouting** extensions are created into _public_ schema whereas in the development/test database the extensions are created into a separate _extensions_ schema.  Having a separate _extensions_ schema makes it easier to develop the app. This discrepancy does not affect the functioning of the app.
-
-In the development/test database there exists also a _flyway_ schema (for keeping account of database migrations) that is not present in the pre-populated database since database migrations are not run in the production setup.
 
 ## Docker Reference
 
