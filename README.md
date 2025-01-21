@@ -18,6 +18,7 @@ The microservice consists of:
 
 - Maven
 - JDK17+
+- Azure CLI
 
 ## Maven profiles
 
@@ -65,6 +66,18 @@ If you want to start only the database dependencies first and start the applicat
 ```sh
 ./development.sh start:deps
 ```
+
+### Digitransit map tiles
+
+Before testing the UI of the application, the Digitransit subscription key should be retrieved for loading Digitransit map tiles.
+
+Only run once: 
+
+```sh
+./development.sh digitransit:fetch
+```
+
+The key is put into your custom `config.<username>.properties` file that is git-ignored.
 
 ### Other development notes
 
