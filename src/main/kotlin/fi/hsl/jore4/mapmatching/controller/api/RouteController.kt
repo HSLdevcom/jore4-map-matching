@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.api
+package fi.hsl.jore4.mapmatching.controller.api
 
 import fi.hsl.jore4.mapmatching.model.LatLng
 import fi.hsl.jore4.mapmatching.model.VehicleType
@@ -6,8 +6,8 @@ import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.routing.IRoutingService
 import fi.hsl.jore4.mapmatching.service.routing.RoutingExtraParameters
 import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toPoints
-import fi.hsl.jore4.mapmatching.web.util.ParameterUtils
-import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
+import fi.hsl.jore4.mapmatching.util.controller.ParameterUtils
+import fi.hsl.jore4.mapmatching.util.controller.ParameterUtils.findVehicleType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Pattern
