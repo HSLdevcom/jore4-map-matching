@@ -29,7 +29,7 @@ class WebSecurityConfig {
                         HttpMethod.GET,
                         RouteController.URL_PREFIX + "/**",
                         "/actuator/health",
-                        "/*" // matches static landing page for examining results from route API
+                        "/*" // matches landing page for testing results from route API
                     ).permitAll()
                     .requestMatchers(
                         HttpMethod.POST,
