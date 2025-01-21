@@ -8,6 +8,16 @@ cd "${WD}"
 
 DOCKER_COMPOSE_CMD="docker compose -f ./docker/docker-compose.yml"
 
+LOGGED_IN=false
+
+login() {
+  if [ $LOGGED_IN != true ]; then
+    echo "Log in to Azure..."
+    az login
+    LOGGED_IN=true
+  fi
+}
+
 start_prod_database() {
   $DOCKER_COMPOSE_CMD up --build -d jore4-mapmatchingdb
 }
@@ -61,6 +71,29 @@ run_tests() {
   mvn clean verify
 }
 
+download_digitransit_key() {
+  login
+
+  echo "Downloading Digitransit subscription key from Azure Key Vault..."
+
+  local subscriptionkey
+  subscriptionkey=$(
+    az keyvault secret show \
+      --name "hsl-jore4-digitransit-api-key" \
+      --vault-name "hsl-jore4-dev-vault" \
+      --query "value" \
+      -o tsv
+  )
+
+  local config_file
+  config_file="./profiles/dev/config.$(whoami).properties"
+  touch "$config_file"
+
+  {
+    echo -n "digitransit.subscription.key=${subscriptionkey}"
+  } >> "$config_file"
+}
+
 generate_jooq() {
   wait_for_test_database_to_be_ready
   mvn clean process-resources
@@ -92,6 +125,10 @@ print_usage() {
 
   test
     Run JUnit tests via Maven using 'dev' profile.
+
+  digitransit:fetch
+    Download Digitransit subscription key for the JORE4 account which is used in
+    the UI while loading map tiles.
 
   generate:jooq
     Generate jOOQ classes using test database as dependency.
@@ -129,6 +166,10 @@ run)
 
 test)
   run_tests
+  ;;
+
+digitransit:fetch)
+  download_digitransit_key
   ;;
 
 generate:jooq)

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <!--
       -- Landing page for testing route API
@@ -69,7 +69,9 @@
         <div id="route-info"></div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
+        const digitransitKey = /*[[${digitransit_key}]]*/;
+
         const map = new maplibregl.Map({
             container: 'map',
             style: {
@@ -78,7 +80,7 @@
                     digitransit: {
                         type: 'raster',
                         tiles: [
-                            'https://cdn.digitransit.fi/map/v1/hsl-map/{z}/{x}/{y}.png'
+                            'https://cdn.digitransit.fi/map/v3/hsl-map/{z}/{x}/{y}.png?digitransit-subscription-key=' + digitransitKey
                         ],
                         tileSize: 512,
                         attribution:
