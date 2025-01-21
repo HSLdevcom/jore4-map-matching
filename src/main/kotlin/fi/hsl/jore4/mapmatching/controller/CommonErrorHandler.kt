@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.web
+package fi.hsl.jore4.mapmatching.controller
 
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import jakarta.validation.ConstraintViolationException

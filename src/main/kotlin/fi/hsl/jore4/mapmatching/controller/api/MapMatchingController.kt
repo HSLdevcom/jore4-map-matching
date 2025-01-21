@@ -1,13 +1,13 @@
-package fi.hsl.jore4.mapmatching.api
+package fi.hsl.jore4.mapmatching.controller.api
 
-import fi.hsl.jore4.mapmatching.api.PublicTransportRouteMatchRequestDTO.MapMatchingParametersDTO
+import fi.hsl.jore4.mapmatching.controller.api.PublicTransportRouteMatchRequestDTO.MapMatchingParametersDTO
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.matching.IMatchingService
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters
 import fi.hsl.jore4.mapmatching.service.matching.PublicTransportRouteMatchingParameters.JunctionMatchingParameters
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
-import fi.hsl.jore4.mapmatching.web.util.ParameterUtils.findVehicleType
+import fi.hsl.jore4.mapmatching.util.controller.ParameterUtils.findVehicleType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,4 +1,4 @@
-package fi.hsl.jore4.mapmatching.api
+package fi.hsl.jore4.mapmatching.controller.api
 
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import jakarta.validation.Valid

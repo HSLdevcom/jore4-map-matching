@@ -1,7 +1,7 @@
 package fi.hsl.jore4.mapmatching.config
 
-import fi.hsl.jore4.mapmatching.api.RouteController
 import fi.hsl.jore4.mapmatching.config.profile.Development
+import fi.hsl.jore4.mapmatching.controller.api.RouteController
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
