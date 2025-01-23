@@ -81,7 +81,7 @@ download_digitransit_key() {
   local config_file
   config_file="./profiles/dev/config.$(whoami).properties"
 
-  cat <<EOF >> $config_file
+  cat <<EOF >> "$config_file"
 digitransit.subscription.key=$(
   az keyvault secret show \
     --name "hsl-jore4-digitransit-api-key" \
