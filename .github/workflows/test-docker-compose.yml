@@ -6,7 +6,6 @@ on:
       - main
   pull_request:
 
-
 jobs:
   test-docker-compose:
     name: Verify Docker Compose setup
@@ -16,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Start databases and the map-matching service
+      - name: Start the database and the map-matching service
         run: ./development.sh start
 
       - name: Verify that dockerized map-matching API is up and running
