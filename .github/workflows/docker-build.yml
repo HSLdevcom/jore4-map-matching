@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  run_java_tests:
-    name: Run Java tests
-    uses: ./.github/workflows/run-java-tests.yml
+  run_kotlin_tests:
+    name: Run Kotlin tests
+    uses: ./.github/workflows/run-kotlin-tests.yml
 
   push_to_registry:
-    needs: run_java_tests
-    name: Build & Push docker image to Docker Hub
+    name: Build & Push Docker image to Docker Hub
     runs-on: ubuntu-24.04
+    needs: run_kotlin_tests
 
     steps:
       - name: Checkout code
@@ -74,8 +74,6 @@ jobs:
 
   run_cypress_tests:
     needs:
-      - run_java_tests
+      - run_kotlin_tests
       - push_to_registry
     uses: ./.github/workflows/run-cypress-tests.yml
-
-
