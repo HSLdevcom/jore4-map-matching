@@ -16,4 +16,4 @@ jobs:
       - name: Start e2e env
         uses: HSLdevcom/jore4-tools/github-actions/run-ci@main
         with:
-          timetables_api_version: "${{ env.IMAGE_NAME }}:${{ env.COMMIT_ID }}"
+          mapmatching_version: "${{ env.IMAGE_NAME }}:${{ env.COMMIT_ID }}"
