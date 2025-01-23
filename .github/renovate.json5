@@ -12,5 +12,7 @@
             "matchPackageNames": ["org.springframework.boot"],
             "allowedVersions": "<4",
         },
+        // arrow-core 2.0.0 does not currently appear to be supported with Kotlin 1.x and JDK 17.
+        {"allowedVersions": "<2.0.0", "matchPackageNames": ["/^io\\.arrow-kt\\./"]}
     ],
 }
