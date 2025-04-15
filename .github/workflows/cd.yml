@@ -12,7 +12,7 @@ jobs:
     name: Run Kotlin tests
     uses: ./.github/workflows/run-kotlin-tests.yml
 
-  push_to_registry:
+  publish_docker_image_to_docker_hub:
     name: Build & Push Docker image to Docker Hub
     runs-on: ubuntu-24.04
     needs: run_kotlin_tests
@@ -91,5 +91,5 @@ jobs:
   run_cypress_tests:
     needs:
       - run_kotlin_tests
-      - push_to_registry
+      - publish_docker_image_to_docker_hub
     uses: ./.github/workflows/run-cypress-tests.yml
