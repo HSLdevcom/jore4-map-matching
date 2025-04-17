@@ -9,8 +9,7 @@ data class VisitNodesOnMultipleLinks(
     val nodesToVisitOnStartLink: VisitedNodesOnLink,
     val viaNodeIds: List<InfrastructureNodeId>,
     val nodesToVisitOnEndLink: VisitedNodesOnLink
-) :
-    VisitedNodes
+) : VisitedNodes
 
 sealed interface VisitedNodesOnLink : VisitedNodes {
     fun toListOfNodeIds(): List<InfrastructureNodeId>
@@ -18,7 +17,9 @@ sealed interface VisitedNodesOnLink : VisitedNodes {
     fun toListOfNodeIdSequences(): List<NodeIdSequence>
 }
 
-data class VisitSingleNode(val nodeId: InfrastructureNodeId) : VisitedNodesOnLink {
+data class VisitSingleNode(
+    val nodeId: InfrastructureNodeId
+) : VisitedNodesOnLink {
     override fun toListOfNodeIds(): List<InfrastructureNodeId> = listOf(nodeId)
 
     override fun toListOfNodeIdSequences(): List<NodeIdSequence> = listOf(NodeIdSequence(toListOfNodeIds()))
@@ -27,8 +28,7 @@ data class VisitSingleNode(val nodeId: InfrastructureNodeId) : VisitedNodesOnLin
 data class VisitNodesOfSingleLinkUnidirectionally(
     val startNodeId: InfrastructureNodeId,
     val endNodeId: InfrastructureNodeId
-) :
-    VisitedNodesOnLink {
+) : VisitedNodesOnLink {
     override fun toListOfNodeIds(): List<InfrastructureNodeId> = listOf(startNodeId, endNodeId)
 
     override fun toListOfNodeIdSequences(): List<NodeIdSequence> = listOf(NodeIdSequence(toListOfNodeIds()))
@@ -37,14 +37,12 @@ data class VisitNodesOfSingleLinkUnidirectionally(
 data class VisitNodesOfSingleLinkBidirectionally(
     val firstNodeId: InfrastructureNodeId,
     val secondNodeId: InfrastructureNodeId
-) :
-    VisitedNodesOnLink {
+) : VisitedNodesOnLink {
     override fun toListOfNodeIds(): List<InfrastructureNodeId> = listOf(firstNodeId, secondNodeId)
 
-    override fun toListOfNodeIdSequences(): List<NodeIdSequence> {
-        return listOf(
+    override fun toListOfNodeIdSequences(): List<NodeIdSequence> =
+        listOf(
             NodeIdSequence(listOf(firstNodeId, secondNodeId)),
             NodeIdSequence(listOf(secondNodeId, firstNodeId))
         )
-    }
 }

@@ -66,7 +66,10 @@ data class PublicTransportRouteMatchingParameters(
      * @throws IllegalArgumentException if match distance is greater than
      * clearing distance
      */
-    data class JunctionMatchingParameters(val matchDistance: Double, val clearingDistance: Double) {
+    data class JunctionMatchingParameters(
+        val matchDistance: Double,
+        val clearingDistance: Double
+    ) {
         init {
             require(matchDistance <= clearingDistance) {
                 "matchDistance must not be greater than clearingDistance"

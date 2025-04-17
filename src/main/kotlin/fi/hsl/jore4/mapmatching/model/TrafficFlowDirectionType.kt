@@ -1,6 +1,8 @@
 package fi.hsl.jore4.mapmatching.model
 
-enum class TrafficFlowDirectionType(val dbValue: Int) {
+enum class TrafficFlowDirectionType(
+    val dbValue: Int
+) {
     BIDIRECTIONAL(2),
     AGAINST_DIGITISED_DIRECTION(3),
     ALONG_DIGITISED_DIRECTION(4);

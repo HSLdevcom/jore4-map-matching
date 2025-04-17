@@ -195,14 +195,13 @@ class ParameterUtilsTest {
     }
 
     class VehicleModeTypeToDefaultVehicleTypeArgumentsProvider : ArgumentsProvider {
-        override fun provideArguments(extensionContext: ExtensionContext): Stream<out Arguments> {
-            return Stream.of(
+        override fun provideArguments(extensionContext: ExtensionContext): Stream<out Arguments> =
+            Stream.of(
                 Arguments.of(VehicleMode.BUS, VehicleType.GENERIC_BUS),
                 Arguments.of(VehicleMode.TRAM, VehicleType.GENERIC_TRAM),
                 Arguments.of(VehicleMode.TRAIN, VehicleType.GENERIC_TRAIN),
                 Arguments.of(VehicleMode.METRO, VehicleType.GENERIC_METRO),
                 Arguments.of(VehicleMode.FERRY, VehicleType.GENERIC_FERRY)
             )
-        }
     }
 }

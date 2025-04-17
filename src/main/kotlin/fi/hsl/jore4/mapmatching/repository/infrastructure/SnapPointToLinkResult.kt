@@ -10,13 +10,12 @@ data class SnapPointToLinkResult(
 ) {
     fun withLocationOnLinkSnappedToTerminusNodeIfWithinDistance(
         distanceOfSnappingToLinkEndpointInMeters: Double
-    ): SnapPointToLinkResult {
-        return SnapPointToLinkResult(
+    ): SnapPointToLinkResult =
+        SnapPointToLinkResult(
             point,
             queryDistance,
             pointOnClosestLink.withSnappedToTerminusNode(
                 distanceOfSnappingToLinkEndpointInMeters
             )
         )
-    }
 }

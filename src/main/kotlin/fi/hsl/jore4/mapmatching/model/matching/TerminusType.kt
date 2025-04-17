@@ -4,7 +4,5 @@ enum class TerminusType {
     START,
     END;
 
-    override fun toString(): String {
-        return name.lowercase()
-    }
+    override fun toString(): String = name.lowercase()
 }

@@ -6,9 +6,15 @@ import org.geolatte.geom.Point
 sealed interface RoutingResponse {
     val code: ResponseCode
 
-    data class RoutingSuccessDTO(override val code: ResponseCode, val routes: List<RouteResultDTO>) : RoutingResponse
+    data class RoutingSuccessDTO(
+        override val code: ResponseCode,
+        val routes: List<RouteResultDTO>
+    ) : RoutingResponse
 
-    data class RoutingFailureDTO(override val code: ResponseCode, val message: String) : RoutingResponse
+    data class RoutingFailureDTO(
+        override val code: ResponseCode,
+        val message: String
+    ) : RoutingResponse
 
     companion object {
         fun ok(route: RouteResultDTO) = RoutingSuccessDTO(ResponseCode.Ok, listOf(route))

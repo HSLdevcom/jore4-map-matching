@@ -23,25 +23,75 @@ class SnappedPointOnLinkExtensionTest {
     private fun forSnappedLinksWithDiscreteEndpoints(
         trafficFlowDirectionType: TrafficFlowDirectionType,
         snapPointLocationFilter: SnapPointLocationAlongLinkFilter
-    ): TheoryBuilder<SnappedPointOnLink> {
-        return qt().forAll(
+    ): TheoryBuilder<SnappedPointOnLink> =
+        qt().forAll(
             SnappedPointOnLinkGenerator.snapLink(
                 hasDiscreteEndpoints = true,
                 trafficFlowDirectionType,
                 snapPointLocationFilter
             )
         )
-    }
 
     @Nested
     @DisplayName("toVisitedNodes")
     inner class ToVisitedNodes {
         @Test
         @DisplayName("When infrastructure link starts from same node as it ends at")
-        fun whenEndpointNodesAreNonDiscrete() {
-            return qt()
+        fun whenEndpointNodesAreNonDiscrete() =
+            qt()
                 .forAll(SnappedPointOnLinkGenerator.snapLink(hasDiscreteEndpoints = false))
                 .checkAssert { pointOnLink ->
+
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitSingleNode(
+                                pointOnLink.startNodeId
+                            )
+                        )
+                }
+
+        @Nested
+        @DisplayName("When snapped to start point of infrastructure link")
+        inner class WhenSnappedToStartPointOfInfrastructureLink {
+            @Test
+            @DisplayName("When infrastructure link is bidirectional")
+            fun whenInfrastructureLinkIsBidirectional() =
+                forSnappedLinksWithDiscreteEndpoints(
+                    BIDIRECTIONAL,
+                    AT_START
+                ).checkAssert { pointOnLink ->
+
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitSingleNode(
+                                pointOnLink.startNodeId
+                            )
+                        )
+                }
+
+            @Test
+            @DisplayName("When traversal is along digitised direction of infrastructure link")
+            fun whenTraversalIsAlongDigitisedDirectionOfInfrastructureLink() =
+                forSnappedLinksWithDiscreteEndpoints(
+                    ALONG_DIGITISED_DIRECTION,
+                    AT_START
+                ).checkAssert { pointOnLink ->
+
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitSingleNode(
+                                pointOnLink.startNodeId
+                            )
+                        )
+                }
+
+            @Test
+            @DisplayName("When traversal is against digitised direction of infrastructure link")
+            fun whenTraversalIsAgainstDigitisedDirectionOfInfrastructureLink() =
+                forSnappedLinksWithDiscreteEndpoints(
+                    AGAINST_DIGITISED_DIRECTION,
+                    AT_START
+                ).checkAssert { pointOnLink ->
 
                     assertThat(pointOnLink.toVisitedNodes())
                         .isEqualTo(
@@ -53,119 +103,55 @@ class SnappedPointOnLinkExtensionTest {
         }
 
         @Nested
-        @DisplayName("When snapped to start point of infrastructure link")
-        inner class WhenSnappedToStartPointOfInfrastructureLink {
-            @Test
-            @DisplayName("When infrastructure link is bidirectional")
-            fun whenInfrastructureLinkIsBidirectional() {
-                return forSnappedLinksWithDiscreteEndpoints(
-                    BIDIRECTIONAL,
-                    AT_START
-                )
-                    .checkAssert { pointOnLink ->
-
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitSingleNode(
-                                    pointOnLink.startNodeId
-                                )
-                            )
-                    }
-            }
-
-            @Test
-            @DisplayName("When traversal is along digitised direction of infrastructure link")
-            fun whenTraversalIsAlongDigitisedDirectionOfInfrastructureLink() {
-                return forSnappedLinksWithDiscreteEndpoints(
-                    ALONG_DIGITISED_DIRECTION,
-                    AT_START
-                )
-                    .checkAssert { pointOnLink ->
-
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitSingleNode(
-                                    pointOnLink.startNodeId
-                                )
-                            )
-                    }
-            }
-
-            @Test
-            @DisplayName("When traversal is against digitised direction of infrastructure link")
-            fun whenTraversalIsAgainstDigitisedDirectionOfInfrastructureLink() {
-                return forSnappedLinksWithDiscreteEndpoints(
-                    AGAINST_DIGITISED_DIRECTION,
-                    AT_START
-                )
-                    .checkAssert { pointOnLink ->
-
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitSingleNode(
-                                    pointOnLink.startNodeId
-                                )
-                            )
-                    }
-            }
-        }
-
-        @Nested
         @DisplayName("When snapped to end point of infrastructure link")
         inner class WhenSnappedToEndPointOfInfrastructureLink {
             @Test
             @DisplayName("When infrastructure link is bidirectional")
-            fun whenInfrastructureLinkIsBidirectional() {
-                return forSnappedLinksWithDiscreteEndpoints(
+            fun whenInfrastructureLinkIsBidirectional() =
+                forSnappedLinksWithDiscreteEndpoints(
                     BIDIRECTIONAL,
                     AT_END
-                )
-                    .checkAssert { pointOnLink ->
+                ).checkAssert { pointOnLink ->
 
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitSingleNode(
-                                    pointOnLink.endNodeId
-                                )
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitSingleNode(
+                                pointOnLink.endNodeId
                             )
-                    }
-            }
+                        )
+                }
 
             @Test
             @DisplayName("When traversal is along digitised direction of infrastructure link")
-            fun whenTraversalIsAlongDigitisedDirectionOfInfrastructureLink() {
-                return forSnappedLinksWithDiscreteEndpoints(
+            fun whenTraversalIsAlongDigitisedDirectionOfInfrastructureLink() =
+                forSnappedLinksWithDiscreteEndpoints(
                     ALONG_DIGITISED_DIRECTION,
                     AT_END
-                )
-                    .checkAssert { pointOnLink ->
+                ).checkAssert { pointOnLink ->
 
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitSingleNode(
-                                    pointOnLink.endNodeId
-                                )
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitSingleNode(
+                                pointOnLink.endNodeId
                             )
-                    }
-            }
+                        )
+                }
 
             @Test
             @DisplayName("When traversal is against digitised direction of infrastructure link")
-            fun whenTraversalIsAgainstDigitisedDirectionOfInfrastructureLink() {
-                return forSnappedLinksWithDiscreteEndpoints(
+            fun whenTraversalIsAgainstDigitisedDirectionOfInfrastructureLink() =
+                forSnappedLinksWithDiscreteEndpoints(
                     AGAINST_DIGITISED_DIRECTION,
                     AT_END
-                )
-                    .checkAssert { pointOnLink ->
+                ).checkAssert { pointOnLink ->
 
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitSingleNode(
-                                    pointOnLink.endNodeId
-                                )
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitSingleNode(
+                                pointOnLink.endNodeId
                             )
-                    }
-            }
+                        )
+                }
         }
 
         @Nested
@@ -173,60 +159,54 @@ class SnappedPointOnLinkExtensionTest {
         inner class WhenSnappedToInBetweenLinkEndpoints {
             @Test
             @DisplayName("When infrastructure link is bidirectional")
-            fun whenInfrastructureLinkIsBidirectional() {
-                return forSnappedLinksWithDiscreteEndpoints(
+            fun whenInfrastructureLinkIsBidirectional() =
+                forSnappedLinksWithDiscreteEndpoints(
                     BIDIRECTIONAL,
                     BETWEEN_ENDPOINTS_EXCLUSIVE
-                )
-                    .checkAssert { pointOnLink ->
+                ).checkAssert { pointOnLink ->
 
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitNodesOfSingleLinkBidirectionally(
-                                    pointOnLink.startNodeId,
-                                    pointOnLink.endNodeId
-                                )
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitNodesOfSingleLinkBidirectionally(
+                                pointOnLink.startNodeId,
+                                pointOnLink.endNodeId
                             )
-                    }
-            }
+                        )
+                }
 
             @Test
             @DisplayName("When infrastructure link is one-way and traversal is along the digitised direction")
-            fun whenInfrastructureLinkIsOneWayAndTraversalIsAlongDigitisedDirection() {
-                return forSnappedLinksWithDiscreteEndpoints(
+            fun whenInfrastructureLinkIsOneWayAndTraversalIsAlongDigitisedDirection() =
+                forSnappedLinksWithDiscreteEndpoints(
                     ALONG_DIGITISED_DIRECTION,
                     BETWEEN_ENDPOINTS_EXCLUSIVE
-                )
-                    .checkAssert { pointOnLink ->
+                ).checkAssert { pointOnLink ->
 
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitNodesOfSingleLinkUnidirectionally(
-                                    pointOnLink.startNodeId,
-                                    pointOnLink.endNodeId
-                                )
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitNodesOfSingleLinkUnidirectionally(
+                                pointOnLink.startNodeId,
+                                pointOnLink.endNodeId
                             )
-                    }
-            }
+                        )
+                }
 
             @Test
             @DisplayName("When infrastructure link is one-way and traversal is against the digitised direction")
-            fun whenInfrastructureLinkIsOneWayAndTraversalIsAgainstDigitisedDirection() {
-                return forSnappedLinksWithDiscreteEndpoints(
+            fun whenInfrastructureLinkIsOneWayAndTraversalIsAgainstDigitisedDirection() =
+                forSnappedLinksWithDiscreteEndpoints(
                     AGAINST_DIGITISED_DIRECTION,
                     BETWEEN_ENDPOINTS_EXCLUSIVE
-                )
-                    .checkAssert { pointOnLink ->
+                ).checkAssert { pointOnLink ->
 
-                        assertThat(pointOnLink.toVisitedNodes())
-                            .isEqualTo(
-                                VisitNodesOfSingleLinkUnidirectionally(
-                                    pointOnLink.endNodeId,
-                                    pointOnLink.startNodeId
-                                )
+                    assertThat(pointOnLink.toVisitedNodes())
+                        .isEqualTo(
+                            VisitNodesOfSingleLinkUnidirectionally(
+                                pointOnLink.endNodeId,
+                                pointOnLink.startNodeId
                             )
-                    }
-            }
+                        )
+                }
         }
     }
 }

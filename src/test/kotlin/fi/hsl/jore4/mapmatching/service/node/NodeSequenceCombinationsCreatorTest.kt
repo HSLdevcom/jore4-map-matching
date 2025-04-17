@@ -161,9 +161,9 @@ class NodeSequenceCombinationsCreatorTest {
                     generateViaNodeIds(allowEmpty = true),
                     generateVisitedNodesOnLink()
                 ).checkAssert {
-                        someNodesToVisitOnStartLink,
-                        viaNodeIds,
-                        someNodesToVisitOnEndLink
+                    someNodesToVisitOnStartLink,
+                    viaNodeIds,
+                    someNodesToVisitOnEndLink
                     ->
 
                     val nodesToVisit =
@@ -188,9 +188,9 @@ class NodeSequenceCombinationsCreatorTest {
                     generateViaNodeIds(allowEmpty = true),
                     generateVisitedNodesOnLink()
                 ).checkAssert {
-                        someNodesToVisitOnStartLink,
-                        viaNodeIds,
-                        someNodesToVisitOnEndLink
+                    someNodesToVisitOnStartLink,
+                    viaNodeIds,
+                    someNodesToVisitOnEndLink
                     ->
 
                     val nodesToVisit =
@@ -215,9 +215,9 @@ class NodeSequenceCombinationsCreatorTest {
                     generateViaNodeIds(allowEmpty = true),
                     generateVisitedNodesOnLink()
                 ).checkAssert {
-                        someNodesToVisitOnStartLink,
-                        viaNodeIds,
-                        someNodesToVisitOnEndLink
+                    someNodesToVisitOnStartLink,
+                    viaNodeIds,
+                    someNodesToVisitOnEndLink
                     ->
 
                     val nodesToVisit =
@@ -719,9 +719,9 @@ class NodeSequenceCombinationsCreatorTest {
                         booleans(),
                         booleans()
                     ) {
-                            (nodeId1, nodeId2, nodeId3, nodeId4),
-                            isStartLinkBidirectional,
-                            isEndLinkBidirectional
+                        (nodeId1, nodeId2, nodeId3, nodeId4),
+                        isStartLinkBidirectional,
+                        isEndLinkBidirectional
                         ->
 
                         Pair(

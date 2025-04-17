@@ -28,8 +28,7 @@ data class SourceRouteTerminusStopPoint(
     override val location: Point<G2D>,
     override val terminusType: TerminusType,
     val stopPointNationalId: Int?
-) :
-    SourceRouteTerminusPoint
+) : SourceRouteTerminusPoint
 
 /**
  * Models the first/last point on a source route that is not a public transport stop point.
@@ -37,5 +36,4 @@ data class SourceRouteTerminusStopPoint(
 data class SourceRouteTerminusNonStopPoint(
     override val location: Point<G2D>,
     override val terminusType: TerminusType
-) :
-    SourceRouteTerminusPoint
+) : SourceRouteTerminusPoint

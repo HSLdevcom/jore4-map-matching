@@ -34,8 +34,7 @@ data class SnappedPointOnLink(
     val infrastructureLinkLength: Double,
     val startNodeId: InfrastructureNodeId,
     val endNodeId: InfrastructureNodeId
-) :
-    HasInfrastructureNodeId {
+) : HasInfrastructureNodeId {
     init {
         // check validity
 
@@ -73,15 +72,14 @@ data class SnappedPointOnLink(
 
     fun isStartNodeCloser(): Boolean = closestPointFractionalMeasure <= 0.5
 
-    fun getSnappedNodeOrNull(): InfrastructureNodeId? {
-        return if (isSnappedToStartNode) {
+    fun getSnappedNodeOrNull(): InfrastructureNodeId? =
+        if (isSnappedToStartNode) {
             startNodeId
         } else if (isSnappedToEndNode) {
             endNodeId
         } else {
             null
         }
-    }
 
     fun isOnLinkTerminatedByNode(nodeId: InfrastructureNodeId) = startNodeId == nodeId || endNodeId == nodeId
 

@@ -37,8 +37,7 @@ data class NodeSequenceCandidatesBetweenSnappedLinks(
     val pointOnStartLink: SnappedPointOnLink,
     val pointOnEndLink: SnappedPointOnLink,
     val nodeIdSequences: List<NodeIdSequence>
-) :
-    Comparable<NodeSequenceCandidatesBetweenSnappedLinks> {
+) : Comparable<NodeSequenceCandidatesBetweenSnappedLinks> {
     init {
         require(nodeIdSequences.isNotEmpty()) { "At least one node ID sequence must be provided" }
         require(nodeIdSequences.size <= 4) {

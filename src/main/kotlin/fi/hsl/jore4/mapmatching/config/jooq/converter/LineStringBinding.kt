@@ -46,12 +46,8 @@ class LineStringBinding : Binding<Any, LineString<C2D>> {
     }
 
     @Throws(SQLException::class)
-    override fun set(ctx: BindingSetSQLOutputContext<LineString<C2D>>) {
-        throw SQLFeatureNotSupportedException()
-    }
+    override fun set(ctx: BindingSetSQLOutputContext<LineString<C2D>>): Unit = throw SQLFeatureNotSupportedException()
 
     @Throws(SQLException::class)
-    override fun get(ctx: BindingGetSQLInputContext<LineString<C2D>>) {
-        throw SQLFeatureNotSupportedException()
-    }
+    override fun get(ctx: BindingGetSQLInputContext<LineString<C2D>>): Unit = throw SQLFeatureNotSupportedException()
 }

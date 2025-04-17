@@ -17,7 +17,9 @@ import java.util.concurrent.ConcurrentHashMap
 @Repository
 class StopRepositoryImpl
     @Autowired
-    constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : IStopRepository {
+    constructor(
+        val jdbcTemplate: NamedParameterJdbcTemplate
+    ) : IStopRepository {
         private val cachedQueriesForFindingStopsByNationalId = ConcurrentHashMap<Int, String>()
 
         @Transactional(readOnly = true)

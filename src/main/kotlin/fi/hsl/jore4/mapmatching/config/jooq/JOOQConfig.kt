@@ -16,6 +16,7 @@ import org.springframework.context.annotation.PropertySource
 class JOOQConfig {
     @Bean
     fun settings(): Settings =
-        SettingsTools.defaultSettings()
+        SettingsTools
+            .defaultSettings()
             .withReturnAllOnUpdatableRecord(true)
 }

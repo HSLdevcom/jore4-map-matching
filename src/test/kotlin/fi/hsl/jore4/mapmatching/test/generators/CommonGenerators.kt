@@ -11,20 +11,20 @@ object CommonGenerators {
     fun <T> pair(source: Gen<T>): Gen<Pair<T, T>> = source.zip(source, ::Pair)
 
     // pair of discrete values (non-equal within single generated tuple)
-    fun <T : Any> discretePair(source: Gen<T>): Gen<Pair<T, T>> {
-        return source.flatMap { value1 ->
+    fun <T : Any> discretePair(source: Gen<T>): Gen<Pair<T, T>> =
+        source.flatMap { value1 ->
             val getAnotherUniqueValue = Retry(source) { it != value1 }
 
             getAnotherUniqueValue.map { value2 -> Pair(value1, value2) }
         }
-    }
 
     fun shuffledPair(
         source1: Gen<Double>,
         source2: Gen<Double>
     ): Gen<Pair<Double, Double>> {
         // Randomise order of distances generated from different sources.
-        return Generate.booleans()
+        return Generate
+            .booleans()
             .zip(source1, source2) { flipOrder, distance1, distance2 ->
                 if (flipOrder) {
                     distance2 to distance1
@@ -37,22 +37,20 @@ object CommonGenerators {
     fun <T> duplicate(source: Gen<T>): Gen<Pair<T, T>> = source.map { value -> value to value }
 
     // triple consisting of three discrete values (unique within single generated tuple)
-    fun <T : Any> discreteTriple(source: Gen<T>): Gen<Triple<T, T, T>> {
-        return discretePair(source)
+    fun <T : Any> discreteTriple(source: Gen<T>): Gen<Triple<T, T, T>> =
+        discretePair(source)
             .flatMap { (value1, value2) ->
                 val getAnotherUniqueValue = Retry(source) { it != value1 && it != value2 }
 
                 getAnotherUniqueValue.map { value3 -> Triple(value1, value2, value3) }
             }
-    }
 
     // quadruple consisting of four discrete values (unique within single generated tuple)
-    fun <T : Any> discreteQuadruple(source: Gen<T>): Gen<Quadruple<T, T, T, T>> {
-        return discreteTriple(source)
+    fun <T : Any> discreteQuadruple(source: Gen<T>): Gen<Quadruple<T, T, T, T>> =
+        discreteTriple(source)
             .flatMap { (value1, value2, value3) ->
                 val getAnotherUniqueValue = Retry(source) { it != value1 && it != value2 && it != value3 }
 
                 getAnotherUniqueValue.map { value4 -> Quadruple(value1, value2, value3, value4) }
             }
-    }
 }
