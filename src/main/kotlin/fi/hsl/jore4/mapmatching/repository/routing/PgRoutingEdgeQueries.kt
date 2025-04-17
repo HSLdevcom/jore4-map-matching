@@ -59,13 +59,12 @@ object PgRoutingEdgeQueries {
         // variable placeholders into the query. This way we enable assigning the
         // actual values through PreparedStatement variable binding.
 
-        fun getPlaceholdersConcatenated(numberOfPlaceholders: Int): String {
-            return CharArray(numberOfPlaceholders) { '?' }.joinToString(
+        fun getPlaceholdersConcatenated(numberOfPlaceholders: Int): String =
+            CharArray(numberOfPlaceholders) { '?' }.joinToString(
                 prefix = "''' || ",
                 separator = " || ''',''' || ",
                 postfix = " || '''"
             )
-        }
 
         val additionalTerminusPredicates: MutableList<String> = ArrayList()
 

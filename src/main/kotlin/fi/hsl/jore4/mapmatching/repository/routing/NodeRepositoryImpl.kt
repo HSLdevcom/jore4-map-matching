@@ -21,7 +21,9 @@ import java.sql.ResultSet
 @Repository
 class NodeRepositoryImpl
     @Autowired
-    constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : INodeRepository {
+    constructor(
+        val jdbcTemplate: NamedParameterJdbcTemplate
+    ) : INodeRepository {
         override fun findNClosestNodes(
             points: List<Point<G2D>>,
             vehicleType: VehicleType,
@@ -103,7 +105,8 @@ class NodeRepositoryImpl
                             idsOfCandidatesForTerminusLinks.forEach {
                                 pstmt.setLong(paramIndex++, it.value)
                             }
-                            repeat(2) { // node IDs need to be set twice, separately for start and end nodes
+                            repeat(2) {
+                                // node IDs need to be set twice, separately for start and end nodes
                                 idsOfCandidatesForTerminusNodes.forEach {
                                     pstmt.setLong(paramIndex++, it.value)
                                 }
@@ -123,18 +126,15 @@ class NodeRepositoryImpl
                         rs.getLong("end_link_id"),
                         InfrastructureNodeId(rs.getLong("node_id"))
                     )
-                }
-                .groupBy(
+                }.groupBy(
                     keySelector = { it.first to it.second },
                     valueTransform = { it.third }
-                )
-                .mapKeys { entry ->
+                ).mapKeys { entry ->
                     val startLinkId = InfrastructureLinkId(entry.key.first)
                     val endLinkId = InfrastructureLinkId(entry.key.second)
 
                     startLinkId to endLinkId
-                }
-                .mapValues { NodeIdSequence(it.value) }
+                }.mapValues { NodeIdSequence(it.value) }
         }
 
         companion object {
@@ -234,7 +234,8 @@ class NodeRepositoryImpl
                 conn: Connection
             ): java.sql.Array {
                 val nodeIdArr: Array<Long> =
-                    nodeIdSequence?.list
+                    nodeIdSequence
+                        ?.list
                         ?.run { map(InfrastructureNodeId::value).toTypedArray() }
                         ?: emptyArray()
 

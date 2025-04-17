@@ -31,8 +31,7 @@ class MatchingService_FindMatchForPublicTransportRouteTest
     @Autowired
     constructor(
         val matchingService: IMatchingService
-    ) :
-    IntegrationTest() {
+    ) : IntegrationTest() {
         private fun matchPublicTransportRoute(
             routeGeometry: LineString<G2D>,
             routePoints: List<RoutePoint>,
@@ -81,7 +80,8 @@ class MatchingService_FindMatchForPublicTransportRouteTest
         inner class WithSmokeTest {
             private fun createSourceGeometry(): LineString<G2D> {
                 val positionSequenceBuilder =
-                    PositionSequenceBuilders.variableSized(G2D::class.java)
+                    PositionSequenceBuilders
+                        .variableSized(G2D::class.java)
                         .add(25.00802, 60.18773)
                         .add(25.00798, 60.18768)
                         .add(25.00720, 60.18668)
@@ -121,7 +121,8 @@ class MatchingService_FindMatchForPublicTransportRouteTest
                 ) { resp ->
 
                     val positionSequenceBuilder =
-                        PositionSequenceBuilders.variableSized(G2D::class.java)
+                        PositionSequenceBuilders
+                            .variableSized(G2D::class.java)
                             .add(25.00802, 60.18773)
                             .add(25.00797, 60.18768)
                             .add(25.00721, 60.18667)
@@ -155,8 +156,10 @@ class MatchingService_FindMatchForPublicTransportRouteTest
 
                     val actualLinkIdsAndForwardTraversals: List<Pair<String, Boolean>> =
                         resp
-                            .routes.first()
-                            .paths.map { traversal: LinkTraversalDTO ->
+                            .routes
+                            .first()
+                            .paths
+                            .map { traversal: LinkTraversalDTO ->
                                 traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
                             }
 

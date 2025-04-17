@@ -11,4 +11,7 @@ import org.geolatte.geom.Point
  * @property sourceLocation the location (for public transport stop) defined in the client system
  * (invoking this map-matching service).
  */
-data class PublicTransportStopMatchParameters(val nationalId: Int, val sourceLocation: Point<G2D>)
+data class PublicTransportStopMatchParameters(
+    val nationalId: Int,
+    val sourceLocation: Point<G2D>
+)

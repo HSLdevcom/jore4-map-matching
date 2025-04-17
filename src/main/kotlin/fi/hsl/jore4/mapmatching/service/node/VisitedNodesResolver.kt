@@ -46,8 +46,8 @@ object VisitedNodesResolver {
     private fun fromSingleLinkWithoutViaNodes(
         pointOnLink: SnappedPointOnLink,
         secondSnapPointFractionalLocation: Double
-    ): VisitedNodes {
-        return when (pointOnLink.isOnLinkWithDiscreteNodes()) {
+    ): VisitedNodes =
+        when (pointOnLink.isOnLinkWithDiscreteNodes()) {
             true ->
                 pointOnLink.run {
                     when (trafficFlowDirectionType) {
@@ -88,7 +88,6 @@ object VisitedNodesResolver {
                 }
             false -> VisitSingleNode(pointOnLink.startNodeId)
         }
-    }
 
     private fun resolveVisitedNodesOnStartLink(
         pointOnStartLink: SnappedPointOnLink,
@@ -102,8 +101,10 @@ object VisitedNodesResolver {
                 ?.takeIf { it == pointOnStartLink.furtherNodeId } != null
 
         return pointOnStartLink.run {
-            if (trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION && endNodeId == snappedTerminusNodeId ||
-                trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION && startNodeId == snappedTerminusNodeId ||
+            if (trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION &&
+                endNodeId == snappedTerminusNodeId ||
+                trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION &&
+                startNodeId == snappedTerminusNodeId ||
                 !isFurtherNodeOfStartLinkAtStartOfReducedListOfViaNodeIds()
             ) {
                 toVisitedNodes()
@@ -125,8 +126,10 @@ object VisitedNodesResolver {
                 ?.takeIf { it == pointOnEndLink.furtherNodeId } != null
 
         return pointOnEndLink.run {
-            if (trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION && startNodeId == snappedTerminusNodeId ||
-                trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION && endNodeId == snappedTerminusNodeId ||
+            if (trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION &&
+                startNodeId == snappedTerminusNodeId ||
+                trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION &&
+                endNodeId == snappedTerminusNodeId ||
                 !isFurtherNodeOfEndLinkAtEndOfReducedListOfViaNodeIds()
             ) {
                 toVisitedNodes()

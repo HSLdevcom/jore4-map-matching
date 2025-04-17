@@ -12,7 +12,8 @@ class GeolatteUtilsTest {
     @Test
     fun testRoundCoordinates() {
         val testCoordinates =
-            PositionSequenceBuilders.variableSized(G2D::class.java)
+            PositionSequenceBuilders
+                .variableSized(G2D::class.java)
                 .add(12.3, 34.5)
                 .add(12.34, 34.56)
                 .add(12.345, 34.567)
@@ -26,7 +27,8 @@ class GeolatteUtilsTest {
         val outputLine: LineString<G2D> = GeolatteUtils.roundCoordinates(testLine, 5)
 
         val expectedCoordinates =
-            PositionSequenceBuilders.variableSized(G2D::class.java)
+            PositionSequenceBuilders
+                .variableSized(G2D::class.java)
                 .add(12.3, 34.5)
                 .add(12.34, 34.56)
                 .add(12.345, 34.567)

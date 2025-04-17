@@ -69,14 +69,16 @@ class MathUtilsTest {
                         genFiniteDouble(tolerance).flatMap { arbitraryNumber: Double ->
 
                             // Generate delta as Double whose absolute value is less than given tolerance.
-                            doubles().between(-0.99999 * tolerance, 0.99999 * tolerance)
+                            doubles()
+                                .between(-0.99999 * tolerance, 0.99999 * tolerance)
                                 .map { delta: Double ->
                                     ToleranceTestTriple(tolerance, arbitraryNumber, delta)
                                 }
                         }
                     }
 
-                qt().forAll(genTriple)
+                qt()
+                    .forAll(genTriple)
                     .checkAssert { (tolerance, number, deltaWithinTolerance) ->
 
                         val numWithinTolerance: Double = plusOrMinusResultingFinite(number, deltaWithinTolerance)
@@ -101,7 +103,8 @@ class MathUtilsTest {
                         }
                     }
 
-                qt().forAll(genTriple)
+                qt()
+                    .forAll(genTriple)
                     .checkAssert { (tolerance, number, deltaOutsideTolerance) ->
 
                         val numOutsideTolerance: Double = plusOrMinusResultingFinite(number, deltaOutsideTolerance)

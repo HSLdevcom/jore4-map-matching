@@ -1,6 +1,8 @@
 package fi.hsl.jore4.mapmatching.model
 
-enum class VehicleMode(val value: String) {
+enum class VehicleMode(
+    val value: String
+) {
     BUS("bus"),
     TRAM("tram"),
     TRAIN("train"),

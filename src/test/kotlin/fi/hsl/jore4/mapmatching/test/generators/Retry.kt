@@ -12,7 +12,10 @@ import java.util.function.Predicate
  * The original source code file (https://github.com/quicktheories/QuickTheories/blob/master/core/src/main/java/org/quicktheories/generators/CodePoints.java)
  * is licensed by https://github.com/quicktheories/QuickTheories under Apace License V2.0.
  */
-class Retry<T : Any>(private val child: Gen<T>, private val assumption: Predicate<T>) : Gen<T> {
+class Retry<T : Any>(
+    private val child: Gen<T>,
+    private val assumption: Predicate<T>
+) : Gen<T> {
     override fun generate(randomnessSource: RandomnessSource): T {
         // danger of infinite loop if used incorrectly
         while (true) {

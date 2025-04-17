@@ -36,11 +36,10 @@ object ParameterUtils {
     fun findVehicleType(
         transportationModeParam: String,
         vehicleTypeParam: String?
-    ): VehicleType? {
-        return VehicleMode.from(transportationModeParam)?.let { vehicleMode: VehicleMode ->
+    ): VehicleType? =
+        VehicleMode.from(transportationModeParam)?.let { vehicleMode: VehicleMode ->
             findVehicleType(vehicleMode, vehicleTypeParam)
         }
-    }
 
     fun findVehicleType(
         vehicleMode: VehicleMode,

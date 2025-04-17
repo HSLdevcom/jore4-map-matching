@@ -13,8 +13,8 @@ sealed interface PgRoutingPoint {
         fun fromSnappedPointOnLink(
             pointOnLink: SnappedPointOnLink,
             linkSideIfVirtualNode: LinkSide = LinkSide.BOTH
-        ): PgRoutingPoint {
-            return if (pointOnLink.isSnappedToStartNode) {
+        ): PgRoutingPoint =
+            if (pointOnLink.isSnappedToStartNode) {
                 RealNode(pointOnLink.startNodeId)
             } else if (pointOnLink.isSnappedToEndNode) {
                 RealNode(pointOnLink.endNodeId)
@@ -26,14 +26,15 @@ sealed interface PgRoutingPoint {
                     pointOnLink.closerNodeId
                 )
             }
-        }
     }
 }
 
 /**
  * A real infrastructure node as routing point.
  */
-data class RealNode(val nodeId: InfrastructureNodeId) : PgRoutingPoint
+data class RealNode(
+    val nodeId: InfrastructureNodeId
+) : PgRoutingPoint
 
 /**
  * A point along infrastructure link as virtual node.

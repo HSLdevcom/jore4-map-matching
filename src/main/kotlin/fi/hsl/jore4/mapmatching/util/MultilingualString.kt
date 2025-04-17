@@ -6,9 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 class MultilingualString(
     @JsonValue val values: Map<String, String?>
 ) {
-    override fun toString(): String {
-        return values.toString()
-    }
+    override fun toString(): String = values.toString()
 
     companion object {
         @JsonCreator

@@ -17,7 +17,8 @@ class WebConfig : WebMvcConfigurer {
         override fun addCorsMappings(registry: CorsRegistry) {
             // To fix browser errors while trying to invoke route API from
             // a web page served from a local disk.
-            registry.addMapping(RouteController.URL_PREFIX + "/**")
+            registry
+                .addMapping(RouteController.URL_PREFIX + "/**")
                 .allowedOrigins("*")
                 .allowedMethods("GET")
         }

@@ -18,7 +18,9 @@ import java.sql.ResultSet
 @Repository
 class LinkRepositoryImpl
     @Autowired
-    constructor(val jdbcTemplate: NamedParameterJdbcTemplate) : ILinkRepository {
+    constructor(
+        val jdbcTemplate: NamedParameterJdbcTemplate
+    ) : ILinkRepository {
         private data class LinkResultItem(
             val pointSeqNum: Int,
             val infrastructureLinkId: InfrastructureLinkId,

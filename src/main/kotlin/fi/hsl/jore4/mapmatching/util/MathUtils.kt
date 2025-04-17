@@ -25,7 +25,6 @@ object MathUtils {
         return difference.abs() < refinedTolerance
     }
 
-    private fun bigDecimalForToleranceChecking(n: Double): BigDecimal {
-        return BigDecimal(n, MathContext(MAX_DECIMAL_PRECISION_FOR_TOLERANCE_CHECKING))
-    }
+    private fun bigDecimalForToleranceChecking(n: Double): BigDecimal =
+        BigDecimal(n, MathContext(MAX_DECIMAL_PRECISION_FOR_TOLERANCE_CHECKING))
 }

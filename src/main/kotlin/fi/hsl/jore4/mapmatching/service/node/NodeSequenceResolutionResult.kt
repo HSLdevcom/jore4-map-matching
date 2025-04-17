@@ -9,7 +9,8 @@ data class NodeSequenceResolutionSucceeded(
     val nodeIdSequence: NodeIdSequence,
     val pointOnStartLink: SnappedPointOnLink,
     val pointOnEndLink: SnappedPointOnLink
-) :
-    NodeSequenceResolutionResult
+) : NodeSequenceResolutionResult
 
-data class NodeSequenceResolutionFailed(val message: String) : NodeSequenceResolutionResult
+data class NodeSequenceResolutionFailed(
+    val message: String
+) : NodeSequenceResolutionResult

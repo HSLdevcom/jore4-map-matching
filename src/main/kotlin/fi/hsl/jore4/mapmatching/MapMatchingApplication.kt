@@ -50,7 +50,8 @@ class MapMatchingApplication {
         return ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .registerModule(
-                KotlinModule.Builder()
+                KotlinModule
+                    .Builder()
                     .withReflectionCacheSize(512)
                     .configure(KotlinFeature.NullToEmptyCollection, false)
                     .configure(KotlinFeature.NullToEmptyMap, false)
@@ -58,7 +59,6 @@ class MapMatchingApplication {
                     .configure(KotlinFeature.SingletonSupport, false)
                     .configure(KotlinFeature.StrictNullChecks, true)
                     .build()
-            )
-            .registerModule(geolatteModule)
+            ).registerModule(geolatteModule)
     }
 }

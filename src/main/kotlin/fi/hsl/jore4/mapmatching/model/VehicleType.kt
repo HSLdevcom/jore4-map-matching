@@ -1,6 +1,9 @@
 package fi.hsl.jore4.mapmatching.model
 
-enum class VehicleType(val vehicleMode: VehicleMode, val value: String) {
+enum class VehicleType(
+    val vehicleMode: VehicleMode,
+    val value: String
+) {
     GENERIC_BUS(VehicleMode.BUS, "generic_bus"),
     GENERIC_TRAM(VehicleMode.TRAM, "generic_tram"),
     GENERIC_TRAIN(VehicleMode.TRAIN, "generic_train"),

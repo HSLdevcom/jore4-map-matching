@@ -26,14 +26,14 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("ClassName")
 class RoutingService_FindRouteTest
     @Autowired
-    constructor(val routingService: IRoutingService) : IntegrationTest() {
+    constructor(
+        val routingService: IRoutingService
+    ) : IntegrationTest() {
         private fun findRoute(
             routeViaPoints: List<Point<G2D>>,
             vehicleType: VehicleType = VehicleType.GENERIC_BUS,
             routingParams: RoutingExtraParameters = DEFAULT_ROUTING_EXTRA_PARAMETERS
-        ): RoutingResponse {
-            return routingService.findRoute(routeViaPoints, vehicleType, routingParams)
-        }
+        ): RoutingResponse = routingService.findRoute(routeViaPoints, vehicleType, routingParams)
 
         private fun findRouteAndCheckAssertionsOnSuccessResponse(
             routeViaPoints: List<Point<G2D>>,
@@ -156,7 +156,8 @@ class RoutingService_FindRouteTest
                 findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
                     val expectedCoordinates =
-                        PositionSequenceBuilders.variableSized(G2D::class.java)
+                        PositionSequenceBuilders
+                            .variableSized(G2D::class.java)
                             .add(24.95708, 60.16801)
                             .add(24.95715, 60.16802)
                             .add(24.95724, 60.16806)
@@ -211,7 +212,8 @@ class RoutingService_FindRouteTest
                 findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
                     val expectedCoordinates =
-                        PositionSequenceBuilders.variableSized(G2D::class.java)
+                        PositionSequenceBuilders
+                            .variableSized(G2D::class.java)
                             .add(24.95734, 60.16813)
                             .add(24.95758, 60.16832)
                             .add(24.95762, 60.16834)
@@ -255,7 +257,8 @@ class RoutingService_FindRouteTest
                 findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
                     val expectedCoordinates =
-                        PositionSequenceBuilders.variableSized(G2D::class.java)
+                        PositionSequenceBuilders
+                            .variableSized(G2D::class.java)
                             .add(24.95762, 60.16834)
                             .add(24.95776, 60.16843)
                             .add(24.95763, 60.16846)
@@ -312,7 +315,8 @@ class RoutingService_FindRouteTest
                 findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
                     val expectedCoordinates =
-                        PositionSequenceBuilders.variableSized(G2D::class.java)
+                        PositionSequenceBuilders
+                            .variableSized(G2D::class.java)
                             .add(24.98955, 60.2772)
                             .add(24.98884, 60.27709)
                             .add(24.98804, 60.27698)
@@ -364,7 +368,8 @@ class RoutingService_FindRouteTest
                 findRouteAndCheckAssertionsOnSuccessResponse(requestRoutePoints) { resp ->
 
                     val expectedCoordinates =
-                        PositionSequenceBuilders.variableSized(G2D::class.java)
+                        PositionSequenceBuilders
+                            .variableSized(G2D::class.java)
                             .add(24.95724, 60.16806)
                             .add(24.95732, 60.16812)
                             .add(24.95758, 60.16832)
@@ -421,7 +426,8 @@ class RoutingService_FindRouteTest
                         ) { resp ->
 
                             val expectedCoordinates =
-                                PositionSequenceBuilders.variableSized(G2D::class.java)
+                                PositionSequenceBuilders
+                                    .variableSized(G2D::class.java)
                                     .add(24.56305, 60.16016)
                                     .add(24.56307, 60.16021)
                                     .add(24.56354, 60.16019)
@@ -514,12 +520,13 @@ class RoutingService_FindRouteTest
 
             private fun getExternalLinkIdsAndTraversalDirections(
                 response: RoutingResponse.RoutingSuccessDTO
-            ): List<Pair<String, Boolean>> {
-                return response
-                    .routes.first()
-                    .paths.map { traversal: LinkTraversalDTO ->
+            ): List<Pair<String, Boolean>> =
+                response
+                    .routes
+                    .first()
+                    .paths
+                    .map { traversal: LinkTraversalDTO ->
                         traversal.externalLinkRef.externalLinkId to traversal.isTraversalForwards
                     }
-            }
         }
     }

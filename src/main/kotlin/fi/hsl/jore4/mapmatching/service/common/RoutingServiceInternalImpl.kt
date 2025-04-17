@@ -15,8 +15,9 @@ import org.springframework.transaction.annotation.Transactional
 @InternalService
 class RoutingServiceInternalImpl
     @Autowired
-    constructor(val routingRepository: IRoutingRepository) :
-    IRoutingServiceInternal {
+    constructor(
+        val routingRepository: IRoutingRepository
+    ) : IRoutingServiceInternal {
         @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
         override fun findRouteViaNodes(
             nodeIdSequence: NodeIdSequence,
@@ -24,15 +25,14 @@ class RoutingServiceInternalImpl
             fractionalStartLocationOnFirstLink: Double,
             fractionalEndLocationOnLastLink: Double,
             bufferAreaRestriction: BufferAreaRestriction?
-        ): List<RouteLink> {
-            return routingRepository.findRouteViaNetworkNodes(
+        ): List<RouteLink> =
+            routingRepository.findRouteViaNetworkNodes(
                 nodeIdSequence,
                 vehicleType,
                 fractionalStartLocationOnFirstLink,
                 fractionalEndLocationOnLastLink,
                 bufferAreaRestriction
             )
-        }
 
         @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
         override fun findRouteViaPointsOnLinks(
