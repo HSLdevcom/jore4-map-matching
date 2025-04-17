@@ -36,7 +36,7 @@
         <ktlint-plugin.version>3.5.0</ktlint-plugin.version>
 
         <!-- Library versions -->
-        <arrow-core.version>1.2.4</arrow-core.version>
+        <arrow-core.version>2.0.1</arrow-core.version>
         <geolatte.version>1.10</geolatte.version>
         <kotlin-logging-jvm.version>7.0.7</kotlin-logging-jvm.version>
         <quicktheories.version>0.26</quicktheories.version>
