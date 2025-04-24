@@ -475,9 +475,6 @@
                 <executions>
                     <execution>
                         <id>check</id>
-                        <configuration>
-                            <sourceRoots>${project.build.sourceDirectory}/fi</sourceRoots>
-                        </configuration>
                         <goals>
                             <goal>check</goal>
                         </goals>
