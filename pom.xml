@@ -24,7 +24,7 @@
         <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
-        <!-- 3.8.8 is the lates version available in Github Actions -->
+        <!-- 3.8.8 is the latest version available in GitHub Actions -->
         <maven-enforcer.plugin.mvn-min-version>3.8.8</maven-enforcer.plugin.mvn-min-version>
 
         <!-- Maven build plugins and their dependencies -->
