@@ -15,7 +15,6 @@ import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.SortedMap
@@ -23,70 +22,68 @@ import java.util.SortedMap
 private val LOGGER = KotlinLogging.logger {}
 
 @Service
-class RoutingServiceImpl
-    @Autowired
-    constructor(
-        val linkRepository: ILinkRepository,
-        val routingServiceInternal: IRoutingServiceInternal
-    ) : IRoutingService {
-        @Transactional(readOnly = true)
-        override fun findRoute(
-            viaPoints: List<Point<G2D>>,
-            vehicleType: VehicleType,
-            extraParameters: RoutingExtraParameters
-        ): RoutingResponse {
-            val filteredPoints = filterOutConsecutiveDuplicates(viaPoints)
+class RoutingServiceImpl(
+    val linkRepository: ILinkRepository,
+    val routingServiceInternal: IRoutingServiceInternal
+) : IRoutingService {
+    @Transactional(readOnly = true)
+    override fun findRoute(
+        viaPoints: List<Point<G2D>>,
+        vehicleType: VehicleType,
+        extraParameters: RoutingExtraParameters
+    ): RoutingResponse {
+        val filteredPoints = filterOutConsecutiveDuplicates(viaPoints)
 
-            if (filteredPoints.distinct().size < 2) {
-                return RoutingResponse.invalidValue("At least 2 distinct points must be given")
-            }
-
-            val closestLinks: Collection<SnapPointToLinkResult> =
-                findClosestInfrastructureLinks(filteredPoints, vehicleType, extraParameters.linkQueryDistance)
-
-            if (closestLinks.size < filteredPoints.size) {
-                return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
-            }
-
-            val sourceRoutePoints: List<PgRoutingPoint> =
-                closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.pointOnClosestLink) }
-
-            val resultRouteLinks: List<RouteLink> =
-                routingServiceInternal
-                    .findRouteViaPointsOnLinks(
-                        sourceRoutePoints,
-                        vehicleType,
-                        extraParameters.simplifyConsecutiveClosedLoopTraversals
-                    ).also { routeLinks: List<RouteLink> ->
-                        if (routeLinks.isNotEmpty()) {
-                            LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
-                        }
-                    }
-
-            return RoutingResponseCreator.create(resultRouteLinks)
+        if (filteredPoints.distinct().size < 2) {
+            return RoutingResponse.invalidValue("At least 2 distinct points must be given")
         }
 
-        private fun findClosestInfrastructureLinks(
-            points: List<Point<G2D>>,
-            vehicleType: VehicleType,
-            linkQueryDistance: Int
-        ): List<SnapPointToLinkResult> =
-            linkRepository
-                .findClosestLinks(points, vehicleType, linkQueryDistance.toDouble())
-                .toSortedMap()
-                .also { sortedResults: SortedMap<Int, SnapPointToLinkResult> ->
-                    LOGGER.debug {
-                        "Found closest links within $linkQueryDistance m radius: ${
-                            joinToLogString(sortedResults.entries) {
-                                "Point #${it.key}: ${it.value}"
-                            }
-                        }"
+        val closestLinks: Collection<SnapPointToLinkResult> =
+            findClosestInfrastructureLinks(filteredPoints, vehicleType, extraParameters.linkQueryDistance)
+
+        if (closestLinks.size < filteredPoints.size) {
+            return RoutingResponse.noSegment(findUnmatchedPoints(closestLinks, filteredPoints))
+        }
+
+        val sourceRoutePoints: List<PgRoutingPoint> =
+            closestLinks.map { PgRoutingPoint.fromSnappedPointOnLink(it.pointOnClosestLink) }
+
+        val resultRouteLinks: List<RouteLink> =
+            routingServiceInternal
+                .findRouteViaPointsOnLinks(
+                    sourceRoutePoints,
+                    vehicleType,
+                    extraParameters.simplifyConsecutiveClosedLoopTraversals
+                ).also { routeLinks: List<RouteLink> ->
+                    if (routeLinks.isNotEmpty()) {
+                        LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
                     }
-                }.values
-                .map { snap ->
-                    // The location is snapped to terminus node if within close distance.
-                    snap.withLocationOnLinkSnappedToTerminusNodeIfWithinDistance(
-                        SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS
-                    )
                 }
+
+        return RoutingResponseCreator.create(resultRouteLinks)
     }
+
+    private fun findClosestInfrastructureLinks(
+        points: List<Point<G2D>>,
+        vehicleType: VehicleType,
+        linkQueryDistance: Int
+    ): List<SnapPointToLinkResult> =
+        linkRepository
+            .findClosestLinks(points, vehicleType, linkQueryDistance.toDouble())
+            .toSortedMap()
+            .also { sortedResults: SortedMap<Int, SnapPointToLinkResult> ->
+                LOGGER.debug {
+                    "Found closest links within $linkQueryDistance m radius: ${
+                        joinToLogString(sortedResults.entries) {
+                            "Point #${it.key}: ${it.value}"
+                        }
+                    }"
+                }
+            }.values
+            .map { snap ->
+                // The location is snapped to terminus node if within close distance.
+                snap.withLocationOnLinkSnappedToTerminusNodeIfWithinDistance(
+                    SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS
+                )
+            }
+}
