@@ -32,4 +32,5 @@ services:
       file: docker-compose.base.yml
       service: jore4-mapmatchingdb-base
     container_name: mapmatchingdb
-    image: "hsldevcom/jore4-postgres:mapmatching-main--20250425-c07c8632baab554dfbbbb64177ed930282094232"
+    environment:
+      DIGIROAD_ROUTING_DUMP_URL: "https://stjore4dev001.blob.core.windows.net/jore4-digiroad/2025-08-13_create_routing_schema_digiroad_r_2025_02.sql"
