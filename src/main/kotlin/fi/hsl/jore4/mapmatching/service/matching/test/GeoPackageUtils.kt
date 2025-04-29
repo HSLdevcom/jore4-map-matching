@@ -2,9 +2,13 @@ package fi.hsl.jore4.mapmatching.service.matching.test
 
 import fi.hsl.jore4.mapmatching.util.GeoToolsUtils.transformCRS
 import org.geolatte.geom.jts.JTS
+import org.geotools.api.data.SimpleFeatureWriter
+import org.geotools.api.data.Transaction
 import org.geotools.api.feature.simple.SimpleFeature
 import org.geotools.api.feature.simple.SimpleFeatureType
+import org.geotools.data.DefaultTransaction
 import org.geotools.data.collection.ListFeatureCollection
+import org.geotools.data.simple.SimpleFeatureIterator
 import org.geotools.feature.simple.SimpleFeatureBuilder
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder
 import org.geotools.geometry.jts.Geometries
@@ -14,6 +18,7 @@ import org.geotools.referencing.crs.DefaultGeographicCRS
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.LineString
 import java.io.File
+import java.io.IOException
 
 object GeoPackageUtils {
     private const val GEOMETRY_COLUMN_NAME = "geometry"
@@ -32,8 +37,16 @@ object GeoPackageUtils {
                 val featureType: SimpleFeatureType =
                     createFeatureTypeForFailedSegment(featureTypeName, isBufferPolygonInsteadOfLineString)
 
+                val featureCollection: ListFeatureCollection =
+                    createFeatureCollection(segment, featureType, isBufferPolygonInsteadOfLineString)
+
                 val entry = FeatureEntry()
-                entry.identifier = segment.routeId
+                // entry.identifier = segment.routeId
+                entry.geometryColumn = GEOMETRY_COLUMN_NAME
+                entry.geometryType =
+                    if (isBufferPolygonInsteadOfLineString) Geometries.POLYGON else Geometries.LINESTRING
+                entry.bounds = featureCollection.bounds
+
                 entry.description =
                     if (isBufferPolygonInsteadOfLineString) {
                         "Buffered geometry for failed ${segment.routeId} segment within map-matching"
@@ -41,7 +54,7 @@ object GeoPackageUtils {
                         "LineString for failed ${segment.routeId} segment within map-matching"
                     }
 
-                geoPkg.add(entry, createFeatureCollection(segment, featureType, isBufferPolygonInsteadOfLineString))
+                writeEntryToGeoPackage(geoPkg, entry, featureCollection)
 
                 // Not sure, if this is really needed.
                 geoPkg.createSpatialIndex(entry)
@@ -114,6 +127,47 @@ object GeoPackageUtils {
             builder.add(referencingRoutes.joinToString(separator = " "))
         }
 
-        return builder.buildFeature(failedSegment.routeId)
+        // This works because every feature is put into a separate table.
+        builder.featureUserData("fid", "1")
+
+        return builder.buildFeature(null)
+    }
+
+    private fun writeEntryToGeoPackage(
+        geoPkg: GeoPackage,
+        entry: FeatureEntry,
+        featureCollection: ListFeatureCollection
+    ) {
+        // Create an SQLite table for FeatureCollection.
+        geoPkg.create(entry, featureCollection.schema)
+
+        val tx: Transaction = DefaultTransaction()
+        val it: SimpleFeatureIterator = featureCollection.features()
+
+        try {
+            val writer: SimpleFeatureWriter = geoPkg.writer(entry, true, null, tx)
+
+            val source = it.next()
+            val target: SimpleFeature = writer.next()
+
+            target.attributes = source.attributes
+
+            // This if-block is the missing piece not done in the GeoPackage.add() method.
+            if (source.hasUserData()) {
+                target.userData.putAll(source.userData)
+            }
+
+            writer.write()
+            writer.close()
+
+            tx.commit()
+        } catch (ex: Exception) {
+            tx.rollback()
+
+            throw ex as? IOException ?: IOException(ex)
+        } finally {
+            tx.close()
+            it.close()
+        }
     }
 }
