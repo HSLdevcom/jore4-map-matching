@@ -23,10 +23,11 @@ class MapMatchingBulkTestResultsPublisherImpl(
 ) : IMapMatchingBulkTestResultsPublisher {
     override fun publishMatchResultsForRoutesAndStopToStopSegments(
         routeResults: List<MatchResult>,
-        stopToStopSegmentResults: List<SegmentMatchResult>
+        stopToStopSegmentResults: List<SegmentMatchResult>,
+        largestBufferRadiusTried: BufferRadius
     ) {
         publishRouteMatchResults(routeResults)
-        publishStopToStopSegmentMatchResults(stopToStopSegmentResults)
+        publishStopToStopSegmentMatchResults(stopToStopSegmentResults, largestBufferRadiusTried)
 
         LOGGER.info {
             "List of IDs of failed routes whose all segments were matched: ${
@@ -78,7 +79,10 @@ class MapMatchingBulkTestResultsPublisherImpl(
         LOGGER.info { "Wrote failed routes to file: ${outputFile.absolutePath}" }
     }
 
-    fun publishStopToStopSegmentMatchResults(results: List<SegmentMatchResult>) {
+    fun publishStopToStopSegmentMatchResults(
+        results: List<SegmentMatchResult>,
+        largestBufferRadiusTried: BufferRadius
+    ) {
         val (succeeded, failed) = partitionSegmentsBySuccess(results)
 
         printBasicStatistics(succeeded, failed, "Stop-to-stop segment")
@@ -113,7 +117,11 @@ class MapMatchingBulkTestResultsPublisherImpl(
             writeGeoJsonToFile(getFailedSegmentsAsGeoJson(failed), FILENAME_FAILED_SEGMENTS_GEOJSON)
         LOGGER.info { "Wrote failed stop-to-stop segments to GeoJSON file: ${geojsonFile.absolutePath}" }
 
-        writeGeoPackageFilesForFailedSegments(failed, getSegmentMatchFailuresOnLowerBufferRadius(succeeded))
+        writeGeoPackageFilesForFailedSegments(
+            failed,
+            largestBufferRadiusTried,
+            getSegmentMatchFailuresOnLowerBufferRadius(succeeded)
+        )
     }
 
     private fun writeGeoJsonToFile(
@@ -129,15 +137,20 @@ class MapMatchingBulkTestResultsPublisherImpl(
 
     private fun writeGeoPackageFilesForFailedSegments(
         primaryFailures: List<SegmentMatchFailure>,
+        largestBufferRadiusTried: BufferRadius,
         secondaryFailures: SortedMap<BufferRadius, List<SegmentMatchFailure>>
     ) {
-        writeGeoPackageFileForFailedSegments(
-            primaryFailures,
-            getGeoPackageFilenameForFailedSegments(),
-            getGeoPackageFilenameForFailedSegmentBuffers()
-        )
+        val segmentFailureMap = secondaryFailures.toMutableMap()
 
-        secondaryFailures.entries.forEach { (bufferRadius, segmentMatchFailures) ->
+        // By design, the "secondaryFailures" map should not contain the largest radius tried as
+        // a key, but in case of a hidden bug, we consider the situation where this assumption is
+        // not true.
+        val segmentMatchFailuresOnLargestRadius: List<SegmentMatchFailure> =
+            primaryFailures + segmentFailureMap.getOrPut(largestBufferRadiusTried) { emptyList() }
+
+        segmentFailureMap.put(largestBufferRadiusTried, segmentMatchFailuresOnLargestRadius)
+
+        segmentFailureMap.entries.forEach { (bufferRadius, segmentMatchFailures) ->
 
             if (segmentMatchFailures.isNotEmpty()) {
                 writeGeoPackageFileForFailedSegments(
@@ -188,15 +201,11 @@ class MapMatchingBulkTestResultsPublisherImpl(
         private const val FILENAME_FAILED_ROUTES_GEOJSON = "failed_routes.geojson"
         private const val FILENAME_FAILED_SEGMENTS_GEOJSON = "failed_segments.geojson"
 
-        private fun getGeoPackageFilenameForFailedSegments(bufferRadius: BufferRadius? = null): String =
-            bufferRadius
-                ?.let { "failed_segments_${it.value}.gpkg" }
-                ?: "failed_segments.gpkg"
+        private fun getGeoPackageFilenameForFailedSegments(bufferRadius: BufferRadius): String =
+            "failed_segments_${bufferRadius.value}.gpkg"
 
-        private fun getGeoPackageFilenameForFailedSegmentBuffers(bufferRadius: BufferRadius? = null): String =
-            bufferRadius
-                ?.let { "failed_segment_buffers_${it.value}.gpkg" }
-                ?: "failed_segment_buffers.gpkg"
+        private fun getGeoPackageFilenameForFailedSegmentBuffers(bufferRadius: BufferRadius): String =
+            "failed_segment_buffers_${bufferRadius.value}.gpkg"
 
         private fun partitionBySuccess(
             results: List<MatchResult>
