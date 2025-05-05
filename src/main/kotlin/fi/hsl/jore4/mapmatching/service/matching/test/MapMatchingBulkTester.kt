@@ -37,9 +37,12 @@ class MapMatchingBulkTester(
             measureTime {
                 val (routeMatchResults, stopToStopSegmentMatchResults) = processFile()
 
+                val largestBufferRadiusTried = BufferRadius(DEFAULT_SEGMENT_MATCH_RADIUS_VALUES.max())
+
                 resultsPublisher.publishMatchResultsForRoutesAndStopToStopSegments(
                     routeMatchResults,
-                    stopToStopSegmentMatchResults
+                    stopToStopSegmentMatchResults,
+                    largestBufferRadiusTried
                 )
             }
 
