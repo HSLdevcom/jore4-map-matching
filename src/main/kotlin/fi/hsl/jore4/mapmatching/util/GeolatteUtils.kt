@@ -15,8 +15,14 @@ import org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84
 import java.math.BigDecimal
 import java.math.RoundingMode.HALF_UP
 import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 object GeolatteUtils {
+    // This is in WGS84 units and corresponds to approximately 5.5 millimeters at northern
+    // latitudes.
+    private const val LINE_ENDPOINT_CONNECTION_TOLERANCE = 0.0000001
+
     fun toPoint(position: G2D): Point<G2D> = mkPoint(position, WGS84)
 
     fun toPoints(coords: List<LatLng>): List<Point<G2D>> = coords.map(LatLng::toGeolattePoint)
@@ -48,9 +54,17 @@ object GeolatteUtils {
         // Do not include the first line because it was already added.
         linesToMerge.drop(1).forEach { line ->
 
-            // New line must start from the same position as the previous line ended at.
-            require(line.startPosition == prevLineLastPosition) {
-                "Not topologically continuous sequence of lines"
+            // In the case of Digiroad data, in most cases (at least 99.95 %) these positions are
+            // the same. However, we need to account for some topology inaccuracies by allowing
+            // a small distance between the endpoints of consecutive lines.
+            if (line.startPosition != prevLineLastPosition) {
+                val distance: Double = calculateDistance(prevLineLastPosition, line.startPosition)
+
+                // The next line must start very close to the end of the previous line.
+                require(distance < LINE_ENDPOINT_CONNECTION_TOLERANCE) {
+                    "Not topologically continuous sequence of lines. Distance between consecutive line endpoints is " +
+                        "more than allowed in WGS84 units: $distance >= $LINE_ENDPOINT_CONNECTION_TOLERANCE"
+                }
             }
 
             // Add all positions except the first one (which was already added within processing of previous line).
@@ -81,4 +95,13 @@ object GeolatteUtils {
 
         return mkLineString(positionSequenceBuilder.toPositionSequence(), WGS84)
     }
+
+    private fun calculateDistance(
+        position1: G2D,
+        position2: G2D
+    ): Double =
+        sqrt(
+            (position1.lat - position2.lat).pow(2.0) +
+                (position1.lon - position2.lon).pow(2.0)
+        )
 }
