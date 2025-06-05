@@ -32,4 +32,3 @@ services:
       file: docker-compose.base.yml
       service: jore4-mapmatchingdb-base
     container_name: mapmatchingdb
-    image: "hsldevcom/jore4-postgres:mapmatching-main--20250425-c07c8632baab554dfbbbb64177ed930282094232"
