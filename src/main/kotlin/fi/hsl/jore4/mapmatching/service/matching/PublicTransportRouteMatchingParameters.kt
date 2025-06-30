@@ -8,7 +8,7 @@ import java.lang.IllegalArgumentException
  *
  * @property bufferRadiusInMeters the radius in meters that is used to expand
  * input route geometry in all directions. The resulting polygon will be used
- * to restrict the set of available infrastructure links (using ST_Contains
+ * to restrict the set of available infrastructure links (using ST_Covers
  * and/or ST_Intersects function) while resolving matching route.
  * @property terminusLinkQueryDistance the distance in meters within which the
  * first or last infrastructure link for matching route is searched in case
