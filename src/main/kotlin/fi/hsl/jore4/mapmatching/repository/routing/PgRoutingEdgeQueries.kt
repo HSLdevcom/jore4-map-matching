@@ -194,5 +194,5 @@ object PgRoutingEdgeQueries {
         lineStringEwkbParameter: String,
         bufferRadiusParameter: String
     ): String =
-        "ST_Contains(ST_Buffer(ST_Transform(ST_GeomFromEWKB($lineStringEwkbParameter), 3067), $bufferRadiusParameter), l.geom)"
+        "ST_Covers(ST_Buffer(ST_Transform(ST_GeomFromEWKB($lineStringEwkbParameter), 3067), $bufferRadiusParameter), l.geom)"
 }
