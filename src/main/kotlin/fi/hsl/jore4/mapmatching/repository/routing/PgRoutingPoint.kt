@@ -6,7 +6,8 @@ import fi.hsl.jore4.mapmatching.model.LinkSide
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 
 /**
- * Source point for pgRouting functions: pgr_withPointsVia, pgr_trspVia_withPoints
+ * Source point for pgRouting functions:
+ *   pgr_withPointsVia, pgr_trspVia_withPoints
  */
 sealed interface PgRoutingPoint {
     companion object {

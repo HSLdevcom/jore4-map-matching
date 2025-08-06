@@ -12,13 +12,13 @@ import java.lang.IllegalArgumentException
  * and/or ST_Intersects function) while resolving matching route.
  * @property terminusLinkQueryDistance the distance in meters within which the
  * first or last infrastructure link for matching route is searched in case
- * terminus link cannot be determined via matching public transport stop from
+ * a terminus link cannot be determined via matching public transport stop from
  * route endpoints. Terminus links generally fall partly outside the buffer area
  * used to restrict infrastructure links. Hence, terminus links need to be
  * treated separately.
  * @property terminusLinkQueryLimit the maximum number of the closest
  * infrastructure links that are considered as terminus links at both ends of
- * route
+ * the route.
  * @property maxStopLocationDeviation the maximum distance between two
  * locations defined for a public transport stop, one given in the
  * map-matching request and the other in the local database, used as a
@@ -45,7 +45,7 @@ data class PublicTransportRouteMatchingParameters(
 ) {
     /**
      * Contains distance properties to tune heuristics for matching route points
-     * with infrastructure network nodes (of road junction type). It is
+     * with infrastructure network nodes (of a road junction type). It is
      * desirable to get as many matches as possible without false guesses that
      * could ruin match results. Conservative values are recommended.
      *
@@ -58,7 +58,7 @@ data class PublicTransportRouteMatchingParameters(
      * infrastructure node must be the only node in the vicinity of a given
      * source route point (at road junction) to be reliably accepted as its
      * peer. In other words, there must be no other infrastructure network nodes
-     * at this distance from the route point in order to have a match with high
+     * at this distance from the route point to have a match with high
      * certainty. Without this condition, the false one can be chosen from two
      * (or more) nearby nodes. This distance must be greater than or equal to
      * [matchDistance].

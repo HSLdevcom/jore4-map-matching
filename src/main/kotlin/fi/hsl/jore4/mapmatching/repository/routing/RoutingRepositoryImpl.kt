@@ -38,7 +38,8 @@ class RoutingRepositoryImpl(
     sealed interface ResultItem
 
     /**
-     * Models full traversal of infrastructure link (from end-to-end) as a route link.
+     * Models full traversal of an infrastructure link (from end-to-end) as
+     * a route link.
      */
     private data class RouteLinkResultItem(
         val routeSeqNum: Int,
@@ -52,7 +53,8 @@ class RoutingRepositoryImpl(
     ) : ResultItem
 
     /**
-     * Models partial traversal of infrastructure link (not end-to-end) as a route link.
+     * Models partial traversal of an infrastructure link (not end-to-end) as
+     * a route link.
      */
     private data class TrimmedRouteLinkResultItem(
         val routeSeqNum: Int,
@@ -425,7 +427,7 @@ class RoutingRepositoryImpl(
         /**
          * The produced SQL query is enclosed in quotes and passed as parameter
          * to pgRouting function. '?' is used as a bind variable placeholder.
-         * Actual variable binding is left to occur within initialisation of
+         * Actual variable binding is left to occur within the initialisation of
          * PreparedStatement.
          */
         private fun createLinkSelectionQueryForPgRouting(bufferAreaRestriction: BufferAreaRestriction?): String =
@@ -537,54 +539,62 @@ class RoutingRepositoryImpl(
             """.trimIndent()
 
         /**
-         * Returns an SQL query that finds the shortest path through infrastructure network via
-         * route points given as parameters. A route point is either (A) infrastructure node or
-         * (B) virtual node, that is, a point along infrastructure link that does not coincide with
-         * link's endpoints. The resulting route is returned as a sequence of route links each of
-         * which refers to an infrastructure link. For each route link, the geometry of the whole
-         * infrastructure link is returned. For only partially traversed infrastructure links also a
-         * trimmed version of the infrastructure link geometry is returned that models the real
+         * Returns an SQL query that finds the shortest path through
+         * infrastructure network via route points given as parameters. A route
+         * point is either (A) infrastructure node or (B) virtual node, that is,
+         * a point along infrastructure link that does not coincide with link's
+         * endpoints. The resulting route is returned as a sequence of route
+         * links, each of which refers to an infrastructure link. For each route
+         * link, the geometry of the whole infrastructure link is returned. For
+         * only partially traversed infrastructure links also a trimmed version
+         * of the infrastructure link geometry is returned that models the real
          * traversed path on the route.
          *
-         * Virtual nodes are bound to the query via array parameters. There are three arrays for
-         * virtual nodes to be bound while preparing the query. Each virtual node point is
-         * effectively a triple consisting of the following properties:
+         * Virtual nodes are bound to the query via three separate arrays given
+         * as parameters. So, each virtual node point is effectively a triple
+         * consisting of the following properties:
          * (1) ID of the infrastructure link along which the point is located,
          * (2) fractional location (0,1) on a link,
-         * (3) side of the road/street that the point affects with regard to the digitised direction
-         * of the link (left, right, both).
+         * (3) side of the road/street that the point affects with regard to the
+         * digitised direction of the link (left, right, both).
          *
-         * A visited points parameter is also bound as an array into the query. It consists of IDs
-         * of all route points.
+         * A visited points parameter is also bound as an array into the query.
+         * It consists of IDs of all route points to be visited.
          *
-         * There is an embedded query enclosed in quotes that restricts the infrastructure links
-         * that are considered viable when finding the shortest path. The embedded query has its own
-         * set of parameters that are handled in [PgRoutingEdgeQueries] object.
+         * There is an embedded query enclosed in quotes that restricts the
+         * infrastructure links that are considered viable when finding the
+         * shortest path. The embedded query has its own set of parameters that
+         * are handled in [PgRoutingEdgeQueries] object.
          *
-         * There is also a decimal precision parameter that is used to round fractional locations
-         * along infrastructure links. The rounding is done as an optimisation to shorten the
-         * internally built query that generates the visited points data as an SQL query.
+         * There is also a decimal precision parameter that is used to round
+         * fractional locations along infrastructure links. The rounding is done
+         * as an optimisation to shorten the internally built query that
+         * generates the visited points data as an SQL query.
          *
-         * The query utilises pgRouting's pgr_withPointsVia function.
+         * The query uses pgRouting's pgr_withPointsVia function.
          *
-         * The query contains sub-queries that process the output of pgRouting in several stages.
-         * The processing involves recognising the direction of traversal on each link which
-         * information pgRouting itself does not provide. Because some input points may be
-         * virtual nodes, the infrastructure links along which those virtual nodes are located, may
-         * appear more times in the pgRouting output than what is desired in the final output. The
-         * processing removes consecutive duplicate appearances of links in one direction of
-         * traversal. In addition, closed-loop links require special treatment which is done in
-         * the processing.
+         * The query contains sub-queries that process the output of pgRouting
+         * in several stages. The processing involves recognising the direction
+         * of traversal on each link which information pgRouting itself does not
+         * provide. Because some input points may be virtual nodes, the
+         * infrastructure links along which those virtual nodes are located may
+         * appear more times in the pgRouting output than what is desired in the
+         * final output. The processing removes consecutive duplicate
+         * appearances of links in one direction of traversal. In addition,
+         * closed-loop links require special treatment which is done in the
+         * processing as well.
          *
-         * Since the query is quite long and complex a commentary in form of a sample data
-         * transformation is provided below for sub-queries transforming the output of pgRouting.
-         * By glancing over sample data transformations one can get a better idea what is going on
-         * while executing the query.
+         * Since the query is quite long and complex, a commentary in the form
+         * of a sample data transformation is provided below for sub-queries
+         * transforming the output of pgRouting. By glancing over sample data
+         * transformations, one can get an idea of what is going on while
+         * executing the query.
          *
-         * Sample output after "pgr" sub-query. "edge" means the ID of an infrastructure link and
-         * "node" denotes either:
+         * Sample output after "pgr" sub-query. "Edge" means the ID of an
+         * infrastructure link and "node" denotes either:
          * - real infrastructure node, if positive
-         * - virtual node (that is, a point along an infrastructure link), if negative
+         * - virtual node (that is, a point along an infrastructure link), if
+         *   negative
          *
          *  seq | path_id |  edge  |  node  |        cost
          * -----+---------+--------+--------+--------------------
@@ -602,8 +612,9 @@ class RoutingRepositoryImpl(
          *   12 |       4 | 238707 |     -6 |  21.20953754741562
          *   13 |       4 |     -2 |     -7 |                  0
          *
-         * Sample output after "pgr_transform1" sub-query. Start and end nodes are added. Positive
-         * values refer to real infrastructure nodes and negative values refer to virtual nodes.
+         * Sample output after "pgr_transform1" sub-query. Start and end nodes
+         * are added. Positive values refer to real infrastructure nodes and
+         * negative values refer to virtual nodes.
          *
          *  seq | path_id |  edge  |        cost        | start_node | end_node
          * -----+---------+--------+--------------------+------------+----------
@@ -617,8 +628,8 @@ class RoutingRepositoryImpl(
          *   10 |       3 | 238707 |  21.20953754741562 |     115663 |       -6
          *   12 |       4 | 238707 |  21.20953754741562 |         -6 |       -7
          *
-         * Sample output after "pgr_transform2" sub-query. Start and end fractions are derived for
-         * each link traversal.
+         * Sample output after "pgr_transform2" sub-query. Start and end
+         * fractions are derived for each link traversal.
          *
          *  seq | path_id |  edge  | start_fraction | end_fraction
          * -----+---------+--------+----------------+--------------
@@ -632,8 +643,8 @@ class RoutingRepositoryImpl(
          *   10 |       3 | 238707 |            0.0 |         0.33
          *   12 |       4 | 238707 |           0.33 |         0.66
          *
-         * Sample output after "pgr_transform3" sub-query. Direction of traversal is determined
-         * based on start and end fractions.
+         * Sample output after "pgr_transform3" sub-query. The direction of
+         * traversal is determined based on start and end fractions.
          *
          *  seq | path_id |  edge  | is_traversal_forwards | start_fraction | end_fraction
          * -----+---------+--------+-----------------------+----------------+--------------
@@ -647,8 +658,8 @@ class RoutingRepositoryImpl(
          *   10 |       3 | 238707 | t                     |            0.0 |         0.33
          *   12 |       4 | 238707 | t                     |           0.33 |         0.66
          *
-         * Sample output after "pgr_transform4" sub-query. Consecutive duplicates of links in one
-         * direction of traversal are removed.
+         * Sample output after "pgr_transform4" sub-query. Consecutive
+         * duplicates of links in one direction of traversal are removed.
          *
          *  seq | path_id |  edge  | is_traversal_forwards | start_fraction | end_fraction
          * -----+---------+--------+-----------------------+----------------+--------------
@@ -658,8 +669,9 @@ class RoutingRepositoryImpl(
          *    9 |       3 | 238712 | t                     |            0.0 |          1.0
          *   10 |       3 | 238707 | t                     |            0.0 |         0.33
          *
-         * Sample output after "pgr_transform5" sub-query. End fractions are corrected after removal
-         * of duplicate links in the previous stage. In addition, sequence numbers are reallocated.
+         * Sample output after "pgr_transform5" sub-query. End fractions are
+         * corrected after removal of duplicate links in the previous stage. In
+         * addition, sequence numbers are reallocated.
          *
          *  seq |  edge  | is_traversal_forwards | start_fraction | end_fraction
          * -----+--------+-----------------------+----------------+--------------

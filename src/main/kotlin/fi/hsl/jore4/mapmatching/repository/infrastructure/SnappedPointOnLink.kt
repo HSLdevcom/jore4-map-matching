@@ -18,12 +18,12 @@ import fi.hsl.jore4.mapmatching.util.MathUtils.isWithinTolerance
  * representing the location of the closest point on the infrastructure link to
  * the source point, as a fraction of the link's 2D length
  * @property trafficFlowDirectionType the direction of traffic flow on
- * infrastructure link
+ * an infrastructure link
  * @property infrastructureLinkLength the 2D length of the infrastructure link
- * @property startNodeId the identifier of the infrastructure node at start
+ * @property startNodeId the identifier of the infrastructure node at the start
  * point of the infrastructure link
- * @property endNodeId the identifier of the infrastructure node at end point of
- * the infrastructure link
+ * @property endNodeId the identifier of the infrastructure node at the end
+ * point of the infrastructure link
  */
 @Suppress("MemberVisibilityCanBePrivate")
 data class SnappedPointOnLink(
@@ -50,13 +50,15 @@ data class SnappedPointOnLink(
     }
 
     /**
-     * @property closerNodeId is the ID of the node that is closer to the snapped projected point on link.
+     * @property closerNodeId is the ID of the node that is closer to the
+     * snapped projected point on a link.
      */
     val closerNodeId: InfrastructureNodeId
         get() = if (isStartNodeCloser()) startNodeId else endNodeId
 
     /**
-     * @property furtherNodeId is the ID of the node that lies further away from the snapped projected point on link.
+     * @property furtherNodeId is the ID of the node that lies further away from
+     * the snapped projected point on a link.
      */
     val furtherNodeId: InfrastructureNodeId get() = if (isStartNodeCloser()) endNodeId else startNodeId
 
@@ -113,11 +115,12 @@ data class SnappedPointOnLink(
     }
 
     /**
-     * This method is used in map-matching public transport routes. If a snap point lies at either
-     * endpoint of a link, then the link may not be included in the route response depending on the
-     * direction of travel from the snapped node. In order to make sure that a link associated with
-     * a terminus stop point is included in a map-matched route, snap point needs to be moved a bit
-     * inwards.
+     * This method is used in map-matching public transport routes. If a snap
+     * point lies at either endpoint of a link, then the link may not be
+     * included in the route response depending on the direction of travel from
+     * the snapped node. To make sure that a link associated with a terminus
+     * stop point is included in a map-matched route, snap point needs to be
+     * moved a bit inwards.
      */
     fun moveSnapPointInwardsIfLocatedAtEndpoint(inwardsOffsetInMeters: Double): SnappedPointOnLink {
         require(inwardsOffsetInMeters < infrastructureLinkLength) {

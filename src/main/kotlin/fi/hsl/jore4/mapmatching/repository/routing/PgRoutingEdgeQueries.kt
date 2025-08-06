@@ -22,7 +22,7 @@ object PgRoutingEdgeQueries {
      * a specific vehicle type. The generated query is enclosed in quotes and
      * intended to be passed as string parameter to a pgRouting SQL function.
      *
-     * @param vehicleTypeVariableName the variable name for vehicle type
+     * @param vehicleTypeVariableName the variable name for a vehicle type
      *
      * @return an SQL query enclosed in quotes as [java.lang.String]
      */
@@ -114,7 +114,7 @@ object PgRoutingEdgeQueries {
      * The generated query is enclosed in quotes and intended to be passed as
      * string parameter to a pgRouting SQL function.
      *
-     * @param vehicleTypeVariableName the variable name for vehicle type
+     * @param vehicleTypeVariableName the variable name for a vehicle type
      * @param terminusLinkIdsVariableName the optional variable name for the
      * list of terminus link identifiers. The actual value to be bound must be
      * given as an array literal like e.g. "{1,2,3}".

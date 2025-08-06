@@ -15,8 +15,8 @@ interface IMatchRouteViaNetworkNodesService {
      * the resulting route. The resulting route must be safely traversable by
      * the given vehicle type.
      *
-     * This internal service variant utilises network nodes based algorithm
-     * (via graph vertices) while finding a matching route.
+     * This internal service variant uses network nodes based algorithm (via
+     * graph vertices) while finding a matching route.
      *
      * @param sourceRouteGeometry the source geometry as a LineString for which
      * a closely matching target LineString geometry is to be resolved.
@@ -27,8 +27,8 @@ interface IMatchRouteViaNetworkNodesService {
      * @param vehicleType vehicle type constraint for the resulting route. The
      * route must consist of only those infrastructure links that are safely
      * traversable by the given vehicle type.
-     * @param matchingParameters contains parameters that can be adjusted for
-     * the purpose of getting optimal matching results.
+     * @param matchingParameters contains parameters that can be adjusted to get
+     * optimal matching results.
      *
      * @return either a successful or failure-marking routing response.
      */

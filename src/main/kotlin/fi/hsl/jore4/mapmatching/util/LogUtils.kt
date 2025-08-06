@@ -2,8 +2,9 @@ package fi.hsl.jore4.mapmatching.util
 
 object LogUtils {
     /**
-     * Transforms a sequence of items to a String in a log-friendly form. Provides a consistent
-     * way of displaying collection of items in a log message.
+     * Transforms a sequence of items to a String in a log-friendly form.
+     * Provides a consistent way of displaying a collection of items in a log
+     * message.
      */
     fun <T> joinToLogString(
         iterable: Iterable<T>,

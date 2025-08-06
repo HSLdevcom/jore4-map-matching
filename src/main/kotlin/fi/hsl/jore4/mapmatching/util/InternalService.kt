@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 /**
  * A meta-annotation for Spring's [Component] annotation. Marks a Spring-managed
  * component to be used internally in the service layer. A class marked with
- * this annotation should not be directly invoked from web layer (a Spring
+ * this annotation should not be directly invoked from the web layer (a Spring
  * controller class).
  *
  * Internal service methods should not mark database transactions to be rolled

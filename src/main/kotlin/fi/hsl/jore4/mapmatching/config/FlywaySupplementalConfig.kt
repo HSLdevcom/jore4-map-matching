@@ -5,10 +5,11 @@ import org.springframework.boot.autoconfigure.flyway.FlywayConfigurationCustomiz
 import org.springframework.context.annotation.Configuration
 
 /**
- * The preferred way of defining Flyway configuration is to add Spring Boot parameters into
- * application.properties file. However, not all Flyway settings are available via Spring Boot
- * "namespace" (parameters starting with prefix "spring.flyway."). Therefore, this class exists
- * to make it possible to set up additional Flyway configuration parameters that cannot set via
+ * The preferred way of defining Flyway configuration is to add Spring Boot
+ * parameters into the application.properties file. However, not all Flyway
+ * settings are available via Spring Boot "namespace" (parameters starting with
+ * prefix "spring.flyway."). Therefore, this class exists to make it possible to
+ * set up additional Flyway configuration parameters that cannot set via
  * application.properties.
  */
 @Configuration

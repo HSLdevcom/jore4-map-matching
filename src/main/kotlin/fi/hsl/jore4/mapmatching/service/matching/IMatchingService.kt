@@ -25,8 +25,8 @@ interface IMatchingService {
      * @param vehicleType vehicle type constraint for the resulting route. The
      * route must consist of only those infrastructure links that are safely
      * traversable by the given vehicle type.
-     * @param matchingParameters contains parameters that can be adjusted for
-     * the purpose of getting optimal matching results.
+     * @param matchingParameters contains parameters that can be adjusted to
+     * get optimal matching results.
      *
      * @return either a successful or failure-marking routing response.
      */

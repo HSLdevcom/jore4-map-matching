@@ -6,8 +6,9 @@ import fi.hsl.jore4.mapmatching.util.CollectionUtils.filterOutConsecutiveDuplica
 
 object NodeSequenceCombinationsCreator {
     /**
-     * Produce list of [NodeIdSequence] objects that contains possible sequences of infrastructure
-     * network node identifiers resolved from parameter.
+     * Produce a list of [NodeIdSequence] objects that contains possible
+     * sequences of infrastructure network node identifiers resolved from
+     * parameter.
      */
     fun create(nodesToVisit: VisitedNodes): List<NodeIdSequence> =
         when (nodesToVisit) {

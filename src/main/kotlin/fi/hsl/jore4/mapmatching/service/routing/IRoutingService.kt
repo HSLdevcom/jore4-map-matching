@@ -7,7 +7,7 @@ import org.geolatte.geom.Point
 
 interface IRoutingService {
     /**
-     * Find route through infrastructure network that matches with the given
+     * Find a route through infrastructure network that matches with the given
      * points and vehicle type.
      *
      * @param viaPoints list of points that are mapped to infrastructure network
@@ -22,7 +22,7 @@ interface IRoutingService {
      *
      * @return either a successful or failing routing response. A successfully
      * resolved route matches with the given points and vehicle type. If the
-     * closest infrastructure link cannot be found for any of the given points
+     * closest infrastructure link cannot be found for any of the given points,
      * then a failure response is returned.
      */
     fun findRoute(
