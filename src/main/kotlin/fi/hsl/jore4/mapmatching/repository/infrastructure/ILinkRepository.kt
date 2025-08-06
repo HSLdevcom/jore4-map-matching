@@ -15,11 +15,11 @@ interface ILinkRepository {
      * are required to be found
      *
      * @return one-based index of the closest link matches for the given
-     * points as [Map]. For each resolved closest link an entry is added to
+     * points as [Map]. For each resolved closest link, an entry is added to
      * the result map. Entry key is derived as one-based index for point
      * appearing in the parameter list. If the closest link for a point
      * could not be found, no entry for the index of the point is added to
-     * the result map. The result map contains at most the same amount of
+     * the result map. The result map contains at most the same number of
      * entries as there are points in the parameter list.
      */
     fun findClosestLinks(
@@ -38,15 +38,15 @@ interface ILinkRepository {
      * links must be safely traversable by the given vehicle type.
      * @param distanceInMeters the distance in meters within which the matches
      * are required to be found
-     * @param limit the maximum amount of closest links returned for given
+     * @param limit the maximum number of closest links returned for given
      * points
      *
      * @return one-based index of the closest link matches for the given
-     * points as [Map]. For each resolved list of closest links an entry is
+     * points as [Map]. For each resolved list of closest links, an entry is
      * added to the result map. Entry key is derived as one-based index for
      * point appearing in the parameter list. If the closest link for a point
      * could not be found, no entry for the index of the point is added to
-     * the result map. The result map contains at most the same amount of
+     * the result map. The result map contains at most the same number of
      * entries as there are points in the parameter list.
      */
     fun findNClosestLinks(

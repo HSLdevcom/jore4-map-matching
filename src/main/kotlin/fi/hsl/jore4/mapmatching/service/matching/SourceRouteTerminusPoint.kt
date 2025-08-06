@@ -5,13 +5,16 @@ import org.geolatte.geom.G2D
 import org.geolatte.geom.Point
 
 /**
- * Models the first/last point on a source route that is to be map-matched. This is used while
- * searching start/end link candidates for a target route. An infrastructure link along which
- * a terminus stop point is located is prioritised over other link candidates.
+ * Models the first/last point on a source route to be map-matched. This is used
+ * while searching start/end link candidates for a target route. An
+ * infrastructure link along which a terminus stop point is located is
+ * prioritised over other link candidates while choosing terminus links.
  *
- * @property location the coordinates for a terminus point of the route. This holds the first/last
- * coordinate of the LineString geometry of the source route.
- * @property terminusType indicates whether this instance denotes a start or end point of a route
+ * @property location the coordinates for a terminus point of a route. This
+ * holds the first/last coordinate of the LineString geometry of the source
+ * route.
+ * @property terminusType indicates whether this instance denotes a start or end
+ * point of a route
  */
 sealed interface SourceRouteTerminusPoint {
     val location: Point<G2D>
@@ -39,10 +42,11 @@ sealed interface SourceRouteTerminusPoint {
 }
 
 /**
- * Models the first/last point on a source route as a public transport stop point.
+ * Models the first/last point on a source route as a public transport stop
+ * point.
  *
- * @property stopPointNationalId the optional national ID for the public transport stop at route's
- * terminus point
+ * @property stopPointNationalId the optional national ID for the public
+ * transport stop at route's terminus point
  */
 data class SourceRouteTerminusStopPoint(
     override val location: Point<G2D>,
@@ -51,7 +55,8 @@ data class SourceRouteTerminusStopPoint(
 ) : SourceRouteTerminusPoint
 
 /**
- * Models the first/last point on a source route that is not a public transport stop point.
+ * Models the first/last point on a source route that is not a public transport
+ * stop point.
  */
 data class SourceRouteTerminusNonStopPoint(
     override val location: Point<G2D>,

@@ -14,11 +14,11 @@ interface INodeServiceInternal {
      * multiple (unique) pairs of start/end link from which to select one node
      * sequence
      * @param vehicleType vehicle type constraint to be applied while resolving
-     * optimal node sequence. Only such infrastructure links are considered that
-     * are safely traversable by the given vehicle type.
+     * an optimal node sequence. Only such infrastructure links are considered
+     * that are safely traversable by the given vehicle type.
      * @param bufferAreaRestriction contains data with which geometrical
      * restriction for the target set of infrastructure links can be defined
-     * while resolving optimal node sequence.
+     * while resolving an optimal node sequence.
      */
     fun resolveNodeIdSequence(
         nodeSequenceCandidates: List<NodeSequenceCandidatesBetweenSnappedLinks>,

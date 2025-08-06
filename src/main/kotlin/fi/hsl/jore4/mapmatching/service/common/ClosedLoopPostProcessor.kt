@@ -5,8 +5,8 @@ import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 
 object ClosedLoopPostProcessor {
     /**
-     * Consecutive traversals (full, partial, reversed, reversed partial) on a
-     * closed-loop shaped infrastructure link are replaced by one full traversal
+     * One full traversal replaces consecutive traversals (full, partial,
+     * reversed, reversed partial) on a closed-loop shaped infrastructure link
      * in the direction of the first traversal appearing per loop. The handling
      * is applied for all appearances of closed loops in a route. This is a kind
      * of compatibility mode for Jore4 where route granularity is defined in

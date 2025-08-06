@@ -28,10 +28,11 @@ import kotlin.math.min
 private val LOGGER = KotlinLogging.logger {}
 
 /**
- * This object contains static helper methods related to map-matching. The reason these methods are
- * here instead of e.g. a service implementation class is that this allows for or a more testable
- * code structure. The methods added here must be independent and contain such logic that it is
- * meaningful to test them with unit tests.
+ * This object contains static helper methods related to map-matching. The
+ * reason these methods are here instead of e.g. a service implementation class
+ * is that this allows for or a more testable code structure. The methods added
+ * here must be independent and contain such logic that it is meaningful to test
+ * them with unit tests.
  */
 object MatchingServiceHelper {
     fun validateInputForRouteMatching(
@@ -264,18 +265,20 @@ object MatchingServiceHelper {
     }
 
     /**
-     * Creates a sorted list of route point sequence candidates from the given terminus point
-     * candidates and via-points.
+     * Creates a sorted list of route point sequence candidates from the given
+     * terminus point candidates and via-points.
      *
-     * In the sorting, priority is given to those route point sequences that are related to public
-     * transport stop points that are matched with the national identifiers found in the
-     * map-matching request. The distance from the end point of the source route to the terminus
-     * point candidate is used as a secondary sorting criterion.
+     * In the sorting, priority is given to those route point sequences that are
+     * related to public transport stop points that are matched with the
+     * national identifiers found in the map-matching request. The distance from
+     * the end point of the source route to the terminus point candidate is used
+     * as a secondary sorting criterion.
      *
-     * In addition, sorting takes place in pairs. For example, a pair with more associations with
-     * public transport stop points is sorted before a pair with fewer associations. Likewise, if
-     * there are an equal number of stop point associations, the pair with the closest snap distance
-     * to one of its terminus point candidates is sorted first.
+     * In addition, sorting takes place in pairs. For example, a pair with more
+     * associations with public transport stop points is sorted before a pair
+     * with fewer associations. Likewise, if there are an equal number of stop
+     * point associations, the pair with the closest snap distance to one of its
+     * terminus point candidates is sorted first.
      */
     fun getSortedRoutePointSequenceCandidates(
         startPointCandidates: List<TerminusPointCandidate>,
@@ -354,18 +357,20 @@ object MatchingServiceHelper {
     }
 
     /**
-     * Creates a sorted list of node sequence candidates from the given terminus link candidates and
-     * via-nodes.
+     * Creates a sorted list of node sequence candidates from the given terminus
+     * link candidates and via-nodes.
      *
-     * In the sorting, priority is given to those terminus link candidates that are related to public
-     * transport stop points that are matched with the national identifiers found in the map-matching
-     * request. The distance from the end point of the source route to the terminus link candidate is
-     * used as a secondary sorting criterion.
+     * In the sorting, priority is given to those terminus link candidates that
+     * are related to public transport stop points that are matched with the
+     * national identifiers found in the map-matching request. The distance from
+     * the end point of the source route to the terminus link candidate is used
+     * as a secondary sorting criterion.
      *
-     * In addition, sorting takes place in pairs. For example, a pair with more associations with
-     * public transport stop points is sorted before a pair with fewer associations. Likewise, if
-     * there are an equal number of stop point associations, the pair with the closest snap distance
-     * to one of its terminus link candidates is sorted first.
+     * In addition, sorting takes place in pairs. For example, a pair with more
+     * associations with public transport stop points is sorted before a pair
+     * with fewer associations. Likewise, if there are an equal number of stop
+     * point associations, the pair with the closest snap distance to one of its
+     * terminus link candidates is sorted first.
      *
      * @throws [IllegalStateException]
      */

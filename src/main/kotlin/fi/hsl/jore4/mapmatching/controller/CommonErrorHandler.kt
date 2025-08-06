@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import java.util.function.Consumer
 
 /**
- * Provides error handler methods that return custom error messages back to client.
+ * Provides error handler methods that return custom error messages to a client.
  */
 @ControllerAdvice
 class CommonErrorHandler {

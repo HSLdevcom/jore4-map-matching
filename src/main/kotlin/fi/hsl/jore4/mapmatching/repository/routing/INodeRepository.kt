@@ -19,11 +19,11 @@ interface INodeRepository {
      * are required to be found
      *
      * @return one-based index of the closest node matches for the given
-     * points as [Map]. For each resolved node list an entry is added to
+     * points as [Map]. For each resolved node list, an entry is added to
      * the result map. Entry key is derived as one-based index for point
      * appearing in the parameter list. If the closest nodes for a point
      * could not be found, no entry for the index of the point is added to
-     * the result map. The result map contains at most the same amount of
+     * the result map. The result map contains at most the same number of
      * entries as there are points in the parameter list.
      */
     fun findNClosestNodes(

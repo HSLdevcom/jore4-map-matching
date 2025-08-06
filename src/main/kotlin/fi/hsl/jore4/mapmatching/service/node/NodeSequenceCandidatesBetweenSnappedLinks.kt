@@ -13,7 +13,7 @@ import kotlin.math.min
  *
  * While map-matching a source route, multiple
  * [NodeSequenceCandidatesBetweenSnappedLinks] objects are resolved based on the
- * geometry and route points of source route. Of these candidates the most
+ * geometry and route points of source route. Of these candidates, the most
  * suitable needs to be selected to constitute a route through infrastructure
  * network.
  *
@@ -23,9 +23,9 @@ import kotlin.math.min
  * the shortest route while preserving both terminus links as part of the route.
  *
  * @property pointOnStartLink holds data about route start point snapped to
- * infrastructure link
+ * an infrastructure link
  * @property pointOnEndLink holds data about route end point snapped to
- * infrastructure link
+ * an infrastructure link
  * @property nodeIdSequences list of infrastructure network node identifier
  * sequences. Each sequence starts with one or both endpoint nodes of the start
  * link and ends with one or both nodes associated with the route's end link.
@@ -55,7 +55,7 @@ data class NodeSequenceCandidatesBetweenSnappedLinks(
 
     /**
      * Indicates whether a route can be created based on the alternatives. If
-     * there is only single infrastructure node present, a route cannot be
+     * there is only a single infrastructure node present, a route cannot be
      * formed.
      */
     fun isRoutePossible(): Boolean = nodeIdSequences.size > 1 || nodeIdSequences.first().size > 1
