@@ -27,7 +27,7 @@ sealed interface RoutePoint {
 data class RouteStopPoint(
     override val location: Point<G2D>,
     val projectedLocation: Point<G2D>?,
-    @field:Pattern(regexp = "[\\w\\d-_ ]{1,10}") val passengerId: String,
+    @field:Pattern(regexp = "[\\w-_ ]{1,10}") val passengerId: String,
     val nationalId: Int?
 ) : RoutePoint
 

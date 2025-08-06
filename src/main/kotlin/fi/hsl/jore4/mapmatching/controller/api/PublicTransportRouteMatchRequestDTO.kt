@@ -18,7 +18,7 @@ import org.geolatte.geom.LineString
  * functionality can be adjusted
  */
 data class PublicTransportRouteMatchRequestDTO(
-    @field:Pattern(regexp = "[\\w\\d-_ ]{1,50}") val routeId: String?,
+    @field:Pattern(regexp = "[\\w-_ ]{1,50}") val routeId: String?,
     val routeGeometry: LineString<G2D>,
     @field:Valid val routePoints: List<RoutePoint>,
     @field:Valid val matchingParameters: MapMatchingParametersDTO?
