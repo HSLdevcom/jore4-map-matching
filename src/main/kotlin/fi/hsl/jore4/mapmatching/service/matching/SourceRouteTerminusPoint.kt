@@ -16,6 +16,26 @@ import org.geolatte.geom.Point
 sealed interface SourceRouteTerminusPoint {
     val location: Point<G2D>
     val terminusType: TerminusType
+
+    companion object {
+        fun fromRouteStopPoint(
+            terminusLocation: Point<G2D>,
+            isStartPoint: Boolean,
+            stopPointNationalId: Int?
+        ) = SourceRouteTerminusStopPoint(
+            terminusLocation,
+            TerminusType.fromBoolean(isStartPoint),
+            stopPointNationalId
+        )
+
+        fun fromRoutePoint(
+            terminusLocation: Point<G2D>,
+            isStartPoint: Boolean
+        ) = SourceRouteTerminusNonStopPoint(
+            terminusLocation,
+            TerminusType.fromBoolean(isStartPoint)
+        )
+    }
 }
 
 /**

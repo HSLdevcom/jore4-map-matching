@@ -17,19 +17,16 @@ import fi.hsl.jore4.mapmatching.repository.routing.RouteLink
 import fi.hsl.jore4.mapmatching.service.common.IRoutingServiceInternal
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponse
 import fi.hsl.jore4.mapmatching.service.common.response.RoutingResponseCreator
-import fi.hsl.jore4.mapmatching.service.matching.MatchingServiceHelper.getSourceRouteTerminusPoint
 import fi.hsl.jore4.mapmatching.service.node.INodeServiceInternal
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceCandidatesBetweenSnappedLinks
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionFailed
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionResult
 import fi.hsl.jore4.mapmatching.service.node.NodeSequenceResolutionSucceeded
-import fi.hsl.jore4.mapmatching.util.GeolatteUtils.toPoint
 import fi.hsl.jore4.mapmatching.util.InternalService
 import fi.hsl.jore4.mapmatching.util.LogUtils.joinToLogString
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.geolatte.geom.G2D
 import org.geolatte.geom.LineString
-import org.geolatte.geom.Point
 import org.springframework.transaction.annotation.Transactional
 
 private val LOGGER = KotlinLogging.logger {}
@@ -57,7 +54,7 @@ class MatchRouteViaNetworkNodesServiceImpl(
     ): RoutingResponse {
         val terminusLinkSelectionParams: TerminusLinkSelectionParams =
             try {
-                resolveTerminusLinkSelectionParams(
+                closestTerminusLinksResolver.resolveTerminusLinkSelectionParameters(
                     sourceRouteGeometry,
                     sourceRoutePoints,
                     vehicleType,
@@ -128,40 +125,6 @@ class MatchRouteViaNetworkNodesServiceImpl(
 
             is NodeSequenceResolutionFailed -> RoutingResponse.noSegment(nodeSeqResult.message)
         }
-    }
-
-    /**
-     * @throws [IllegalStateException] if no links are found for one or both of the two endpoints
-     * of the route
-     */
-    internal fun resolveTerminusLinkSelectionParams(
-        sourceRouteGeometry: LineString<G2D>,
-        sourceRoutePoints: List<RoutePoint>,
-        vehicleType: VehicleType,
-        terminusLinkQueryDistance: Double,
-        terminusLinkQueryLimit: Int
-    ): TerminusLinkSelectionParams {
-        // The terminus locations are extracted from the LineString geometry of the source route
-        // instead of the route point entities (mostly stop point instances) since in this context
-        // we are interested in the start/end coordinates of the source route line.
-        val startLocation: Point<G2D> = toPoint(sourceRouteGeometry.startPosition)
-        val endLocation: Point<G2D> = toPoint(sourceRouteGeometry.endPosition)
-
-        val (closestStartLinks: List<SnappedPointOnLink>, closestEndLinks: List<SnappedPointOnLink>) =
-            closestTerminusLinksResolver.findClosestInfrastructureLinksForRouteEndpoints(
-                startLocation,
-                endLocation,
-                vehicleType,
-                terminusLinkQueryDistance,
-                terminusLinkQueryLimit
-            )
-
-        return TerminusLinkSelectionParams(
-            getSourceRouteTerminusPoint(sourceRoutePoints.first(), startLocation, true),
-            closestStartLinks,
-            getSourceRouteTerminusPoint(sourceRoutePoints.last(), endLocation, false),
-            closestEndLinks
-        )
     }
 
     /**

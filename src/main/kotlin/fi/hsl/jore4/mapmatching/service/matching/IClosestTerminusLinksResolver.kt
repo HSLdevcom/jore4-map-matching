@@ -1,8 +1,10 @@
 package fi.hsl.jore4.mapmatching.service.matching
 
 import fi.hsl.jore4.mapmatching.model.VehicleType
+import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import org.geolatte.geom.G2D
+import org.geolatte.geom.LineString
 import org.geolatte.geom.Point
 
 interface IClosestTerminusLinksResolver {
@@ -29,4 +31,19 @@ interface IClosestTerminusLinksResolver {
         linkQueryDistance: Double,
         linkQueryLimit: Int
     ): Pair<List<SnappedPointOnLink>, List<SnappedPointOnLink>>
+
+    /**
+     * Resolves input parameters for selecting and prioritising terminus link
+     * candidates while map-matching a source route to a target route.
+     *
+     * @throws [IllegalStateException] if no links are found for one or both of the two endpoints
+     * of the route
+     */
+    fun resolveTerminusLinkSelectionParameters(
+        sourceRouteGeometry: LineString<G2D>,
+        sourceRoutePoints: List<RoutePoint>,
+        vehicleType: VehicleType,
+        terminusLinkQueryDistance: Double,
+        terminusLinkQueryLimit: Int
+    ): TerminusLinkSelectionParams
 }

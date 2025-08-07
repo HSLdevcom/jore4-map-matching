@@ -5,4 +5,8 @@ enum class TerminusType {
     END;
 
     override fun toString(): String = name.lowercase()
+
+    companion object {
+        fun fromBoolean(isStartPoint: Boolean) = if (isStartPoint) START else END
+    }
 }
