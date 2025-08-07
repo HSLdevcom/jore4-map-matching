@@ -79,10 +79,9 @@ class MatchRouteViaPointsOnLinksServiceImpl(
         )?.let { routeLinks: List<RouteLink> ->
             LOGGER.debug { "Got route links: ${joinToLogString(routeLinks)}" }
             RoutingResponseCreator.create(routeLinks)
-        }
-            ?: RoutingResponse.noSegment(
-                "Could not find route while map-matching via graph edges (points on links)"
-            )
+        } ?: RoutingResponse.noSegment(
+            "Could not find route while map-matching via graph edges (points on links)"
+        )
     }
 
     /**
