@@ -9,7 +9,6 @@ import fi.hsl.jore4.mapmatching.model.NodeProximity
 import fi.hsl.jore4.mapmatching.model.VehicleMode
 import fi.hsl.jore4.mapmatching.model.VehicleType
 import fi.hsl.jore4.mapmatching.model.matching.RoutePoint
-import fi.hsl.jore4.mapmatching.model.matching.RouteStopPoint
 import fi.hsl.jore4.mapmatching.model.matching.TerminusType
 import fi.hsl.jore4.mapmatching.repository.infrastructure.SnappedPointOnLink
 import fi.hsl.jore4.mapmatching.repository.routing.PgRoutingPoint
@@ -54,25 +53,6 @@ object MatchingServiceHelper {
         val routePointLocations: List<Point<G2D>> = routePoints.map(RoutePoint::location)
 
         return filterOutConsecutiveDuplicates(routePointLocations).size >= 2
-    }
-
-    fun getSourceRouteTerminusPoint(
-        routePoint: RoutePoint,
-        terminusLocationFromRouteLine: Point<G2D>,
-        isStartPoint: Boolean
-    ): SourceRouteTerminusPoint {
-        val terminusType = if (isStartPoint) TerminusType.START else TerminusType.END
-
-        return when (routePoint) {
-            is RouteStopPoint ->
-                SourceRouteTerminusStopPoint(
-                    terminusLocationFromRouteLine,
-                    terminusType,
-                    routePoint.nationalId
-                )
-
-            else -> SourceRouteTerminusNonStopPoint(terminusLocationFromRouteLine, terminusType)
-        }
     }
 
     fun createPairwiseCandidatesForRouteTerminusPoints(
