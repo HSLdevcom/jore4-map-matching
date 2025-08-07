@@ -365,7 +365,7 @@ class RoutingRepositoryImpl(
         // number of route link.
         val routeSeqNumToTrimmedRouteLink: Map<Int, TrimmedRouteLinkResultItem> =
             queryResults
-                .mapNotNull { if (it is TrimmedRouteLinkResultItem) it else null }
+                .mapNotNull { it as? TrimmedRouteLinkResultItem }
                 .associateBy { it.routeSeqNum }
 
         val routeLinks: List<RouteLink> =
@@ -386,7 +386,7 @@ class RoutingRepositoryImpl(
                             // (already reversed in SQL in case of backwards traversal).
                             val traversedGeometry: LineString<G2D> =
                                 trimmedRouteLink
-                                    ?.let { it.traversedGeometry }
+                                    ?.traversedGeometry
                                     ?: when (path.isTraversalForwards) {
                                         true -> path.linkGeometry
                                         false -> mkLineString(path.linkGeometry.positions.reverse(), WGS84)
@@ -397,7 +397,7 @@ class RoutingRepositoryImpl(
                             // the traversed distance.
                             val traversedDistance: Double =
                                 trimmedRouteLink
-                                    ?.let { it.traversedDistance }
+                                    ?.traversedDistance
                                     ?: path.linkLength
 
                             RouteLink(
