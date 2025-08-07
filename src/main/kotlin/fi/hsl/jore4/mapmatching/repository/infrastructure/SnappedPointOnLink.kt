@@ -44,8 +44,8 @@ data class SnappedPointOnLink(
         require(closestPointFractionalMeasure in 0.0..1.0) {
             "closestPointFractionalMeasure must be in range 0.0..1.0: $closestPointFractionalMeasure"
         }
-        require(infrastructureLinkLength >= 0.0) {
-            "infrastructureLinkLength must be greater than or equal to 0.0: $infrastructureLinkLength"
+        require(infrastructureLinkLength > 0.0) {
+            "infrastructureLinkLength must be greater than 0.0: $infrastructureLinkLength"
         }
     }
 
