@@ -713,7 +713,7 @@ class RoutingRepositoryImpl(
                 FROM (
                     SELECT
                         CASE
-                            WHEN pid = 3 THEN
+                            WHEN pid = 3 THEN -- first point given column names
                                 'SELECT ' || pid || ' AS pid, ' || edge_id || ' AS edge_id, ' || rounded_fraction || ' AS fraction, ''' || side || '''::char AS side'
                             ELSE
                                 'SELECT ' || pid || ', ' || edge_id || ', ' || rounded_fraction || ', ''' || side || '''::char'
