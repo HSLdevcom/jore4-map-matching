@@ -48,9 +48,9 @@ class MatchRouteViaPointsOnLinksServiceImpl(
         vehicleType: VehicleType,
         matchingParameters: PublicTransportRouteMatchingParameters
     ): RoutingResponse {
-        val terminusLinkSelectionInput: TerminusLinkSelectionInput =
+        val terminusLinkSelectionParams: TerminusLinkSelectionParams =
             try {
-                resolveTerminusLinkSelectionInput(
+                resolveTerminusLinkSelectionParams(
                     sourceRouteGeometry,
                     sourceRoutePoints,
                     vehicleType,
@@ -67,7 +67,7 @@ class MatchRouteViaPointsOnLinksServiceImpl(
             resolveRoutePointSequenceCandidates(
                 sourceRoutePoints,
                 vehicleType,
-                terminusLinkSelectionInput,
+                terminusLinkSelectionParams,
                 matchingParameters
             )
 
@@ -88,13 +88,13 @@ class MatchRouteViaPointsOnLinksServiceImpl(
      * @throws [IllegalStateException] if no links are found for one or both of the two endpoints
      * of the route
      */
-    internal fun resolveTerminusLinkSelectionInput(
+    internal fun resolveTerminusLinkSelectionParams(
         sourceRouteGeometry: LineString<G2D>,
         sourceRoutePoints: List<RoutePoint>,
         vehicleType: VehicleType,
         terminusLinkQueryDistance: Double,
         terminusLinkQueryLimit: Int
-    ): TerminusLinkSelectionInput {
+    ): TerminusLinkSelectionParams {
         // The terminus locations are extracted from the LineString geometry of the source route
         // instead of the route point entities (mostly stop point instances) since in this context
         // we are interested in the start/end coordinates of the source route line.
@@ -116,7 +116,7 @@ class MatchRouteViaPointsOnLinksServiceImpl(
                 it.withSnappedToTerminusNode(Constants.SNAP_TO_LINK_ENDPOINT_DISTANCE_IN_METERS)
             }
 
-        return TerminusLinkSelectionInput(
+        return TerminusLinkSelectionParams(
             getSourceRouteTerminusPoint(sourceRoutePoints.first(), startLocation, true),
             snapToTerminusNodes(closestStartLinks),
             getSourceRouteTerminusPoint(sourceRoutePoints.last(), endLocation, false),
@@ -127,7 +127,7 @@ class MatchRouteViaPointsOnLinksServiceImpl(
     internal fun resolveRoutePointSequenceCandidates(
         sourceRoutePoints: List<RoutePoint>,
         vehicleType: VehicleType,
-        terminusLinkSelectionInput: TerminusLinkSelectionInput,
+        terminusLinkSelectionParams: TerminusLinkSelectionParams,
         matchingParams: PublicTransportRouteMatchingParameters
     ): List<List<PgRoutingPoint>> {
         val (
@@ -137,7 +137,7 @@ class MatchRouteViaPointsOnLinksServiceImpl(
         ) =
             resolveTerminusPointCandidatesAndStopPoints(
                 sourceRoutePoints,
-                terminusLinkSelectionInput,
+                terminusLinkSelectionParams,
                 matchingParams.maxStopLocationDeviation
             )
 
@@ -181,7 +181,7 @@ class MatchRouteViaPointsOnLinksServiceImpl(
 
     internal fun resolveTerminusPointCandidatesAndStopPoints(
         sourceRoutePoints: List<RoutePoint>,
-        terminusLinkSelectionInput: TerminusLinkSelectionInput,
+        terminusLinkSelectionParams: TerminusLinkSelectionParams,
         maxStopLocationDeviation: Double
     ): TerminusPointCandidatesAndStopPoints {
         val fromRoutePointIndexToSnappedLinkOfMatchedStop: Map<Int, SnapStopToLinkResult> =
@@ -210,7 +210,7 @@ class MatchRouteViaPointsOnLinksServiceImpl(
             targetEndPointCandidates: List<TerminusPointCandidate>
         ) =
             MatchingServiceHelper.createPairwiseCandidatesForRouteTerminusPoints(
-                terminusLinkSelectionInput,
+                terminusLinkSelectionParams,
                 fromNationalIdToTargetStopPoint
             )
 

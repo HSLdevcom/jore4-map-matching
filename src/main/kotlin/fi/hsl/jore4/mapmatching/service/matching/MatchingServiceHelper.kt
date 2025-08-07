@@ -76,7 +76,7 @@ object MatchingServiceHelper {
     }
 
     fun createPairwiseCandidatesForRouteTerminusPoints(
-        terminusLinkSelectionInput: TerminusLinkSelectionInput,
+        terminusLinkSelectionParams: TerminusLinkSelectionParams,
         stopPointsIndexedByNationalId: Map<Int, PgRoutingPoint>
     ): Pair<List<TerminusPointCandidate>, List<TerminusPointCandidate>> {
         fun createTerminusPointCandidatesForOneEndpoint(
@@ -137,12 +137,12 @@ object MatchingServiceHelper {
 
         return Pair(
             createTerminusPointCandidatesForOneEndpoint(
-                terminusLinkSelectionInput.closestStartLinks,
-                terminusLinkSelectionInput.sourceRouteStartPoint
+                terminusLinkSelectionParams.closestStartLinks,
+                terminusLinkSelectionParams.sourceRouteStartPoint
             ),
             createTerminusPointCandidatesForOneEndpoint(
-                terminusLinkSelectionInput.closestEndLinks,
-                terminusLinkSelectionInput.sourceRouteEndPoint
+                terminusLinkSelectionParams.closestEndLinks,
+                terminusLinkSelectionParams.sourceRouteEndPoint
             )
         )
     }
@@ -197,7 +197,7 @@ object MatchingServiceHelper {
     }
 
     fun resolveTerminusLinkCandidates(
-        terminusLinkSelectionInput: TerminusLinkSelectionInput,
+        terminusLinkSelectionParams: TerminusLinkSelectionParams,
         fromStopNationalIdToInfrastructureLinkId: Map<Int, InfrastructureLinkId>
     ): Pair<List<TerminusLinkCandidate>, List<TerminusLinkCandidate>> {
         fun createTerminusLinkCandidates(
@@ -233,12 +233,12 @@ object MatchingServiceHelper {
 
         return Pair(
             createTerminusLinkCandidates(
-                terminusLinkSelectionInput.closestStartLinks,
-                terminusLinkSelectionInput.sourceRouteStartPoint
+                terminusLinkSelectionParams.closestStartLinks,
+                terminusLinkSelectionParams.sourceRouteStartPoint
             ),
             createTerminusLinkCandidates(
-                terminusLinkSelectionInput.closestEndLinks,
-                terminusLinkSelectionInput.sourceRouteEndPoint
+                terminusLinkSelectionParams.closestEndLinks,
+                terminusLinkSelectionParams.sourceRouteEndPoint
             )
         )
     }
