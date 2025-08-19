@@ -224,7 +224,7 @@ class MapMatchingBulkTester(
 
     companion object {
         private val DEFAULT_ROUTE_MATCH_RADIUS_VALUES: Set<Double> = setOf(55.0)
-        private val DEFAULT_SEGMENT_MATCH_RADIUS_VALUES: Set<Double> = setOf(40.0, 50.0, 90.0)
+        private val DEFAULT_SEGMENT_MATCH_RADIUS_VALUES: Set<Double> = setOf(20.0, 35.0, 55.0, 90.0)
 
         private fun getMatchingParameters(bufferRadius: Double): PublicTransportRouteMatchingParameters {
             val roadJunctionMatchingParams =
