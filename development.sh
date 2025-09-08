@@ -152,6 +152,11 @@ run_tests() {
 }
 
 download_digitransit_key() {
+  if [[ -z "$AZ_HTTPS_PROXY" ]]; then
+    echo "The AZ_HTTPS_PROXY environment variable must be set according to the general JORE4 Azure guidelines when fetching the Digitransit subscription key from Azure Key Vault."
+    exit 1
+  fi
+
   login
 
   echo "Downloading Digitransit subscription key from Azure Key Vault..."
@@ -163,9 +168,9 @@ download_digitransit_key() {
 
   cat <<EOF >> "$config_file"
 digitransit.subscription.key=$(
-  az keyvault secret show \
+  HTTPS_PROXY="$AZ_HTTPS_PROXY" az keyvault secret show \
     --name "hsl-jore4-digitransit-api-key" \
-    --vault-name "hsl-jore4-dev-vault" \
+    --vault-name "kv-jore4-dev-001" \
     --query "value" \
     -o tsv
 )
@@ -206,7 +211,8 @@ print_usage() {
 
   digitransit:fetch
     Download Digitransit subscription key for the JORE4 account which is used in
-    the UI while loading map tiles.
+    the UI while loading map tiles. You will need to set the AZ_HTTPS_PROXY
+    environment variable. For more information, see the README.md file.
 
   generate:jooq
     Generate jOOQ classes using test database as dependency.
