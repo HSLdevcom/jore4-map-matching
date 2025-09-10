@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 class RoutingServiceInternalImpl(
     val routingRepository: IRoutingRepository
 ) : IRoutingServiceInternal {
-    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
+    @Transactional(readOnly = true)
     override fun findRouteViaNodes(
         nodeIdSequence: NodeIdSequence,
         vehicleType: VehicleType,
@@ -31,7 +31,7 @@ class RoutingServiceInternalImpl(
             bufferAreaRestriction
         )
 
-    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
+    @Transactional(readOnly = true)
     override fun findRouteViaPointsOnLinks(
         points: List<PgRoutingPoint>,
         vehicleType: VehicleType,

@@ -19,7 +19,7 @@ private val LOGGER = KotlinLogging.logger {}
 class RoadJunctionMatcherImpl(
     val nodeRepository: INodeRepository
 ) : IRoadJunctionMatcher {
-    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
+    @Transactional(readOnly = true)
     override fun findInfrastructureNodesMatchingRoadJunctions(
         routePoints: List<RoutePoint>,
         vehicleType: VehicleType,
