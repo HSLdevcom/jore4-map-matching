@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.4</version>
+        <version>3.5.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -38,7 +38,7 @@
         <!-- Library versions -->
         <arrow-core.version>2.1.2</arrow-core.version>
         <geolatte.version>1.10</geolatte.version>
-        <kotlin-logging-jvm.version>7.0.12</kotlin-logging-jvm.version>
+        <kotlin-logging-jvm.version>7.0.13</kotlin-logging-jvm.version>
         <quicktheories.version>0.26</quicktheories.version>
 
         <!-- Other properties -->
