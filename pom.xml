@@ -31,7 +31,7 @@
         <build-helper-plugin.version>3.6.1</build-helper-plugin.version>
         <build-properties-plugin.version>1.2.1</build-properties-plugin.version>
         <maven-compiler.plugin.version>3.14.0</maven-compiler.plugin.version>
-        <surefire-plugin.version>3.5.3</surefire-plugin.version>
+        <surefire-plugin.version>3.5.4</surefire-plugin.version>
         <maven-enforcer-plugin.version>3.6.1</maven-enforcer-plugin.version>
         <ktlint-plugin.version>3.5.0</ktlint-plugin.version>
 
