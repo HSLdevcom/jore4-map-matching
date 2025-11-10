@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
  * The possible directions of traffic flow on infrastructure links. Using code
  * values from Digiroad codeset.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> {
 
     private static final long serialVersionUID = 1L;

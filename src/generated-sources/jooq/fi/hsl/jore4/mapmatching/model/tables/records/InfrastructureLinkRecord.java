@@ -18,7 +18,7 @@ import org.jooq.impl.UpdatableRecordImpl;
  * The infrastructure links, e.g. road or rail elements:
  * https://www.transmodel-cen.eu/model/index.htm?goto=2:1:1:1:453
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class InfrastructureLinkRecord extends UpdatableRecordImpl<InfrastructureLinkRecord> {
 
     private static final long serialVersionUID = 1L;

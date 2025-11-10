@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
  * The vehicle modes from Transmodel:
  * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class VehicleMode extends TableImpl<VehicleModeRecord> {
 
     private static final long serialVersionUID = 1L;

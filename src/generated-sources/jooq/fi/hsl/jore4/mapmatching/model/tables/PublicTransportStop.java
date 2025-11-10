@@ -43,7 +43,7 @@ import org.jooq.impl.TableImpl;
 /**
  * The public transport stops imported from Digiroad export
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class PublicTransportStop extends TableImpl<PublicTransportStopRecord> {
 
     private static final long serialVersionUID = 1L;

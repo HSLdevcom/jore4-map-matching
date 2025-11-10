@@ -38,7 +38,7 @@
         <!-- Library versions -->
         <arrow-core.version>2.1.2</arrow-core.version>
         <geolatte.version>1.10</geolatte.version>
-        <geotools.version>32.2</geotools.version>
+        <geotools.version>34.0</geotools.version>
         <kotlin-logging-jvm.version>7.0.12</kotlin-logging-jvm.version>
         <quicktheories.version>0.26</quicktheories.version>
 
@@ -391,6 +391,11 @@
                         <!-- Enable strict mode for JSR-305 annotations. -->
                         <arg>-Xjsr305=strict</arg>
                     </args>
+                    <sourceDirs>
+                        <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                        <sourceDir>${project.basedir}/src/generated-sources/jooq</sourceDir>
+                    </sourceDirs>
+                    <output>${project.build.outputDirectory}</output>
                 </configuration>
                 <executions>
                     <execution>
@@ -471,7 +476,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <fork>true</fork>
                     <mainClass>${start.class}</mainClass>
                 </configuration>
                 <executions>
@@ -645,6 +649,13 @@
             <groupId>org.quicktheories</groupId>
             <artifactId>quicktheories</artifactId>
             <version>${quicktheories.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>2.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

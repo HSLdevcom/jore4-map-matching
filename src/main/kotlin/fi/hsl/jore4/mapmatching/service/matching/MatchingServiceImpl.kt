@@ -66,10 +66,10 @@ class MatchingServiceImpl(
                                 )
 
                         LOGGER.info {
-                            if (viaNodesResponse is RoutingResponse.RoutingSuccessDTO) {
-                                "Matching $routeName using via-graph-vertices algorithm succeeded"
+                            if (viaNodesResponse is RoutingResponse.RoutingFailureDTO) {
+                                "Matching $routeName using via-graph-vertices algorithm failed: ${viaNodesResponse.message}"
                             } else {
-                                "Matching $routeName using via-graph-vertices algorithm failed: ${viaPointsOnLinksResponse.message}"
+                                "Matching $routeName using via-graph-vertices algorithm succeeded"
                             }
                         }
 

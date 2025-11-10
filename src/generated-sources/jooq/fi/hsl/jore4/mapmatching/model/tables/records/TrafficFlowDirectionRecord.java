@@ -14,7 +14,7 @@ import org.jooq.impl.UpdatableRecordImpl;
  * The possible directions of traffic flow on infrastructure links. Using code
  * values from Digiroad codeset.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class TrafficFlowDirectionRecord extends UpdatableRecordImpl<TrafficFlowDirectionRecord> {
 
     private static final long serialVersionUID = 1L;

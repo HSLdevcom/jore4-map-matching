@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 /**
  * Topology nodes created for infrastructure links by pgRougting
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkVerticesPgrRecord> {
 
     private static final long serialVersionUID = 1L;

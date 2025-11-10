@@ -14,7 +14,7 @@ import org.jooq.impl.UpdatableRecordImpl;
  * The vehicle types from Transmodel:
  * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class VehicleTypeRecord extends UpdatableRecordImpl<VehicleTypeRecord> {
 
     private static final long serialVersionUID = 1L;

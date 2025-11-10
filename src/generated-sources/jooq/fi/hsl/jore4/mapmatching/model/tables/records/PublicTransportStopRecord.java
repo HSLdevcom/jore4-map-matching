@@ -16,7 +16,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 /**
  * The public transport stops imported from Digiroad export
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class PublicTransportStopRecord extends UpdatableRecordImpl<PublicTransportStopRecord> {
 
     private static final long serialVersionUID = 1L;

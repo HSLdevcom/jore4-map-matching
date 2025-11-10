@@ -13,7 +13,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 /**
  * Which infrastructure links are safely traversed by which vehicle types?
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class InfrastructureLinkSafelyTraversedByVehicleTypeRecord extends UpdatableRecordImpl<InfrastructureLinkSafelyTraversedByVehicleTypeRecord> {
 
     private static final long serialVersionUID = 1L;

@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 /**
  * The enumerated sources for infrastructure network entities
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class InfrastructureSource extends TableImpl<InfrastructureSourceRecord> {
 
     private static final long serialVersionUID = 1L;

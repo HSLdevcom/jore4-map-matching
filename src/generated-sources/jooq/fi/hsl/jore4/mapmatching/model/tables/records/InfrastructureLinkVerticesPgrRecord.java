@@ -15,7 +15,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 /**
  * Topology nodes created for infrastructure links by pgRougting
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class InfrastructureLinkVerticesPgrRecord extends UpdatableRecordImpl<InfrastructureLinkVerticesPgrRecord> {
 
     private static final long serialVersionUID = 1L;
