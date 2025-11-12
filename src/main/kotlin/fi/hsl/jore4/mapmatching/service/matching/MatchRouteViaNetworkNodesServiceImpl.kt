@@ -45,7 +45,7 @@ class MatchRouteViaNetworkNodesServiceImpl(
         val viaLinksIndexedByRoutePointOrdering: Map<Int, SnappedPointOnLink>
     )
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun findMatchForPublicTransportRoute(
         sourceRouteGeometry: LineString<G2D>,
         sourceRoutePoints: List<RoutePoint>,

@@ -18,7 +18,7 @@ private val LOGGER = KotlinLogging.logger {}
 class NodeServiceInternalImpl(
     val nodeRepository: INodeRepository
 ) : INodeServiceInternal {
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun resolveNodeIdSequence(
         nodeSequenceCandidates: List<NodeSequenceCandidatesBetweenSnappedLinks>,
         vehicleType: VehicleType,

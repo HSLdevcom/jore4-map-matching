@@ -18,7 +18,7 @@ private val LOGGER = KotlinLogging.logger {}
 class PublicTransportStopMatcherImpl(
     val stopRepository: IStopRepository
 ) : IPublicTransportStopMatcher {
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun findStopPointsByNationalIdsAndIndexByRoutePointOrdering(
         routePoints: List<RoutePoint>,
         maxStopLocationDeviation: Double

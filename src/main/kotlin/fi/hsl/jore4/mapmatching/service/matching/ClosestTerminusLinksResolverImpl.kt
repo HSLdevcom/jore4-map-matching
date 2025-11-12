@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional
 class ClosestTerminusLinksResolverImpl(
     val linkRepository: ILinkRepository
 ) : IClosestTerminusLinksResolver {
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun findClosestInfrastructureLinksForRouteEndpoints(
         startPoint: Point<G2D>,
         endPoint: Point<G2D>,
@@ -61,7 +61,7 @@ class ClosestTerminusLinksResolverImpl(
         return closestStartLinks to closestEndLinks
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = [RuntimeException::class])
     override fun resolveTerminusLinkSelectionParameters(
         sourceRouteGeometry: LineString<G2D>,
         sourceRoutePoints: List<RoutePoint>,
