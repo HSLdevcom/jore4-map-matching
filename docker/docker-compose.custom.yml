@@ -33,3 +33,5 @@ services:
       service: jore4-mapmatchingdb-base
     container_name: mapmatchingdb
     image: "hsldevcom/jore4-postgres:mapmatching-main--20250425-c07c8632baab554dfbbbb64177ed930282094232"
+    environment:
+        DIGIROAD_ROUTING_DUMP_URL: "https://jore4storage.blob.core.windows.net/jore4-digiroad/2025-08-29_create_routing_schema_digiroad_r_2025_02_fixup.sql"
