@@ -165,11 +165,11 @@ class MatchingService_FindMatchForPublicTransportRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "440250" to false,
-                            "440764" to false,
-                            "440767" to false,
-                            "440765" to false,
-                            "440750" to true
+                            "90c18933-06f4-4f7b-9df2-9c82b59ecd35:2" to false,
+                            "315a1fa3-fdfa-4340-b581-2a83bb8abfa9:2" to false,
+                            "80f7650b-e63b-4f0b-8159-b04936ce7cdb:2" to false,
+                            "9fbfa4c7-0bc7-490c-99a2-c8524225ba40:2" to false,
+                            "e30555b1-d6bd-43d5-ae94-fc3834d0abef:2" to true
                         )
                     )
                 }
