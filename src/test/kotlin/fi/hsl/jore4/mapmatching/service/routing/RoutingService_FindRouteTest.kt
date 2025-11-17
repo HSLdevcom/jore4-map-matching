@@ -189,9 +189,9 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "441679" to true,
-                            "441872" to true,
-                            "441874" to true
+                            "c525b97b-8c30-4aba-bfce-28074d4c08e5:1" to true,
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true,
+                            "1d1a650b-5621-40bf-bfb2-73d231849c48:1" to true
                         )
                     )
                 }
@@ -236,7 +236,7 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "441872" to true
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true
                         )
                     )
                 }
@@ -288,11 +288,11 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "441872" to true,
-                            "441880" to true,
-                            "441870" to false,
-                            "441890" to false,
-                            "441872" to true
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true,
+                            "134baafa-fbc0-47e7-8be1-6f25cbd37eff:1" to true,
+                            "2f402bd1-aeeb-4a32-bbf7-36dac212bd14:1" to false,
+                            "bd198e25-1902-44fd-ac89-da19c5115eee:1" to false,
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true
                         )
                     )
                 }
@@ -344,10 +344,10 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "419821" to false,
-                            "419821" to true,
-                            "419827" to true,
-                            "419825" to true
+                            "5e070b32-d8f9-4096-8957-7303f8affe8b:2" to false,
+                            "5e070b32-d8f9-4096-8957-7303f8affe8b:2" to true,
+                            "28c73f2e-0d5e-40e1-9756-5171bb65f39d:2" to true,
+                            "9e19e8ac-55dc-4cfb-b262-9206a957d084:2" to true
                         )
                     )
                 }
@@ -393,7 +393,7 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "441872" to true
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true
                         )
                     )
                 }
@@ -468,11 +468,11 @@ class RoutingService_FindRouteTest
 
                             assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                                 listOf(
-                                    "11392370" to true,
-                                    "12538103" to true,
-                                    "12538103" to false,
-                                    "12538103" to false,
-                                    "12538103" to true
+                                    "4f8aa489-14dd-4061-b197-41db30fc3e98:1" to true,
+                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to false,
+                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to true,
+                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to true,
+                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to false
                                 )
                             )
                         }
@@ -501,8 +501,8 @@ class RoutingService_FindRouteTest
                             // shorter list than without simplifying, the closed-loop link appears only once
                             assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                                 listOf(
-                                    "11392370" to true,
-                                    "12538103" to true
+                                    "4f8aa489-14dd-4061-b197-41db30fc3e98:1" to true,
+                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to false
                                 )
                             )
                         }
