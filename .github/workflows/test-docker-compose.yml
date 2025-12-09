@@ -4,8 +4,11 @@ on:
   push:
     branches:
       - main
-      - "releases/**"
+      - releases/**
   pull_request:
+
+permissions:
+  contents: read
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -17,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Start the database and the map-matching service
         run: ./development.sh start
