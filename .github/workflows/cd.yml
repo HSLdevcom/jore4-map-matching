@@ -4,9 +4,12 @@ on:
   push:
     branches:
       - main
-      - "releases/**"
+      - releases/**
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   run_kotlin_tests:
@@ -20,7 +23,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: HSLdevcom/jore4-tools/.github/workflows/shared-build-and-publish-docker-image.yml@shared-build-and-publish-docker-image-v1
+    uses: HSLdevcom/jore4-tools/.github/workflows/shared-build-and-publish-docker-image.yml@shared-build-and-publish-docker-image-v6
     with:
       docker_image_name: jore4-map-matching
       build_arm64_image: true
