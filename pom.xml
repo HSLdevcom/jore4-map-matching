@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.7</version>
+        <version>4.0.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -36,9 +36,9 @@
         <ktlint-plugin.version>3.5.0</ktlint-plugin.version>
 
         <!-- Library versions -->
-        <arrow-core.version>2.2.0</arrow-core.version>
+        <arrow-core.version>2.2.1.1</arrow-core.version>
         <geolatte.version>1.10</geolatte.version>
-        <kotlin-logging-jvm.version>7.0.13</kotlin-logging-jvm.version>
+        <kotlin-logging-jvm.version>7.0.14</kotlin-logging-jvm.version>
         <quicktheories.version>0.26</quicktheories.version>
 
         <!-- Other properties -->
