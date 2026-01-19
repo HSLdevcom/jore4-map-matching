@@ -24,16 +24,16 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # download script for reading Docker secrets
-RUN curl -o /tmp/read-secrets.sh "https://raw.githubusercontent.com/HSLdevcom/jore4-tools/main/docker/read-secrets.sh"
+ADD --chmod=755 https://raw.githubusercontent.com/HSLdevcom/jore4-tools/main/docker/read-secrets.sh /tmp/read-secrets.sh
 
 # add helper script for constructing JDBC URL
-COPY ./scripts/build-jdbc-urls.sh /tmp/build-jdbc-urls.sh
+COPY --chmod=755 ./scripts/build-jdbc-urls.sh /tmp/build-jdbc-urls.sh
 
 # copy compiled jar from builder stage
 COPY --from=builder /build/target/*.jar /usr/src/jore4-map-matching/jore4-map-matching.jar
 
 # read Docker secrets into environment variables and run application
-CMD /bin/bash -c "source /tmp/read-secrets.sh && source /tmp/build-jdbc-urls.sh && java -jar /usr/src/jore4-map-matching/jore4-map-matching.jar"
+CMD ["/bin/bash", "-c", "source /tmp/read-secrets.sh && source /tmp/build-jdbc-urls.sh && java -jar /usr/src/jore4-map-matching/jore4-map-matching.jar"]
 
 HEALTHCHECK --interval=1m --timeout=5s \
   CMD curl --fail http://localhost:8080/actuator/health
