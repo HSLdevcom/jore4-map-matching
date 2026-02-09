@@ -13,7 +13,7 @@ COPY ./src /build/src
 COPY ./profiles/prod /build/profiles/prod
 RUN mvn -Pprod -DskipTests=true clean package spring-boot:repackage
 
-FROM eclipse-temurin:25.0.1_8-jre
+FROM eclipse-temurin:25.0.2_10-jre
 
 # Application Insights version
 ARG APPINSIGHTS_VERSION=3.7.7
