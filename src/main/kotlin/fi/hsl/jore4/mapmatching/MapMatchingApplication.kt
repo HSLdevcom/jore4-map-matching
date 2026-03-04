@@ -7,8 +7,8 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.geolatte.geom.json.GeolatteGeomModule
 import org.geolatte.geom.json.Setting
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 import org.springframework.boot.runApplication
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 import org.springframework.transaction.annotation.EnableTransactionManagement
