@@ -8,6 +8,7 @@ import tools.jackson.core.JsonGenerator
 import tools.jackson.databind.SerializationContext
 import tools.jackson.databind.SerializationFeature
 import tools.jackson.databind.ValueSerializer
+import tools.jackson.databind.introspect.DefaultAccessorNamingStrategy
 import tools.jackson.databind.module.SimpleModule
 
 @Configuration
@@ -25,6 +26,11 @@ class JacksonGeoJsonConfig {
             builder.addModule(module)
             builder.disable(SerializationFeature.FAIL_ON_SELF_REFERENCES)
             builder.enable(SerializationFeature.WRITE_SELF_REFERENCES_AS_NULL)
+
+            // Jackson 3.x treats Kotlin `isXxx` boolean properties as JavaBean is-getters and
+            // strips the "is" prefix (e.g. `isTraversalForwards` → `traversalForwards`).
+            // Disable is-getter detection so Kotlin property names are preserved verbatim.
+            builder.accessorNaming(DefaultAccessorNamingStrategy.Provider().withIsGetterPrefix(""))
         }
 
     private class GeoLatteLineStringSerializer : ValueSerializer<LineString<*>>() {
