@@ -29,6 +29,7 @@ ADD --chmod=444 https://raw.githubusercontent.com/HSLdevcom/jore4-tools/main/doc
 
 # Connection string is provided as env in Kubernetes by secrets manager
 # it should not be provided for other environments (local etc)
+RUN mkdir -p /usr/src/jore4-map-matching
 ADD --chmod=444 https://github.com/microsoft/ApplicationInsights-Java/releases/download/${APPINSIGHTS_VERSION}/applicationinsights-agent-${APPINSIGHTS_VERSION}.jar /usr/src/jore4-map-matching/applicationinsights-agent.jar
 COPY --chmod=444 ./applicationinsights.json /usr/src/jore4-map-matching/applicationinsights.json
 
