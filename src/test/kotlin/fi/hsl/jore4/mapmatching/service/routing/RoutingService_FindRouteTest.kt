@@ -159,15 +159,34 @@ class RoutingService_FindRouteTest
                         PositionSequenceBuilders
                             .variableSized(G2D::class.java)
                             .add(24.95708, 60.16801)
+                            .add(24.95709, 60.16801)
+                            .add(24.95712, 60.16801)
                             .add(24.95715, 60.16802)
+                            .add(24.95718, 60.16804)
+                            .add(24.95724, 60.16806)
                             .add(24.95724, 60.16806)
                             .add(24.95732, 60.16812)
+                            .add(24.95734, 60.16814)
                             .add(24.95758, 60.16832)
                             .add(24.95776, 60.16843)
+                            .add(24.95795, 60.16856)
                             .add(24.95797, 60.16858)
+                            .add(24.95821, 60.16873)
                             .add(24.95826, 60.16876)
+                            .add(24.95826, 60.16876)
+                            .add(24.95836, 60.16882)
+                            .add(24.95838, 60.16883)
                             .add(24.95839, 60.16885)
+                            .add(24.95841, 60.16886)
+                            .add(24.95843, 60.16888)
+                            .add(24.95845, 60.16889)
+                            .add(24.95847, 60.16891)
                             .add(24.95848, 60.16892)
+                            .add(24.95849, 60.16894)
+                            .add(24.95850, 60.16896)
+                            .add(24.95850, 60.16898)
+                            .add(24.95851, 60.16901)
+                            .add(24.95851, 60.16905)
                             .add(24.95851, 60.16906)
                             .add(24.95851, 60.16911)
 
@@ -189,9 +208,9 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "c525b97b-8c30-4aba-bfce-28074d4c08e5:1" to true,
-                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true,
-                            "1d1a650b-5621-40bf-bfb2-73d231849c48:1" to true
+                            "d561a40e-1b2b-45aa-bb91-fcb5ba82e136:1" to true,
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:2" to true,
+                            "9253d310-7825-4323-84ee-1575fa382800:1" to true
                         )
                     )
                 }
@@ -215,6 +234,7 @@ class RoutingService_FindRouteTest
                         PositionSequenceBuilders
                             .variableSized(G2D::class.java)
                             .add(24.95734, 60.16813)
+                            .add(24.95734, 60.16814)
                             .add(24.95758, 60.16832)
                             .add(24.95762, 60.16834)
 
@@ -236,7 +256,7 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:2" to true
                         )
                     )
                 }
@@ -262,10 +282,19 @@ class RoutingService_FindRouteTest
                             .add(24.95762, 60.16834)
                             .add(24.95776, 60.16843)
                             .add(24.95763, 60.16846)
+                            .add(24.95748, 60.16836)
                             .add(24.95746, 60.16834)
                             .add(24.95734, 60.16825)
+                            .add(24.95734, 60.16825)
+                            .add(24.95726, 60.16819)
+                            .add(24.95724, 60.16817)
+                            .add(24.95721, 60.16816)
+                            .add(24.95719, 60.16814)
                             .add(24.95718, 60.16814)
+                            .add(24.95715, 60.16812)
+                            .add(24.95712, 60.16811)
                             .add(24.95711, 60.16811)
+                            .add(24.95724, 60.16806)
                             .add(24.95724, 60.16806)
                             .add(24.95732, 60.16812)
                             .add(24.95734, 60.16813)
@@ -288,11 +317,11 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true,
-                            "134baafa-fbc0-47e7-8be1-6f25cbd37eff:1" to true,
-                            "2f402bd1-aeeb-4a32-bbf7-36dac212bd14:1" to false,
-                            "bd198e25-1902-44fd-ac89-da19c5115eee:1" to false,
-                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:2" to true,
+                            "134baafa-fbc0-47e7-8be1-6f25cbd37eff:2" to true,
+                            "e8ad869e-5b60-43d1-b30d-345fd4c5ae92:1" to false,
+                            "bd198e25-1902-44fd-ac89-da19c5115eee:2" to false,
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:2" to true
                         )
                     )
                 }
@@ -344,10 +373,10 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "5e070b32-d8f9-4096-8957-7303f8affe8b:2" to false,
-                            "5e070b32-d8f9-4096-8957-7303f8affe8b:2" to true,
-                            "28c73f2e-0d5e-40e1-9756-5171bb65f39d:2" to true,
-                            "9e19e8ac-55dc-4cfb-b262-9206a957d084:2" to true
+                            "5e070b32-d8f9-4096-8957-7303f8affe8b:3" to false,
+                            "5e070b32-d8f9-4096-8957-7303f8affe8b:3" to true,
+                            "28c73f2e-0d5e-40e1-9756-5171bb65f39d:3" to true,
+                            "9e19e8ac-55dc-4cfb-b262-9206a957d084:3" to true
                         )
                     )
                 }
@@ -371,7 +400,9 @@ class RoutingService_FindRouteTest
                         PositionSequenceBuilders
                             .variableSized(G2D::class.java)
                             .add(24.95724, 60.16806)
+                            .add(24.95724, 60.16806)
                             .add(24.95732, 60.16812)
+                            .add(24.95734, 60.16814)
                             .add(24.95758, 60.16832)
                             .add(24.95776, 60.16843)
 
@@ -393,7 +424,7 @@ class RoutingService_FindRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "3113baf5-2120-45d3-8f16-0d94e63644fd:1" to true
+                            "3113baf5-2120-45d3-8f16-0d94e63644fd:2" to true
                         )
                     )
                 }
@@ -431,21 +462,66 @@ class RoutingService_FindRouteTest
                                     .add(24.56305, 60.16016)
                                     .add(24.56307, 60.16021)
                                     .add(24.56354, 60.16019)
+                                    .add(24.56354, 60.16019)
+                                    .add(24.56383, 60.16018)
+                                    .add(24.56390, 60.16018)
                                     .add(24.56391, 60.16018)
+                                    .add(24.56398, 60.16018)
+                                    .add(24.56406, 60.16019)
+                                    .add(24.56409, 60.16019)
+                                    .add(24.56413, 60.16019)
+                                    .add(24.56416, 60.16020)
                                     .add(24.56420, 60.16020)
+                                    .add(24.56423, 60.16021)
+                                    .add(24.56427, 60.16022)
+                                    .add(24.56430, 60.16022)
+                                    .add(24.56433, 60.16023)
                                     .add(24.56436, 60.16024)
-                                    .add(24.56449, 60.1603)
+                                    .add(24.56439, 60.16025)
+                                    .add(24.56442, 60.16026)
+                                    .add(24.56445, 60.16028)
+                                    .add(24.56447, 60.16029)
+                                    .add(24.56449, 60.16030)
+                                    .add(24.56447, 60.16029)
+                                    .add(24.56445, 60.16028)
+                                    .add(24.56442, 60.16026)
+                                    .add(24.56439, 60.16025)
                                     .add(24.56436, 60.16024)
+                                    .add(24.56433, 60.16023)
+                                    .add(24.56430, 60.16022)
+                                    .add(24.56427, 60.16022)
+                                    .add(24.56423, 60.16021)
                                     .add(24.56420, 60.16020)
+                                    .add(24.56416, 60.16020)
+                                    .add(24.56413, 60.16019)
+                                    .add(24.56409, 60.16019)
+                                    .add(24.56406, 60.16019)
+                                    .add(24.56398, 60.16018)
                                     .add(24.56391, 60.16018)
+                                    .add(24.56390, 60.16018)
+                                    .add(24.56383, 60.16018)
+                                    .add(24.56354, 60.16019)
                                     .add(24.56354, 60.16019)
                                     .add(24.56307, 60.16021)
+                                    .add(24.56305, 60.16021)
                                     .add(24.56291, 60.16022)
+                                    .add(24.56276, 60.16023)
+                                    .add(24.56273, 60.16024)
                                     .add(24.56269, 60.16024)
+                                    .add(24.56268, 60.16024)
+                                    .add(24.56264, 60.16025)
+                                    .add(24.56261, 60.16025)
+                                    .add(24.56257, 60.16026)
+                                    .add(24.56254, 60.16027)
+                                    .add(24.56251, 60.16028)
+                                    .add(24.56248, 60.16028)
                                     .add(24.56245, 60.16029)
+                                    .add(24.56242, 60.16030)
+                                    .add(24.56239, 60.16032)
                                     .add(24.56223, 60.16039)
-                                    .add(24.56217, 60.16041)
-                                    .add(24.56221, 60.16040)
+                                    .add(24.56221, 60.16039)
+                                    .add(24.56216, 60.16041)
+                                    .add(24.56221, 60.16039)
 
                             val expectedGeometry: LineString<G2D> =
                                 mkLineString(expectedCoordinates.toPositionSequence(), WGS84)
@@ -468,11 +544,11 @@ class RoutingService_FindRouteTest
 
                             assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                                 listOf(
-                                    "4f8aa489-14dd-4061-b197-41db30fc3e98:1" to true,
-                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to false,
-                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to true,
-                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to true,
-                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to false
+                                    "4f8aa489-14dd-4061-b197-41db30fc3e98:2" to true,
+                                    "4979ed8b-a5c4-4c38-87e4-3243fa994b80:1" to false,
+                                    "4979ed8b-a5c4-4c38-87e4-3243fa994b80:1" to true,
+                                    "4979ed8b-a5c4-4c38-87e4-3243fa994b80:1" to true,
+                                    "4979ed8b-a5c4-4c38-87e4-3243fa994b80:1" to false
                                 )
                             )
                         }
@@ -501,8 +577,8 @@ class RoutingService_FindRouteTest
                             // shorter list than without simplifying, the closed-loop link appears only once
                             assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                                 listOf(
-                                    "4f8aa489-14dd-4061-b197-41db30fc3e98:1" to true,
-                                    "88bd12da-4e71-4e32-95f8-f9ee8c276c95:1" to false
+                                    "4f8aa489-14dd-4061-b197-41db30fc3e98:2" to true,
+                                    "4979ed8b-a5c4-4c38-87e4-3243fa994b80:1" to false
                                 )
                             )
                         }

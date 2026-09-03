@@ -128,11 +128,24 @@ class MatchingService_FindMatchForPublicTransportRouteTest
                             .add(25.00721, 60.18667)
                             .add(25.00692, 60.18627)
                             .add(25.00684, 60.18611)
+                            .add(25.00682, 60.18610)
+                            .add(25.00661, 60.18603)
                             .add(25.00652, 60.18600)
+                            .add(25.00651, 60.18600)
+                            .add(25.00648, 60.18599)
+                            .add(25.00638, 60.18597)
                             .add(25.00615, 60.18592)
+                            .add(25.00613, 60.18592)
+                            .add(25.00595, 60.18590)
+                            .add(25.00588, 60.18590)
                             .add(25.00581, 60.18589)
+                            .add(25.00578, 60.18589)
+                            .add(25.00570, 60.18589)
+                            .add(25.00563, 60.18589)
                             .add(25.00542, 60.18590)
+                            .add(25.00541, 60.18590)
                             .add(25.00491, 60.18592)
+                            .add(25.00487, 60.18592)
                             .add(25.00430, 60.18595)
                             .add(25.00377, 60.18597)
 
@@ -165,11 +178,11 @@ class MatchingService_FindMatchForPublicTransportRouteTest
 
                     assertThat(actualLinkIdsAndForwardTraversals).isEqualTo(
                         listOf(
-                            "90c18933-06f4-4f7b-9df2-9c82b59ecd35:2" to false,
-                            "315a1fa3-fdfa-4340-b581-2a83bb8abfa9:2" to false,
-                            "80f7650b-e63b-4f0b-8159-b04936ce7cdb:2" to false,
-                            "9fbfa4c7-0bc7-490c-99a2-c8524225ba40:2" to false,
-                            "e30555b1-d6bd-43d5-ae94-fc3834d0abef:2" to true
+                            "f32ddd65-441b-4a14-964a-37e0b2759a7d:1" to false,
+                            "315a1fa3-fdfa-4340-b581-2a83bb8abfa9:3" to false,
+                            "80f7650b-e63b-4f0b-8159-b04936ce7cdb:3" to false,
+                            "9517b4d4-f010-4806-b6a4-e947278764ab:1" to false,
+                            "588b7eb9-b1f3-400b-9758-ca263b688b1c:1" to true
                         )
                     )
                 }
