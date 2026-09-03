@@ -530,6 +530,15 @@
             <version>${kotlin.version}</version>
         </dependency>
 
+        <!--
+            Geolatte's GeoJSON module (org.geolatte.geom.json.GeolatteGeomModule) is built against
+            Jackson 2, while Spring Boot 4 uses Jackson 3 (tools.jackson) by default. Keep Jackson 2
+            as the JSON mapper for the web layer until Geolatte ships a Jackson 3 module.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jackson2</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
