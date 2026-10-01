@@ -368,6 +368,7 @@
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <!-- version inherited from the Spring Boot parent POM -->
                 <version>${kotlin.version}</version>
+                <extensions>true</extensions>
                 <configuration>
                     <compilerPlugins>
                         <plugin>spring</plugin>
@@ -376,6 +377,7 @@
                         <!-- Enable strict mode for JSR-305 annotations. -->
                         <arg>-Xjsr305=strict</arg>
                     </args>
+                    <jvmTarget>${java.version}</jvmTarget>
                 </configuration>
                 <executions>
                     <execution>
@@ -384,6 +386,12 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>src/generated-sources/jooq</sourceDir>
+                                <sourceDir>src/main/kotlin</sourceDir>
+                            </sourceDirs>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>test-compile</id>
@@ -438,6 +446,20 @@
                     </execution>
                     <execution>
                         <id>java-test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>testCompile</id>
                         <phase>test-compile</phase>
                         <goals>
                             <goal>testCompile</goal>
@@ -603,6 +625,12 @@
             <groupId>org.quicktheories</groupId>
             <artifactId>quicktheories</artifactId>
             <version>${quicktheories.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
