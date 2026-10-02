@@ -7,6 +7,11 @@ FROM postgis/postgis:15-3.3 AS pgrouting
 ENV PGROUTING_VERSION 3.4.1
 ENV PGROUTING_SHA256 a4e034efee8cf67582b67033d9c3ff714a09d8f5425339624879df50aff3f642
 
+# Switch to Debian Archive for EOL disto version
+RUN rm /etc/apt/sources.list
+RUN rm /etc/apt/sources.list.d/pgdg.list
+ADD archive.sources.list /etc/apt/sources.list
+
 # - Build and install pgRouting from source.
 # - ca-certificates as a dependency for wget is left installed in order to not
 #   lose all CA certificates from the container.

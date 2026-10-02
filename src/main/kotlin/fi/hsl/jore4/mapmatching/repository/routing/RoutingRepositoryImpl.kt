@@ -344,8 +344,11 @@ class RoutingRepositoryImpl(
                             val infrastructureSource = rs.getString("infrastructure_source_name")
                             val externalLinkId = rs.getString("external_link_id")
 
-                            val linkNameJson = JSONB.jsonb(rs.getString("link_name"))
-                            val linkName = jsonbConverter.fromJson(linkNameJson, MultilingualString::class.java)
+                            val linkName =
+                                rs
+                                    .getString("link_name")
+                                    ?.let { jsonbConverter.fromJson(JSONB.jsonb(it), MultilingualString::class.java) }
+                                    ?: MultilingualString(mapOf("fi" to "", "se" to ""))
 
                             val isClosedLoop = rs.getBoolean("is_closed_loop")
 
