@@ -16,7 +16,7 @@ env:
 jobs:
   generate-jooq:
     name: Verifies whether generated jOOQ classes have been updated
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout code
