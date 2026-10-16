@@ -123,7 +123,9 @@ class MatchRouteViaNetworkNodesServiceImpl(
                 RoutingResponseCreator.create(routeLinks)
             }
 
-            is NodeSequenceResolutionFailed -> RoutingResponse.noSegment(nodeSeqResult.message)
+            is NodeSequenceResolutionFailed -> {
+                RoutingResponse.noSegment(nodeSeqResult.message)
+            }
         }
     }
 
@@ -169,16 +171,22 @@ class MatchRouteViaNetworkNodesServiceImpl(
                 .mapNotNull { (sourceRoutePointIndex: Int, sourceRoutePoint: RoutePoint) ->
 
                     when (sourceRoutePoint) {
-                        is RouteStopPoint ->
+                        is RouteStopPoint -> {
                             fromRouteStopPointIndexToInfrastructureLink[sourceRoutePointIndex]
                                 ?.let(
                                     ::Left
                                 )
-                        is RouteJunctionPoint ->
+                        }
+
+                        is RouteJunctionPoint -> {
                             fromRoutePointIndexToRoadJunctionNode[sourceRoutePointIndex]?.let(
                                 ::Right
                             )
-                        else -> null
+                        }
+
+                        else -> {
+                            null
+                        }
                     }
                 }
 

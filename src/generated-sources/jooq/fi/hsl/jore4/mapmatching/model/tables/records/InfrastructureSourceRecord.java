@@ -13,7 +13,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 /**
  * The enumerated sources for infrastructure network entities
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class InfrastructureSourceRecord extends UpdatableRecordImpl<InfrastructureSourceRecord> {
 
     private static final long serialVersionUID = 1L;
@@ -101,6 +101,6 @@ public class InfrastructureSourceRecord extends UpdatableRecordImpl<Infrastructu
         setInfrastructureSourceId(infrastructureSourceId);
         setInfrastructureSourceName(infrastructureSourceName);
         setDescription(description);
-        resetChangedOnNotNull();
+        resetTouchedOnNotNull();
     }
 }

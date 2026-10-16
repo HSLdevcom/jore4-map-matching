@@ -25,13 +25,14 @@ import org.jooq.QueryPart;
 import org.jooq.Record;
 import org.jooq.SQL;
 import org.jooq.Schema;
-import org.jooq.Select;
 import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
+import org.jooq.TableLike;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
+import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
@@ -39,7 +40,7 @@ import org.jooq.impl.TableImpl;
 /**
  * Which infrastructure links are safely traversed by which vehicle types?
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<InfrastructureLinkSafelyTraversedByVehicleTypeRecord> {
 
     private static final long serialVersionUID = 1L;
@@ -225,7 +226,7 @@ public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<In
      */
     @Override
     public InfrastructureLinkSafelyTraversedByVehicleType where(Condition condition) {
-        return new InfrastructureLinkSafelyTraversedByVehicleType(getQualifiedName(), aliased() ? this : null, null, condition);
+        return new InfrastructureLinkSafelyTraversedByVehicleType(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
 
     /**
@@ -292,7 +293,7 @@ public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<In
      * Create an inline derived table from this table
      */
     @Override
-    public InfrastructureLinkSafelyTraversedByVehicleType whereExists(Select<?> select) {
+    public InfrastructureLinkSafelyTraversedByVehicleType whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
 
@@ -300,7 +301,7 @@ public class InfrastructureLinkSafelyTraversedByVehicleType extends TableImpl<In
      * Create an inline derived table from this table
      */
     @Override
-    public InfrastructureLinkSafelyTraversedByVehicleType whereNotExists(Select<?> select) {
+    public InfrastructureLinkSafelyTraversedByVehicleType whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }
 }

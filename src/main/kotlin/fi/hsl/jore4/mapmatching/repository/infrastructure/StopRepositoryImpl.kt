@@ -48,7 +48,10 @@ class StopRepositoryImpl(
 
             val stopSideOnLink: LinkSide =
                 when (rs.getBoolean("is_on_direction_of_link_forward_traversal")) {
-                    true -> LinkSide.RIGHT
+                    true -> {
+                        LinkSide.RIGHT
+                    }
+
                     false -> {
                         if (rs.wasNull()) {
                             // only rarely in the real world

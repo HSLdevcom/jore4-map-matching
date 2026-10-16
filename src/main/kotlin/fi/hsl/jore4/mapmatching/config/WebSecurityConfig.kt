@@ -21,7 +21,7 @@ class WebSecurityConfig {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.NEVER) }
             // CSRF is not needed.
             .csrf { it.disable() }
-            /** A CORS mapping is defined in [WebConfig] within "development" Spring profile. */
+            // A CORS mapping is defined in [WebConfig] within "development" Spring profile.
             .cors(withDefaults())
             .authorizeHttpRequests {
                 it

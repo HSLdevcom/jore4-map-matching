@@ -13,7 +13,6 @@ object NodeSequenceCombinationsCreator {
     fun create(nodesToVisit: VisitedNodes): List<NodeIdSequence> =
         when (nodesToVisit) {
             is VisitedNodesOnLink -> nodesToVisit.toListOfNodeIdSequences()
-
             is VisitNodesOnMultipleLinks -> toListOfNodeIdSequences(nodesToVisit)
         }
 

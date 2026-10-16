@@ -26,13 +26,14 @@ import org.jooq.QueryPart;
 import org.jooq.Record;
 import org.jooq.SQL;
 import org.jooq.Schema;
-import org.jooq.Select;
 import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
+import org.jooq.TableLike;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
+import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
@@ -41,7 +42,7 @@ import org.jooq.impl.TableImpl;
  * The vehicle types from Transmodel:
  * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:9:360
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class VehicleType extends TableImpl<VehicleTypeRecord> {
 
     private static final long serialVersionUID = 1L;
@@ -229,7 +230,7 @@ public class VehicleType extends TableImpl<VehicleTypeRecord> {
      */
     @Override
     public VehicleType where(Condition condition) {
-        return new VehicleType(getQualifiedName(), aliased() ? this : null, null, condition);
+        return new VehicleType(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
 
     /**
@@ -296,7 +297,7 @@ public class VehicleType extends TableImpl<VehicleTypeRecord> {
      * Create an inline derived table from this table
      */
     @Override
-    public VehicleType whereExists(Select<?> select) {
+    public VehicleType whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
 
@@ -304,7 +305,7 @@ public class VehicleType extends TableImpl<VehicleTypeRecord> {
      * Create an inline derived table from this table
      */
     @Override
-    public VehicleType whereNotExists(Select<?> select) {
+    public VehicleType whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }
 }

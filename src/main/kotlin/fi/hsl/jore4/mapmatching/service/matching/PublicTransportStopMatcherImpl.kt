@@ -60,7 +60,7 @@ class PublicTransportStopMatcherImpl(
             routePoints
                 .mapIndexedNotNull { index: Int, routePoint: RoutePoint ->
                     when (routePoint) {
-                        is RouteStopPoint ->
+                        is RouteStopPoint -> {
                             routePoint.nationalId?.let { nationalId ->
 
                                 // Prefer projected location because it is expected to be closer to
@@ -69,8 +69,11 @@ class PublicTransportStopMatcherImpl(
 
                                 index to PublicTransportStopMatchParameters(nationalId, sourceLocation)
                             }
+                        }
 
-                        else -> null
+                        else -> {
+                            null
+                        }
                     }
                 }.toMap()
     }

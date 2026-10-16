@@ -14,7 +14,7 @@ import org.jooq.impl.UpdatableRecordImpl;
  * The vehicle modes from Transmodel:
  * https://www.transmodel-cen.eu/model/index.htm?goto=1:6:1:283
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class VehicleModeRecord extends UpdatableRecordImpl<VehicleModeRecord> {
 
     private static final long serialVersionUID = 1L;
@@ -64,6 +64,6 @@ public class VehicleModeRecord extends UpdatableRecordImpl<VehicleModeRecord> {
         super(VehicleMode.VEHICLE_MODE);
 
         setVehicleMode(vehicleMode);
-        resetChangedOnNotNull();
+        resetTouchedOnNotNull();
     }
 }

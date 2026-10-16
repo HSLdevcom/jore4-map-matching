@@ -86,7 +86,7 @@ data class PublicTransportRouteMatchRequestDTO(
 
         @AssertTrue(message = "false")
         fun isJunctionNodeDistancesAbsentWhenJunctionMatchingDisabled(): Boolean =
-            isRoadJunctionMatchingEnabled || junctionNodeMatchDistance == null && junctionNodeClearingDistance == null
+            isRoadJunctionMatchingEnabled || (junctionNodeMatchDistance == null && junctionNodeClearingDistance == null)
 
         @AssertTrue(message = "false")
         fun isJunctionNodeMatchDistanceNotGreaterThanClearingDistance(): Boolean =

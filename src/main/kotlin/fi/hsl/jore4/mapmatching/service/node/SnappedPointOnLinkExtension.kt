@@ -14,9 +14,7 @@ object SnappedPointOnLinkExtension {
         } else {
             when (trafficFlowDirectionType) {
                 BIDIRECTIONAL -> VisitNodesOfSingleLinkBidirectionally(startNodeId, endNodeId)
-
                 ALONG_DIGITISED_DIRECTION -> VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
-
                 AGAINST_DIGITISED_DIRECTION -> VisitNodesOfSingleLinkUnidirectionally(endNodeId, startNodeId)
             }
         }

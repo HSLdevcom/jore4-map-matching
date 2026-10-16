@@ -17,7 +17,7 @@ The microservice consists of:
 ### Necessary tools
 
 - Maven
-- JDK17+
+- JDK25+
 - Azure CLI
 
 ## Maven profiles

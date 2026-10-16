@@ -80,11 +80,13 @@ object MatchingServiceHelper {
                     stopPointMatchedByNationalId
                         ?.let { refStopPoint ->
                             when (refStopPoint) {
-                                is RealNode ->
+                                is RealNode -> {
                                     targetRoutePoint is RealNode && targetRoutePoint.nodeId == refStopPoint.nodeId
+                                }
 
-                                is VirtualNode ->
+                                is VirtualNode -> {
                                     targetRoutePoint is VirtualNode && targetRoutePoint.linkId == refStopPoint.linkId
+                                }
                             }
                         }
                         ?: false
@@ -147,15 +149,17 @@ object MatchingServiceHelper {
                             ?.also {
                                 LOGGER.debug {
                                     when (it) {
-                                        is RealNode ->
+                                        is RealNode -> {
                                             "Resolved infrastructureNodeId=${it.nodeId} as $terminusType node " +
                                                 "candidate from public transport stop matched with " +
                                                 "nationalId=$stopPointNationalId"
+                                        }
 
-                                        is VirtualNode ->
+                                        is VirtualNode -> {
                                             "Resolved infrastructureLinkId=${it.linkId} as $terminusType link " +
                                                 "candidate from public transport stop matched with " +
                                                 "nationalId=$stopPointNationalId"
+                                        }
                                     }
                                 }
                             }
@@ -192,7 +196,10 @@ object MatchingServiceHelper {
                 )
 
             return when (linkIdAssociatedWithStopPoint) {
-                null -> closestLinks.map { TerminusLinkCandidate(it, terminusStopPointMatchFoundByNationalId = false) }
+                null -> {
+                    closestLinks.map { TerminusLinkCandidate(it, terminusStopPointMatchFoundByNationalId = false) }
+                }
+
                 else -> {
                     closestLinks.map { pointOnLink ->
                         if (pointOnLink.infrastructureLinkId == linkIdAssociatedWithStopPoint) {

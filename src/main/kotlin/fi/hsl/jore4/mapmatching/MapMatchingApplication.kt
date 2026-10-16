@@ -1,16 +1,9 @@
 package fi.hsl.jore4.mapmatching
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import org.geolatte.geom.json.GeolatteGeomModule
-import org.geolatte.geom.json.Setting
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor
@@ -40,25 +33,4 @@ class MapMatchingApplication {
 
     @Bean
     fun validator() = LocalValidatorFactoryBean()
-
-    @Bean
-    @Primary
-    fun objectMapper(): ObjectMapper {
-        val geolatteModule = GeolatteGeomModule()
-        geolatteModule.set(Setting.SUPPRESS_CRS_SERIALIZATION, true)
-
-        return ObjectMapper()
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            .registerModule(
-                KotlinModule
-                    .Builder()
-                    .withReflectionCacheSize(512)
-                    .configure(KotlinFeature.NullToEmptyCollection, false)
-                    .configure(KotlinFeature.NullToEmptyMap, false)
-                    .configure(KotlinFeature.NullIsSameAsDefault, false)
-                    .configure(KotlinFeature.SingletonSupport, false)
-                    .configure(KotlinFeature.StrictNullChecks, true)
-                    .build()
-            ).registerModule(geolatteModule)
-    }
 }

@@ -71,7 +71,9 @@ class RoadJunctionMatcherImpl(
                         }
                     }
 
-                    else -> null // discard because multiple nodes within clearing distance
+                    else -> {
+                        null
+                    } // discard because multiple nodes within clearing distance
                 }
             }.also { routePointIndexToJunctionNode: List<Pair<Int, NodeProximity>> ->
                 LOGGER.debug {

@@ -53,7 +53,9 @@ class RoutingService_FindRouteTest
                     checkAssertions(response)
                 }
 
-                else -> fail<Void>("RoutingResponse is not a success response as expected: $response")
+                else -> {
+                    fail<Void>("RoutingResponse is not a success response as expected: $response")
+                }
             }
         }
 
@@ -74,7 +76,9 @@ class RoutingService_FindRouteTest
                     checkAssertions(response)
                 }
 
-                else -> fail<Void>("RoutingResponse is not a failure response as expected: $response")
+                else -> {
+                    fail<Void>("RoutingResponse is not a failure response as expected: $response")
+                }
             }
         }
 
