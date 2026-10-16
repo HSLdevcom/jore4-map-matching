@@ -17,7 +17,7 @@ import fi.hsl.jore4.mapmatching.model.tables.VehicleType;
 /**
  * Convenience access to all tables in routing.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
 
     /**

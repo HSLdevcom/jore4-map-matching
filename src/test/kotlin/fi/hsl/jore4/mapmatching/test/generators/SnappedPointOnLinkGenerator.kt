@@ -88,21 +88,25 @@ object SnappedPointOnLinkGenerator {
         }
 
         return when (snapPointLocationFilter) {
-            IN_FIRST_HALF ->
+            IN_FIRST_HALF -> {
                 oneOf(
                     createSnappedPointOnLink(AT_START),
                     createSnappedPointOnLink(CLOSE_TO_START),
                     createSnappedPointOnLink(AT_MIDPOINT)
                 )
+            }
 
-            IN_SECOND_HALF ->
+            IN_SECOND_HALF -> {
                 oneOf(
                     createSnappedPointOnLink(AT_END),
                     createSnappedPointOnLink(CLOSE_TO_END),
                     createSnappedPointOnLink(AT_MIDPOINT)
                 )
+            }
 
-            else -> createSnappedPointOnLink(snapPointLocationFilter)
+            else -> {
+                createSnappedPointOnLink(snapPointLocationFilter)
+            }
         }
     }
 
@@ -286,63 +290,80 @@ object SnappedPointOnLinkGenerator {
         snapPointLocationFilter: SnapPointLocationAlongLinkFilter
     ): Gen<Double> =
         when (snapPointLocationFilter) {
-            IN_FIRST_HALF -> doubles().between(0.0, 0.5)
-            IN_SECOND_HALF -> doubles().between(0.5, 1.0)
+            IN_FIRST_HALF -> {
+                doubles().between(0.0, 0.5)
+            }
 
-            AT_MIDPOINT -> constant(0.5)
-            BETWEEN_ENDPOINTS_EXCLUSIVE ->
+            IN_SECOND_HALF -> {
+                doubles().between(0.5, 1.0)
+            }
+
+            AT_MIDPOINT -> {
+                constant(0.5)
+            }
+
+            BETWEEN_ENDPOINTS_EXCLUSIVE -> {
                 doubles().between(
                     DEFAULT_DOUBLE_TOLERANCE,
                     1.0 - DEFAULT_DOUBLE_TOLERANCE
                 )
+            }
 
-            AT_START ->
+            AT_START -> {
                 doubles().between(
                     0.0,
                     0.95 * DEFAULT_DOUBLE_TOLERANCE
                 )
+            }
 
-            AT_END ->
+            AT_END -> {
                 doubles().between(
                     1.0 - 0.95 * DEFAULT_DOUBLE_TOLERANCE,
                     1.0
                 )
+            }
 
-            AT_OR_CLOSE_TO_START ->
+            AT_OR_CLOSE_TO_START -> {
                 doubles().between(
                     0.0,
                     0.5 - DEFAULT_DOUBLE_TOLERANCE
                 )
+            }
 
-            AT_OR_CLOSE_TO_END ->
+            AT_OR_CLOSE_TO_END -> {
                 doubles().between(
                     0.5 + DEFAULT_DOUBLE_TOLERANCE,
                     1.0
                 )
+            }
 
-            CLOSE_TO_START ->
+            CLOSE_TO_START -> {
                 doubles().between(
                     DEFAULT_DOUBLE_TOLERANCE,
                     0.5 - DEFAULT_DOUBLE_TOLERANCE
                 )
+            }
 
-            CLOSE_TO_END ->
+            CLOSE_TO_END -> {
                 doubles().between(
                     0.5 + DEFAULT_DOUBLE_TOLERANCE,
                     1.0 - DEFAULT_DOUBLE_TOLERANCE
                 )
+            }
 
-            NOT_AT_START ->
+            NOT_AT_START -> {
                 doubles().between(
                     DEFAULT_DOUBLE_TOLERANCE,
                     1.0
                 )
+            }
 
-            NOT_AT_END ->
+            NOT_AT_END -> {
                 doubles().between(
                     0.0,
                     1.0 - DEFAULT_DOUBLE_TOLERANCE
                 )
+            }
         }
 
     private fun generatePairOfSnapPointLocationFractions(

@@ -1,28 +1,17 @@
 package fi.hsl.jore4.mapmatching.util.component
 
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.jooq.JSONB
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 
 @Component
 class JsonbConverterImpl(
-    val objectMapper: ObjectMapper
+    val jsonMapper: JsonMapper
 ) : IJsonbConverter {
-    override fun asJson(obj: Any?): JSONB =
-        try {
-            JSONB.jsonb(objectMapper.writeValueAsString(obj))
-        } catch (e: JsonProcessingException) {
-            throw RuntimeException(e)
-        }
+    override fun asJson(obj: Any?): JSONB = JSONB.jsonb(jsonMapper.writeValueAsString(obj))
 
     override fun <T> fromJson(
         json: JSONB,
         clazz: Class<T>
-    ): T =
-        try {
-            objectMapper.readValue(json.data(), clazz)
-        } catch (e: JsonProcessingException) {
-            throw RuntimeException(e)
-        }
+    ): T = jsonMapper.readValue(json.data(), clazz)
 }

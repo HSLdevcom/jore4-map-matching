@@ -71,7 +71,9 @@ class MatchingService_FindMatchForPublicTransportRouteTest
                     checkAssertions(response)
                 }
 
-                else -> fail<Void>("RoutingResponse is not a success response as expected: $response")
+                else -> {
+                    fail<Void>("RoutingResponse is not a success response as expected: $response")
+                }
             }
         }
 

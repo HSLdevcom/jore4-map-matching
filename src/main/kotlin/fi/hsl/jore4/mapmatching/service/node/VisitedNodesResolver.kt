@@ -48,7 +48,7 @@ object VisitedNodesResolver {
         secondSnapPointFractionalLocation: Double
     ): VisitedNodes =
         when (pointOnLink.isOnLinkWithDiscreteNodes()) {
-            true ->
+            true -> {
                 pointOnLink.run {
                     when (trafficFlowDirectionType) {
                         BIDIRECTIONAL -> {
@@ -58,6 +58,7 @@ object VisitedNodesResolver {
                                 else -> VisitSingleNode(closerNodeId)
                             }
                         }
+
                         ALONG_DIGITISED_DIRECTION -> {
                             val oneWayTraversal = VisitNodesOfSingleLinkUnidirectionally(startNodeId, endNodeId)
 
@@ -71,6 +72,7 @@ object VisitedNodesResolver {
                                 oneWayTraversal
                             }
                         }
+
                         AGAINST_DIGITISED_DIRECTION -> {
                             val oneWayTraversal = VisitNodesOfSingleLinkUnidirectionally(endNodeId, startNodeId)
 
@@ -86,7 +88,11 @@ object VisitedNodesResolver {
                         }
                     }
                 }
-            false -> VisitSingleNode(pointOnLink.startNodeId)
+            }
+
+            false -> {
+                VisitSingleNode(pointOnLink.startNodeId)
+            }
         }
 
     private fun resolveVisitedNodesOnStartLink(
@@ -101,10 +107,8 @@ object VisitedNodesResolver {
                 ?.takeIf { it == pointOnStartLink.furtherNodeId } != null
 
         return pointOnStartLink.run {
-            if (trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION &&
-                endNodeId == snappedTerminusNodeId ||
-                trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION &&
-                startNodeId == snappedTerminusNodeId ||
+            if ((trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION && endNodeId == snappedTerminusNodeId) ||
+                (trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION && startNodeId == snappedTerminusNodeId) ||
                 !isFurtherNodeOfStartLinkAtStartOfReducedListOfViaNodeIds()
             ) {
                 toVisitedNodes()
@@ -126,10 +130,8 @@ object VisitedNodesResolver {
                 ?.takeIf { it == pointOnEndLink.furtherNodeId } != null
 
         return pointOnEndLink.run {
-            if (trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION &&
-                startNodeId == snappedTerminusNodeId ||
-                trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION &&
-                endNodeId == snappedTerminusNodeId ||
+            if ((trafficFlowDirectionType == ALONG_DIGITISED_DIRECTION && startNodeId == snappedTerminusNodeId) ||
+                (trafficFlowDirectionType == AGAINST_DIGITISED_DIRECTION && endNodeId == snappedTerminusNodeId) ||
                 !isFurtherNodeOfEndLinkAtEndOfReducedListOfViaNodeIds()
             ) {
                 toVisitedNodes()

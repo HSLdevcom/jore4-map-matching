@@ -21,13 +21,14 @@ import org.jooq.PlainSQL;
 import org.jooq.QueryPart;
 import org.jooq.SQL;
 import org.jooq.Schema;
-import org.jooq.Select;
 import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
+import org.jooq.TableLike;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
+import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
@@ -35,7 +36,7 @@ import org.jooq.impl.TableImpl;
 /**
  * Topology nodes created for infrastructure links by pgRougting
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkVerticesPgrRecord> {
 
     private static final long serialVersionUID = 1L;
@@ -57,7 +58,7 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
     /**
      * The column <code>routing.infrastructure_link_vertices_pgr.id</code>.
      */
-    public final TableField<InfrastructureLinkVerticesPgrRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
+    public final TableField<InfrastructureLinkVerticesPgrRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).generatedByDefaultAsIdentity(), this, "");
 
     /**
      * The column <code>routing.infrastructure_link_vertices_pgr.cnt</code>.
@@ -176,7 +177,7 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
      */
     @Override
     public InfrastructureLinkVerticesPgr where(Condition condition) {
-        return new InfrastructureLinkVerticesPgr(getQualifiedName(), aliased() ? this : null, null, condition);
+        return new InfrastructureLinkVerticesPgr(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
 
     /**
@@ -243,7 +244,7 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
      * Create an inline derived table from this table
      */
     @Override
-    public InfrastructureLinkVerticesPgr whereExists(Select<?> select) {
+    public InfrastructureLinkVerticesPgr whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
 
@@ -251,7 +252,7 @@ public class InfrastructureLinkVerticesPgr extends TableImpl<InfrastructureLinkV
      * Create an inline derived table from this table
      */
     @Override
-    public InfrastructureLinkVerticesPgr whereNotExists(Select<?> select) {
+    public InfrastructureLinkVerticesPgr whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }
 }

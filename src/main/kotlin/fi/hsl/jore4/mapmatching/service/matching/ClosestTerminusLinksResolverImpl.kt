@@ -77,26 +77,32 @@ class ClosestTerminusLinksResolverImpl(
 
         val sourceRouteStartPoint: SourceRouteTerminusPoint =
             when (val firstRoutePoint: RoutePoint = sourceRoutePoints.first()) {
-                is RouteStopPoint ->
+                is RouteStopPoint -> {
                     SourceRouteTerminusPoint.fromRouteStopPoint(
                         startLocation,
                         true,
                         firstRoutePoint.nationalId
                     )
+                }
 
-                else -> SourceRouteTerminusPoint.fromRoutePoint(startLocation, true)
+                else -> {
+                    SourceRouteTerminusPoint.fromRoutePoint(startLocation, true)
+                }
             }
 
         val sourceRouteEndPoint: SourceRouteTerminusPoint =
             when (val lastRoutePoint: RoutePoint = sourceRoutePoints.last()) {
-                is RouteStopPoint ->
+                is RouteStopPoint -> {
                     SourceRouteTerminusPoint.fromRouteStopPoint(
                         endLocation,
                         false,
                         lastRoutePoint.nationalId
                     )
+                }
 
-                else -> SourceRouteTerminusPoint.fromRoutePoint(endLocation, false)
+                else -> {
+                    SourceRouteTerminusPoint.fromRoutePoint(endLocation, false)
+                }
             }
 
         val (closestStartLinks: List<SnappedPointOnLink>, closestEndLinks: List<SnappedPointOnLink>) =

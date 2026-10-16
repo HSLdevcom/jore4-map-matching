@@ -119,13 +119,17 @@ class MatchRouteViaPointsOnLinksServiceImpl(
                 .mapNotNull { (sourceRoutePointIndex: Int, sourceRoutePoint: RoutePoint) ->
 
                     when (sourceRoutePoint) {
-                        is RouteStopPoint -> fromRoutePointIndexToTargetStopPoint[sourceRoutePointIndex]
+                        is RouteStopPoint -> {
+                            fromRoutePointIndexToTargetStopPoint[sourceRoutePointIndex]
+                        }
 
                         is RouteJunctionPoint -> {
                             fromRoutePointIndexToRoadJunctionNode[sourceRoutePointIndex]?.let { RealNode(it.id) }
                         }
 
-                        else -> null
+                        else -> {
+                            null
+                        }
                     }
                 }
 

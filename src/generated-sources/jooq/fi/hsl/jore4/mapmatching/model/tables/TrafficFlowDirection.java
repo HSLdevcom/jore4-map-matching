@@ -22,13 +22,14 @@ import org.jooq.QueryPart;
 import org.jooq.Record;
 import org.jooq.SQL;
 import org.jooq.Schema;
-import org.jooq.Select;
 import org.jooq.Stringly;
 import org.jooq.Table;
 import org.jooq.TableField;
+import org.jooq.TableLike;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
+import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
@@ -37,7 +38,7 @@ import org.jooq.impl.TableImpl;
  * The possible directions of traffic flow on infrastructure links. Using code
  * values from Digiroad codeset.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> {
 
     private static final long serialVersionUID = 1L;
@@ -207,7 +208,7 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
      */
     @Override
     public TrafficFlowDirection where(Condition condition) {
-        return new TrafficFlowDirection(getQualifiedName(), aliased() ? this : null, null, condition);
+        return new TrafficFlowDirection(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
 
     /**
@@ -274,7 +275,7 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
      * Create an inline derived table from this table
      */
     @Override
-    public TrafficFlowDirection whereExists(Select<?> select) {
+    public TrafficFlowDirection whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
 
@@ -282,7 +283,7 @@ public class TrafficFlowDirection extends TableImpl<TrafficFlowDirectionRecord> 
      * Create an inline derived table from this table
      */
     @Override
-    public TrafficFlowDirection whereNotExists(Select<?> select) {
+    public TrafficFlowDirection whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }
 }

@@ -91,14 +91,17 @@ object PgRoutingEdgeQueries {
 
         val queryEnd: String =
             when (additionalTerminusPredicates.size) {
-                1 -> "\n  AND " + additionalTerminusPredicates.first()
+                1 -> {
+                    "\n  AND " + additionalTerminusPredicates.first()
+                }
 
-                else ->
+                else -> {
                     additionalTerminusPredicates.joinToString(
                         prefix = "\n  AND (\n    ",
                         separator = "\n    OR ",
                         postfix = "\n  )"
                     )
+                }
             }
 
         return "'$queryStart$queryEnd'"
@@ -164,14 +167,17 @@ object PgRoutingEdgeQueries {
 
         val queryEnd: String =
             when (additionalTerminusPredicates.size) {
-                1 -> "\n  AND " + additionalTerminusPredicates.first()
+                1 -> {
+                    "\n  AND " + additionalTerminusPredicates.first()
+                }
 
-                else ->
+                else -> {
                     additionalTerminusPredicates.joinToString(
                         prefix = "\n  AND (\n    ",
                         separator = "\n    OR ",
                         postfix = "\n  )"
                     )
+                }
             }
 
         return "$$ $queryStart$queryEnd$$"

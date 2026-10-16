@@ -763,8 +763,11 @@ class NodeSequenceCombinationsCreatorTest {
         fun generateVisitedNodesOnLink(): Gen<VisitedNodesOnLink> =
             GENERATE_VISITED_NODES_ON_LINK_KCLASS.flatMap { className ->
                 when (className) {
-                    VisitSingleNode::class -> infrastructureNodeId().map(::VisitSingleNode)
-                    else ->
+                    VisitSingleNode::class -> {
+                        infrastructureNodeId().map(::VisitSingleNode)
+                    }
+
+                    else -> {
                         discreteNodeIdPair()
                             .map { (firstNodeId, secondNodeId) ->
 
@@ -774,6 +777,7 @@ class NodeSequenceCombinationsCreatorTest {
                                     VisitNodesOfSingleLinkBidirectionally(firstNodeId, secondNodeId)
                                 }
                             }
+                    }
                 }
             }
 

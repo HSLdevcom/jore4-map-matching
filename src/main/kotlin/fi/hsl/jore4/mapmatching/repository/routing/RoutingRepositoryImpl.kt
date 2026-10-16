@@ -173,7 +173,9 @@ class RoutingRepositoryImpl(
 
         points.forEach { point ->
             when (point) {
-                is RealNode -> addRealNodeAsRoutePoint(point.nodeId)
+                is RealNode -> {
+                    addRealNodeAsRoutePoint(point.nodeId)
+                }
 
                 is VirtualNode -> {
                     val fraction: Double = point.fractionalLocation
@@ -330,13 +332,14 @@ class RoutingRepositoryImpl(
                     val lineString: LineString<G2D> = extractLineStringG2D(geom)
 
                     when (trimmed) {
-                        true ->
+                        true -> {
                             TrimmedRouteLinkResultItem(
                                 routeSeqNum,
                                 infrastructureLinkId,
                                 lineString,
                                 cost
                             )
+                        }
 
                         false -> {
                             val isTraversalForwards = rs.getBoolean("is_traversal_forwards")
@@ -379,7 +382,9 @@ class RoutingRepositoryImpl(
                     when (path) {
                         // Filtered out since trimmed versions (partial link traversals) were already
                         // collected to a Map.
-                        is TrimmedRouteLinkResultItem -> null
+                        is TrimmedRouteLinkResultItem -> {
+                            null
+                        }
 
                         is RouteLinkResultItem -> {
                             val seqNum: Int = path.routeSeqNum

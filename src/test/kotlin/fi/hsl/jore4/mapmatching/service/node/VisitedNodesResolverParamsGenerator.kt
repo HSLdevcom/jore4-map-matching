@@ -197,16 +197,12 @@ object VisitedNodesResolverParamsGenerator {
         when (snapPointLocation) {
             AT_START -> constant(SnapPointLocationAlongLinkFilter.AT_START)
             AT_END -> constant(SnapPointLocationAlongLinkFilter.AT_END)
-
             AT_OR_CLOSE_TO_START -> constant(SnapPointLocationAlongLinkFilter.AT_OR_CLOSE_TO_START)
             AT_OR_CLOSE_TO_END -> constant(SnapPointLocationAlongLinkFilter.AT_OR_CLOSE_TO_END)
-
             CLOSE_TO_START -> constant(SnapPointLocationAlongLinkFilter.CLOSE_TO_START)
             CLOSE_TO_END -> constant(SnapPointLocationAlongLinkFilter.CLOSE_TO_END)
-
             AT_MIDPOINT -> constant(SnapPointLocationAlongLinkFilter.AT_MIDPOINT)
             BETWEEN_ENDPOINTS_EXCLUSIVE -> constant(SnapPointLocationAlongLinkFilter.BETWEEN_ENDPOINTS_EXCLUSIVE)
-
             SnapPointLocation.ANY -> locationAlongLinkType()
         }
 
@@ -226,10 +222,7 @@ object VisitedNodesResolverParamsGenerator {
                     it != pointOnStartLink.closerNodeId &&
                         (
                             it != pointOnEndLink.closerNodeId ||
-                                !pointOnStartLink.isOnSameLinkAs(
-                                    pointOnEndLink
-                                ) &&
-                                numViaNodes > 1
+                                (!pointOnStartLink.isOnSameLinkAs(pointOnEndLink) && numViaNodes > 1)
                         )
                 }
 
@@ -260,8 +253,14 @@ object VisitedNodesResolverParamsGenerator {
         genLastNodeId: Gen<InfrastructureNodeId>
     ): Gen<List<InfrastructureNodeId>> =
         when (numberOfNodeIds) {
-            1 -> genFirstNodeId.map { node -> listOf(node) }
-            2 -> genFirstNodeId.zip(genLastNodeId) { firstNode, secondNode -> listOf(firstNode, secondNode) }
+            1 -> {
+                genFirstNodeId.map { node -> listOf(node) }
+            }
+
+            2 -> {
+                genFirstNodeId.zip(genLastNodeId) { firstNode, secondNode -> listOf(firstNode, secondNode) }
+            }
+
             else -> {
                 val genMiddleNodeIds: Gen<List<InfrastructureNodeId>> = generateList(nodeId(), numberOfNodeIds - 2)
 
@@ -359,10 +358,22 @@ object VisitedNodesResolverParamsGenerator {
 
                 val genViaNodeIds: Gen<List<InfrastructureNodeId>> =
                     when (viaNodeScheme) {
-                        VIA_NODES_EMPTY -> generateEmptyViaNodeIds()
-                        VIA_NODES_RANDOM -> generateRandomViaNodeIds()
-                        VIA_NODES_FULLY_REDUNDANT -> generateFullyRedundantViaNodes(pointOnStartLink, pointOnEndLink)
-                        VIA_NODES_NON_REDUNDANT -> generateNonRedundantViaNodes(pointOnStartLink, pointOnEndLink)
+                        VIA_NODES_EMPTY -> {
+                            generateEmptyViaNodeIds()
+                        }
+
+                        VIA_NODES_RANDOM -> {
+                            generateRandomViaNodeIds()
+                        }
+
+                        VIA_NODES_FULLY_REDUNDANT -> {
+                            generateFullyRedundantViaNodes(pointOnStartLink, pointOnEndLink)
+                        }
+
+                        VIA_NODES_NON_REDUNDANT -> {
+                            generateNonRedundantViaNodes(pointOnStartLink, pointOnEndLink)
+                        }
+
                         VIA_NODES_NOT_STARTING_OR_ENDING_WITH_NODES_OF_TERMINUS_LINKS -> {
                             oneOf(
                                 generateEmptyViaNodeIds(),
@@ -373,7 +384,9 @@ object VisitedNodesResolverParamsGenerator {
                             )
                         }
 
-                        ViaNodeGenerationScheme.ANY -> oneOf(generateEmptyViaNodeIds(), generateRandomViaNodeIds())
+                        ViaNodeGenerationScheme.ANY -> {
+                            oneOf(generateEmptyViaNodeIds(), generateRandomViaNodeIds())
+                        }
                     }
 
                 genViaNodeIds.map { viaNodeIds ->
@@ -400,15 +413,18 @@ object VisitedNodesResolverParamsGenerator {
 
             return unwrapAny.flatMap { linkRel ->
                 when (linkRel) {
-                    DISCRETE_LINKS ->
+                    DISCRETE_LINKS -> {
                         pick(
                             listOf(
                                 DISCRETE_LINKS_CONNECTED,
                                 DISCRETE_LINKS_UNCONNECTED
                             )
                         )
+                    }
 
-                    else -> constant(linkRel)
+                    else -> {
+                        constant(linkRel)
+                    }
                 }
             }
         }
@@ -431,13 +447,17 @@ object VisitedNodesResolverParamsGenerator {
                 generateParamsForPointOnEndLink().flatMap { pointOnEndLinkParams ->
 
                     when (terminusLinkRelation) {
-                        DISCRETE_LINKS_CONNECTED ->
+                        DISCRETE_LINKS_CONNECTED -> {
                             snapTwoConnectedLinks(pointOnStartLinkParams, pointOnEndLinkParams)
+                        }
 
-                        DISCRETE_LINKS_UNCONNECTED ->
+                        DISCRETE_LINKS_UNCONNECTED -> {
                             snapTwoUnconnectedLinks(pointOnStartLinkParams, pointOnEndLinkParams)
+                        }
 
-                        else -> throw IllegalStateException("Should not end up here")
+                        else -> {
+                            throw IllegalStateException("Should not end up here")
+                        }
                     }
                 }
             }

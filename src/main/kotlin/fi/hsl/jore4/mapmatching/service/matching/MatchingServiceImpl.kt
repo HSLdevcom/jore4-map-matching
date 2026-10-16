@@ -52,7 +52,10 @@ class MatchingServiceImpl(
                 }
 
                 when (matchingParameters.fallbackToViaNodesAlgorithm) {
-                    false -> viaPointsOnLinksResponse
+                    false -> {
+                        viaPointsOnLinksResponse
+                    }
+
                     else -> {
                         LOGGER.info { "Trying to match $routeName using via-graph-vertices algorithm..." }
 
