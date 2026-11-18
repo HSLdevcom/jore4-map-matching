@@ -40,7 +40,8 @@ COPY --chmod=555 ./scripts/build-jdbc-urls.sh /tmp/build-jdbc-urls.sh
 COPY --from=builder /build/target/*.jar /usr/src/jore4-map-matching/jore4-map-matching.jar
 
 # read Docker secrets into environment variables and run application
-CMD ["/bin/bash", "-c", "source /tmp/read-secrets.sh && source /tmp/build-jdbc-urls.sh && java -javaagent:/usr/src/jore4-map-matching/applicationinsights-agent.jar -jar /usr/src/jore4-map-matching/jore4-map-matching.jar"]
+# remove -XX:-UseBASE64Intrinsics once java4shell has been patched
+CMD ["/bin/bash", "-c", "source /tmp/read-secrets.sh && source /tmp/build-jdbc-urls.sh && java -XX:-UseBASE64Intrinsics -javaagent:/usr/src/jore4-map-matching/applicationinsights-agent.jar -jar /usr/src/jore4-map-matching/jore4-map-matching.jar"]
 
 HEALTHCHECK --interval=1m --timeout=5s \
   CMD ["java", "-jar", "/app/scripts/HealthCheck.jar"]
